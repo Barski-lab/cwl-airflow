@@ -1,1 +1,150 @@
 # cwl-airflow
+
+### About
+Python package to extend [Apache-Airflow 1.8.2](https://github.com/apache/incubator-airflow) functionality with [CWL v1.0](http://www.commonwl.org/v1.0/) support.
+
+### Installation
+1. Install cwl-airflow from source
+  ```sh
+  $ git clone https://github.com/Barski-lab/cwl-airflow.git
+  $ cd cwl-airflow
+  $ pip install .
+  ```
+ If [Apache-Airflow](https://github.com/apache/incubator-airflow) or [cwltool](http://www.commonwl.org/ "cwltool main page") aren't installed, it will be done automatically with recommended versions: Apache-Airflow v1.8.2, cwltool 1.0.20170622090721
+
+2. If required, add [extra packages](https://airflow.incubator.apache.org/installation.html#extra-packages) for extending Airflow functionality. Configure Airflow according to your needs following the [instructions](https://airflow.incubator.apache.org/configuration.html#configuration)
+
+3. To support CWL update ***airflow.cfg*** configuration file with the following parameters
+
+  Add [cwl] section
+
+  ```
+  [cwl]
+  cwl_jobs = absolute path to the folder with job files. Required!
+  cwl_workflows = absolute path to the folder with workflow files. Required!
+  output_folder = absolute path to the folder to save results. Required!
+  tmp_folder = absolute path to the folder to save temporary calculation results. Default: unique temporary
+    directory in /tmp folder 
+  max_jobs_to_run = maximum number of jobs to be processed at the same time, int. Default: 1
+  log_level = log level, [CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET]. Default:  INFO
+  strict = enable "strict" validation, boolean. Default: False
+  ```
+  Update [core] section
+  ```
+  [core]
+  dags_folder                 = /your/repository/location/cwl-airflow/cwl_runner/cwl_dag/cwl_dag.py
+  dags_are_paused_at_creation = False
+  load_examples               = False
+  ```
+> Pay attention, only ***cwl_jobs***, ***cwl_workflows*** and ***output_folder*** are required.
+For the rest of parameters the defaults values will be used if not provided.
+
+### Preparing workflow and job files
+1. All workflow descriptor files should be placed in a folder set as ***cwl_workflows*** in Airflow configuration file. The structure of this folder is arbitrary.
+
+2. Folder ***cwl_jobs*** from the same configuration file is used to store input parameters files (i.e job files) and should have the following structure
+```
+├── jobs
+│   ├── fail
+│   ├── new
+│   ├── running
+│   └── success
+```
+All the job files scheduled to be processed should be placed in ***new*** subfolder. Depending on the current execution state the job file can be moved to one of the following folders: ***fail***, ***running***, ***success***
+
+3. To allow automatically fetch CWL descriptor file by job's filename, follow naming rule
+  ```
+  [identical].cwl                 - workflow descriptor filename
+  [identical][arbitrary].json     - input parameters filename
+  ```
+  where [identical] part of the name defines the correspondence between workflow and job files.
+
+  > Pay attention, if you have two or more workflow descriptor files with identical names, but in different subfolders of ***cwl_workflows***, the newest one will be used.
+
+4. Job file may include additional fields which in case of ***output_folder*** and ***tmp_folder***
+redefines parameters from ***airflow.cfg***.
+```
+{
+    "uid": "arbitrary unique id, which will be used for current workflow run",
+    "output_folder": "path to the folder to save results",
+    "tmp_folder": "path to the folder to save temporary calculation results",
+    "author": "Author of a the experiment. Default: CWL-Airflow"
+}
+```
+> Pay attention, ***output_folder*** and ***tmp_folder*** may be set as the path realtive
+to job file location 
+
+### Running workflow
+
+#### Automatic mode
+1. Put CWL descriptor file and all tools which it includes into ***cwl_workflows*** folder.
+All input parameters files should be placed in subfolder ***new*** of  ***cwl_jobs***.
+
+2. Run Airflow scheduler:
+  ```sh
+  $ airflow scheduler
+  ```
+  > Pay attention, you can use [cwl-airflow-cli](https://github.com/Barski-lab/airflow_cwl_cli)
+  to make it even more easy then it is.
+
+#### Manual mode
+Use `airflow-cwl-runner` with explicitly specified CWL descriptor and input parameters files.
+```bash
+   airflow-cwl-runner WORKFLOW JOB
+```
+If necessary, set additional arguments following the `airflow-cwl-runner --help` information.
+<details> 
+  <summary>airflow-cwl-runner --help</summary>
+  
+        usage: airflow-cwl-runner [-h] [-t TASK_REGEX] [-m] [-l] [-x] [-a] [-i] [-I]
+                                  [--pool POOL] [-dr] [--outdir OUTDIR]
+                                  [--tmp-folder TMP_FOLDER]
+                                  [--tmpdir-prefix TMPDIR_PREFIX]
+                                  [--tmp-outdir-prefix TMP_OUTDIR_PREFIX] [--quiet]
+                                  [--ignore-def-outdir]
+                                  workflow job
+        
+        CWL-Airflow
+        
+        positional arguments:
+          workflow
+          job
+        
+        optional arguments:
+          -h, --help            show this help message and exit
+          -t TASK_REGEX, --task_regex TASK_REGEX
+                                The regex to filter specific task_ids to backfill
+                                (optional)
+          -m, --mark_success    Mark jobs as succeeded without running them
+          -l, --local           Run the task using the LocalExecutor
+          -x, --donot_pickle    Do not attempt to pickle the DAG object to send over
+                                to the workers, just tell the workers to run their
+                                version of the code.
+          -a, --include_adhoc   Include dags with the adhoc parameter.
+          -i, --ignore_dependencies
+                                Skip upstream tasks, run only the tasks matching the
+                                regexp. Only works in conjunction with task_regex
+          -I, --ignore_first_depends_on_past
+                                Ignores depends_on_past dependencies for the first set
+                                of tasks only (subsequent executions in the backfill
+                                DO respect depends_on_past).
+          --pool POOL           Resource pool to use
+          -dr, --dry_run        Perform a dry run
+          --outdir OUTDIR       Output folder to save results
+          --tmp-folder TMP_FOLDER
+                                Temp folder to store data between execution of airflow
+                                tasks/steps
+          --tmpdir-prefix TMPDIR_PREFIX
+                                Path prefix for temporary directories
+          --tmp-outdir-prefix TMP_OUTDIR_PREFIX
+                                Path prefix for intermediate output directories
+          --quiet               Print only workflow execultion results
+          --ignore-def-outdir   Disable default output directory to be set to current
+                                directory. Use OUTPUT_FOLDER from Airflow
+                                configuration file instead
+</details>
+
+
+### Collecting output
+  All output files will be saved into subfolder of **output_folder**
+  with the name corresponding to the job filename.

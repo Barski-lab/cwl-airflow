@@ -209,7 +209,7 @@ def make_dag(args):
         os.makedirs(tmp_folder)
         os.chmod(tmp_folder, 0755)
 
-    owner = job_entry.get('author', 'SciDAP')
+    owner = job_entry.get('author', 'CWL-Airflow')
 
     default_args = {
         'owner': owner,
