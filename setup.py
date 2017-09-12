@@ -17,7 +17,7 @@ setup(
         'jsonmerge',
         'mysql-python>=1.2.5',
         'ruamel.yaml<0.15',
-        "airflow==1.8.0",
+        "apache-airflow==1.8.2",
         "html5lib"
     ],
     zip_safe=False,

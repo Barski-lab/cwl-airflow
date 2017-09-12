@@ -20,9 +20,9 @@ class SkipException(Exception):
 
 def get_max_jobs_to_run():
     try:
-        max_jobs_to_run = int(conf_get_default('biowardrobe', 'MAX_JOBS_TO_RUN', 1))
+        max_jobs_to_run = int(conf_get_default('cwl', 'MAX_JOBS_TO_RUN', 1))
     except ValueError:
-        logging.error('Error evaluating MAX_JOBS_TO_RUN as integer: {0}'.format (conf_get_default('biowardrobe', 'MAX_JOBS_TO_RUN', 1)))
+        logging.error('Error evaluating MAX_JOBS_TO_RUN as integer: {0}'.format (conf_get_default('cwl', 'MAX_JOBS_TO_RUN', 1)))
         sys.exit()
     return max_jobs_to_run
 
@@ -65,21 +65,21 @@ def make_dag(job_file, workflow_file):
 
     basedir = os.path.abspath(os.path.dirname(job_file))
 
-    output_folder = job.get('output_folder', os.path.join(conf_get_default('biowardrobe', 'OUTPUT_FOLDER', os.getcwd()), dag_id))
+    output_folder = job.get('output_folder', os.path.join(conf_get_default('cwl', 'OUTPUT_FOLDER', os.getcwd()), dag_id))
     output_folder = output_folder if os.path.isabs(output_folder) else os.path.normpath(os.path.join(basedir, output_folder))
 
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
         os.chmod(output_folder, 0775)
 
-    tmp_folder = job.get('tmp_folder', conf_get_default('biowardrobe', 'TMP_FOLDER', tempfile.mkdtemp()))
+    tmp_folder = job.get('tmp_folder', conf_get_default('cwl', 'TMP_FOLDER', tempfile.mkdtemp()))
     tmp_folder = tmp_folder if os.path.isabs(tmp_folder) else os.path.normpath(os.path.join(basedir, tmp_folder))
 
     if not os.path.exists(tmp_folder):
         os.makedirs(tmp_folder)
         os.chmod(tmp_folder, 0755)
 
-    owner = job.get('author', 'biowardrobe')
+    owner = job.get('author', 'SciDAP')
 
     default_args = {
         'owner': owner,
@@ -111,7 +111,7 @@ def make_dag(job_file, workflow_file):
         'version': False,
         'enable_dev': False,
         'enable_ext': False,
-        'strict': conf_get_default('biowardrobe', 'STRICT', 'False').lower() in ['true', '1', 't', 'y', 'yes'],
+        'strict': conf_get_default('cwl', 'STRICT', 'False').lower() in ['true', '1', 't', 'y', 'yes'],
         'rdf_serializer': None,
         'basedir': basedir,
         'tool_help': False,
@@ -142,7 +142,7 @@ def make_dag(job_file, workflow_file):
 
 
 def find_workflow(job_filename):
-    workflows_folder = conf.get('biowardrobe', 'CWL_WORKFLOWS')
+    workflows_folder = conf.get('cwl', 'CWL_WORKFLOWS')
     all_workflows = {}
     for root, dirs, files in os.walk(workflows_folder):
         all_workflows.update( \
@@ -175,11 +175,11 @@ def get_jobs_folder_structure(monitor_folder):
     return jobs
 
 
-logging.getLogger('cwltool').setLevel(eval_log_level(conf_get_default('biowardrobe', 'LOG_LEVEL', 'INFO').upper()))
-logging.getLogger('salad').setLevel(eval_log_level(conf_get_default('biowardrobe', 'LOG_LEVEL', 'INFO').upper()))
+logging.getLogger('cwltool').setLevel(eval_log_level(conf_get_default('cwl', 'LOG_LEVEL', 'INFO').upper()))
+logging.getLogger('salad').setLevel(eval_log_level(conf_get_default('cwl', 'LOG_LEVEL', 'INFO').upper()))
 
 max_jobs_to_run = get_max_jobs_to_run()
-monitor_folder = conf.get('biowardrobe', 'CWL_JOBS')
+monitor_folder = conf.get('cwl', 'CWL_JOBS')
 
 jobs_list = get_jobs_folder_structure (monitor_folder)
 

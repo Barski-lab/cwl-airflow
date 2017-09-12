@@ -39,7 +39,7 @@ restore_stdout()
 
 
 def arg_parser():
-    parser = argparse.ArgumentParser(description='BioWardrobe2 Airflow')
+    parser = argparse.ArgumentParser(description='CWL-Airflow')
 
     # FROM AIRFLOW
     parser.add_argument ("-t", "--task_regex", help="The regex to filter specific task_ids to backfill (optional)")
@@ -109,7 +109,7 @@ def eval_log_level(key):
 def set_logger ():
     cwl_logger = logging.getLogger("cwltool")
     cwl_logger.addHandler(logging.StreamHandler())
-    cwl_logger.setLevel(eval_log_level(conf_get_default('biowardrobe','LOG_LEVEL','INFO').upper()))
+    cwl_logger.setLevel(eval_log_level(conf_get_default('cwl','LOG_LEVEL','INFO').upper()))
 
 
 def get_log_filename (args):
@@ -171,7 +171,7 @@ def main(argsl=None):
 
 def get_tmp_folder (args, job_entry, job):
     if not args.get('tmp_folder'):
-        tmp_folder = job_entry.get('tmp_folder', conf_get_default('biowardrobe', 'TMP_FOLDER', tempfile.mkdtemp()))
+        tmp_folder = job_entry.get('tmp_folder', conf_get_default('cwl', 'TMP_FOLDER', tempfile.mkdtemp()))
         return tmp_folder if os.path.isabs(tmp_folder) else os.path.normpath(os.path.join(os.path.dirname(job), tmp_folder))
     else:
         return os.path.abspath(args.get('tmp_folder'))
@@ -180,7 +180,7 @@ def get_tmp_folder (args, job_entry, job):
 def get_output_folder (args, job_entry, job, workflow_file):
     if not args.get('outdir'):
         if args.get('ignore_def_outdir'):
-            default_outdir = os.path.join(conf_get_default('biowardrobe', 'OUTPUT_FOLDER', os.getcwd()), gen_dag_id(workflow_file,job))
+            default_outdir = os.path.join(conf_get_default('cwl', 'OUTPUT_FOLDER', os.getcwd()), gen_dag_id(workflow_file,job))
         else:
             default_outdir = os.path.abspath(os.getcwd())
         output_folder = job_entry.get('output_folder', default_outdir)
@@ -209,7 +209,7 @@ def make_dag(args):
         os.makedirs(tmp_folder)
         os.chmod(tmp_folder, 0755)
 
-    owner = job_entry.get('author', 'biowardrobe')
+    owner = job_entry.get('author', 'SciDAP')
 
     default_args = {
         'owner': owner,
@@ -241,7 +241,7 @@ def make_dag(args):
         'version': False,
         'enable_dev': False,
         'enable_ext': False,
-        'strict': conf_get_default('biowardrobe', 'STRICT', 'False').lower() in ['true', '1', 't', 'y', 'yes'],
+        'strict': conf_get_default('cwl', 'STRICT', 'False').lower() in ['true', '1', 't', 'y', 'yes'],
         'rdf_serializer': None,
         'basedir': basedir,
         'tool_help': False,
