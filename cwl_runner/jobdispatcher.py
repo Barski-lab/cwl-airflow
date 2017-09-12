@@ -6,7 +6,7 @@ import os
 import tempfile
 from schema_salad.ref_resolver import Loader
 import functools
-from cwltool.pathmapper import adjustDirObjs, adjustFileObjs, get_listing
+from cwltool.pathmapper import adjustDirObjs, visit_class, trim_listing
 from cwltool.process import normalizeFilesDirs
 from cwltool.stdfsaccess import StdFsAccess
 from typing import cast, Callable, Any, Text
@@ -85,11 +85,21 @@ class JobDispatcher(BaseOperator):
                 p["location"] = p["path"]
                 del p["path"]
 
-        adjustDirObjs(job_order_object, pathToLoc)
-        adjustFileObjs(job_order_object, pathToLoc)
+        def addSizes(p):
+            if 'location' in p:
+                try:
+                    p["size"] = os.stat(p["location"][7:]).st_size  # strip off file://
+                except OSError:
+                    pass
+            elif 'contents' in p:
+                p["size"] = len(p['contents'])
+            else:
+                return  # best effort
+
+        visit_class(job_order_object, ("File", "Directory"), pathToLoc)
+        visit_class(job_order_object, ("File"), addSizes)
+        adjustDirObjs(job_order_object, trim_listing)
         normalizeFilesDirs(job_order_object)
-        adjustDirObjs(job_order_object, cast(Callable[..., Any],
-                                             functools.partial(get_listing, StdFsAccess(self.dag.default_args['basedir']))))
 
         if "cwl:tool" in job_order_object:
             del job_order_object["cwl:tool"]

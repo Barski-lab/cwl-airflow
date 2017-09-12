@@ -77,28 +77,29 @@ class CWLStepOperator(BaseOperator):
 
         for inp in self.cwl_step.tool["inputs"]:
             jobobj_id = shortname(inp["id"]).split("/")[-1]
-            if "source" in inp or "valueFrom" in inp:
-                source_ids = []
-                promises_outputs = []
-                try:
-                    source_ids = [shortname(source) for source in inp["source"]] if isinstance(inp["source"], list) else [shortname(inp["source"])]
-                    promises_outputs = [promises[source_id] for source_id in source_ids if source_id in promises]
-                except Exception as ex:
-                    logging.info("{0}: Couldn't find source field in step input:\n{1}".format(self.task_id,json.dumps(inp,indent=4)))
-                logging.info('{0}: For source_ids: \n{1} \nfound upstream outputs: \n{2}'.format(self.task_id, source_ids, promises_outputs))
-                if len(promises_outputs) > 1:
-                    if inp.get("linkMerge", "merge_nested") == "merge_flattened":
-                        promises_outputs = flatten (promises_outputs)
-                elif len(promises_outputs) == 1:
-                    promises_outputs = promises_outputs[0]
-                elif "valueFrom" in inp:
-                    promises_outputs = None
+            source_ids = []
+            promises_outputs = []
+            try:
+                source_ids = [shortname(source) for source in inp["source"]] if isinstance(inp["source"], list) else [shortname(inp["source"])]
+                promises_outputs = [promises[source_id] for source_id in source_ids if source_id in promises]
+            except Exception as ex:
+                logging.info("{0}: Couldn't find source field in step input:\n{1}".format(self.task_id,json.dumps(inp,indent=4)))
+            logging.info('{0}: For input {1} with source_ids: {2} found upstream outputs: \n{3}'.format(self.task_id, jobobj_id, source_ids, promises_outputs))
+            if len(promises_outputs) > 1:
+                if inp.get("linkMerge", "merge_nested") == "merge_flattened":
+                    jobobj[jobobj_id] = flatten (promises_outputs)
                 else:
-                    continue
-                jobobj[jobobj_id] = promises_outputs
+                    jobobj[jobobj_id] = promises_outputs
+            elif len(promises_outputs) == 1 and promises_outputs[0]: # Should also check if [None], because in this case we need to take default value
+                jobobj[jobobj_id] = promises_outputs[0]
+            elif "valueFrom" in inp:
+                jobobj[jobobj_id] = None
             elif "default" in inp:
                 d = copy.copy(inp["default"])
                 jobobj[jobobj_id] = d
+            else:
+                continue
+
 
         logging.info('{0}: Collected job object: \n {1}'.format(self.task_id, json.dumps(jobobj,indent=4)))
 

@@ -13,7 +13,7 @@ setup(
     license = 'MIT',
     packages=find_packages(),
     install_requires=[
-        'cwltool==1.0.20170622090721',
+        'cwltool==1.0.20170828135420',
         'jsonmerge',
         'mysql-python>=1.2.5',
         'ruamel.yaml<0.15',
