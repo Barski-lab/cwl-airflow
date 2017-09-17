@@ -10,7 +10,7 @@ setup(
     download_url=('https://github.com/Barski-lab/cwl-airflow'),
     author='Michael Kotliar',
     author_email='misha.kotliar@gmail.com',
-    license = 'MIT',
+    license = 'Apache-2.0',
     packages=find_packages(),
     install_requires=[
         'cwltool==1.0.20170828135420',
