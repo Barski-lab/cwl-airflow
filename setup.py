@@ -23,7 +23,7 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            "airflow-cwl-runner=cwl_runner.main:main",
+            "cwl-airflow-runner=cwl_runner.main:main",
             "cwl-runner=cwl_runner.main:main"
         ]
     }

@@ -88,15 +88,15 @@ All input parameters files should be placed in subfolder ***new*** of  ***cwl_jo
   to make it even more easy then it is.
 
 #### Manual mode
-Use `airflow-cwl-runner` with explicitly specified CWL descriptor and input parameters files.
+Use `cwl-airflow-runner` with explicitly specified CWL descriptor and input parameters files.
 ```bash
-   airflow-cwl-runner WORKFLOW JOB
+   cwl-airflow-runner WORKFLOW JOB
 ```
-If necessary, set additional arguments following the `airflow-cwl-runner --help` information.
+If necessary, set additional arguments following the `cwl-airflow-runner --help` information.
 <details> 
-  <summary>airflow-cwl-runner --help</summary>
+  <summary>cwl-airflow-runner --help</summary>
   
-        usage: airflow-cwl-runner [-h] [-t TASK_REGEX] [-m] [-l] [-x] [-a] [-i] [-I]
+        usage: cwl-airflow-runner [-h] [-t TASK_REGEX] [-m] [-l] [-x] [-a] [-i] [-I]
                                   [--pool POOL] [-dr] [--outdir OUTDIR]
                                   [--tmp-folder TMP_FOLDER]
                                   [--tmpdir-prefix TMPDIR_PREFIX]
