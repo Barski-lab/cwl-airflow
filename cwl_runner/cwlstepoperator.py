@@ -90,7 +90,7 @@ class CWLStepOperator(BaseOperator):
                     jobobj[jobobj_id] = flatten (promises_outputs)
                 else:
                     jobobj[jobobj_id] = promises_outputs
-            elif len(promises_outputs) == 1 and promises_outputs[0]: # Should also check if [None], because in this case we need to take default value
+            elif len(promises_outputs) == 1 and (promises_outputs[0] is not None): # Should also check if [None], because in this case we need to take default value
                 jobobj[jobobj_id] = promises_outputs[0]
             elif "valueFrom" in inp:
                 jobobj[jobobj_id] = None
