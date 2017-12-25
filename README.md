@@ -93,6 +93,7 @@ Use `cwl-airflow-runner` with explicitly specified CWL descriptor and input para
    cwl-airflow-runner WORKFLOW JOB
 ```
 If necessary, set additional arguments following the `cwl-airflow-runner --help` information.
+> When running on macOS, make sure yor docker or docker-machine has access to `$TMPDIR`. If necessary set `--tmp-outdir-prefix` and `--tmpdir-prefix` parameters to point location available for your docker.
 <details> 
   <summary>cwl-airflow-runner --help</summary>
   
