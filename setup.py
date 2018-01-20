@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
+from setuptools.command.egg_info import egg_info
 from subprocess import check_call
 import os
 
@@ -11,6 +12,11 @@ class PostInstallCommand(install):
         check_call("./install.sh".split())
         install.run(self)
 
+class PostEggInfoCommand(egg_info):
+    """Post-installation for egg_info mode"""
+    def run(self):
+        check_call("./install.sh".split())
+        egg_info.run(self)
 
 setup(
     name='cwl-airflow',
@@ -33,7 +39,8 @@ setup(
     ],
     zip_safe=False,
     cmdclass={
-        'install': PostInstallCommand
+        'install': PostInstallCommand,
+        'egg_info': PostEggInfoCommand
     },
     entry_points={
         'console_scripts': [
