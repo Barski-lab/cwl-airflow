@@ -2,7 +2,7 @@
 
 HOME_DIR=${AIRFLOW_HOME:-~/airflow}
 CONFIG_FILE=$HOME_DIR/airflow.cfg
-DAGS=$HOME_DIR/dags
+DAGS=$(grep 'dags_folder' $CONFIG_FILE | awk '{print $NF}')
 
 CWL=$HOME_DIR/cwl
 JOBS=$CWL/jobs
