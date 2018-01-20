@@ -13,7 +13,7 @@ from jsonmerge import merge
 import json
 import os
 import copy
-from cwl_runner.cwlutils import shortname, flatten
+from cwl_runner.modules.cwlutils import shortname, flatten
 import tempfile
 import cwltool.stdfsaccess
 

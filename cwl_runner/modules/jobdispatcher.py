@@ -11,7 +11,7 @@ from cwltool.process import normalizeFilesDirs
 from cwltool.stdfsaccess import StdFsAccess
 from typing import cast, Callable, Any, Text
 import json
-from cwl_runner.cwlutils import url_shortname
+from cwl_runner.modules.cwlutils import url_shortname
 from six.moves import urllib
 
 class JobDispatcher(BaseOperator):

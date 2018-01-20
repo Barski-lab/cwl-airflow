@@ -17,6 +17,8 @@ Python package to extend [Apache-Airflow 1.8.2](https://github.com/apache/incuba
   - pip 9.0.1
   - setuptools 38.4.0
   - libmysqlclient-dev
+  - zip
+  - docker
   
   
   Troubleshooting:
