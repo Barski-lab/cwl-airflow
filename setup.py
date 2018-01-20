@@ -5,11 +5,6 @@ from subprocess import check_call
 import os
 
 
-class PostDevelopCommand(develop):
-    """Post-installation for development mode"""
-    def run(self):
-        develop.run(self)
-
 class PostInstallCommand(install):
     """Post-installation for installation mode"""
     def run(self):
@@ -38,8 +33,7 @@ setup(
     ],
     zip_safe=False,
     cmdclass={
-        'develop': PostDevelopCommand,
-        'install': PostInstallCommand,
+        'install': PostInstallCommand
     },
     entry_points={
         'console_scripts': [

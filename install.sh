@@ -41,8 +41,8 @@ sed "s/.*dags_are_paused_at_creation.*/dags_are_paused_at_creation = False/" $CO
 echo "Set load_examples = False in airflow.cfg"
 sed "s/.*load_examples.*/load_examples = False/" $CONFIG_FILE > tempfile; mv tempfile $CONFIG_FILE
 
-echo "Add [cwl] section to airflow.cfg"
-if ! grep -q '[cwl]' $CONFIG_FILE; then
+echo "Add [cwl] section to $CONFIG_FILE"
+if ! grep -q '\[cwl\]' $CONFIG_FILE; then
 cat >> $CONFIG_FILE << EOL
 [cwl]
 # Absolute path to the folder with job files. Required!
