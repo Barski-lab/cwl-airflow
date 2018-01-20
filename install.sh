@@ -60,4 +60,6 @@ log_level = DEBUG
 # enable strict validation, boolean. Default: False
 strict = False
 EOL
+else
+echo "[cwl] section is already present in $CONFIG_FILE"
 fi
