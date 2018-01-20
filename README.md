@@ -6,10 +6,34 @@ Python package to extend [Apache-Airflow 1.8.2](https://github.com/apache/incuba
 ### Installation
 1. Install cwl-airflow from source
   ```sh
-  $ git clone https://github.com/Barski-lab/cwl-airflow.git
+  $ git clone --branch v0.0.2 https://github.com/Barski-lab/cwl-airflow.git
   $ cd cwl-airflow
   $ pip install .
   ```
+  
+  Requirements:
+  - Ubuntu 16.04
+  - Python 2.7.12
+  - pip 9.0.1
+  - setuptools 38.4.0
+  - libmysqlclient-dev
+  
+  
+  Troubleshooting:
+  ```bash
+  ImportError: No module named setuptools
+  pip install setuptools
+  ```
+  ```bash
+  EnvironmentError: mysql_config not found
+  apt-get install -y libmysqlclient-dev
+  ```
+
+  
+  
+  
+  
+  
  If [Apache-Airflow](https://github.com/apache/incubator-airflow) or [cwltool](http://www.commonwl.org/ "cwltool main page") aren't installed, it will be done automatically with recommended versions: Apache-Airflow v1.8.2, cwltool 1.0.20171107133715
 
 2. If required, add [extra packages](https://airflow.incubator.apache.org/installation.html#extra-packages) for extending Airflow functionality. Configure Airflow according to your needs following the [instructions](https://airflow.incubator.apache.org/configuration.html#configuration)
