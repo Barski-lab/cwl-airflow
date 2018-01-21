@@ -3,7 +3,7 @@
 HOME_DIR=${AIRFLOW_HOME:-~/airflow}
 
 echo "Init Airlow DB"
-airflow initdb
+airflow initdb || exit 0
 
 CONFIG_FILE=$HOME_DIR/airflow.cfg
 DAGS=$(grep 'dags_folder' $CONFIG_FILE | awk '{print $NF}')
