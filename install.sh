@@ -31,10 +31,9 @@ echo "  $DAGS"
 
 mkdir -p $DAGS $JOBS/fail $JOBS/new $JOBS/running $JOBS/success $OUTPUT $TMP $WORKFLOWS
 
-echo "Copy cwl_dag.zip to $DAGS"
-cd cwl_runner
-zip -r cwl_dag.zip ./* -x ./main.py ./*.pyc
-mv cwl_dag.zip $DAGS
+echo "Copy cwl_runner to $DAGS"
+cp -r cwl_runner $DAGS
+rm $DAGS/cwl_runner/main.py
 
 echo "Set dags_are_paused_at_creation = False in airflow.cfg"
 sed "s/.*dags_are_paused_at_creation.*/dags_are_paused_at_creation = False/" $CONFIG_FILE > tempfile; mv tempfile $CONFIG_FILE
