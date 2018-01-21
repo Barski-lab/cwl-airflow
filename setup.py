@@ -30,7 +30,7 @@ setup(
     license = 'Apache-2.0',
     packages=find_packages(),
     install_requires=[
-        'cwltool==1.0.20171107133715',
+        'cwltool==1.0.20180116213856',
         'jsonmerge',
         'mysql-python>=1.2.5',
         'ruamel.yaml<0.15',
