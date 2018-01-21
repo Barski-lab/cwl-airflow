@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
 HOME_DIR=${AIRFLOW_HOME:-~/airflow}
+
+echo "Init Airlow DB"
+airflow initdb
+
 CONFIG_FILE=$HOME_DIR/airflow.cfg
 DAGS=$(grep 'dags_folder' $CONFIG_FILE | awk '{print $NF}')
 
@@ -10,14 +14,10 @@ WORKFLOWS=$CWL/workflows
 TMP=$CWL/tmp
 OUTPUT=$CWL/output
 
-
 echo "Configuration"
 echo "  HOME_DIR = $HOME_DIR"
 echo "  CONFIG_FILE = $CONFIG_FILE"
 echo "  DAGS = $DAGS"
-
-echo "Init Airlow DB"
-airflow initdb
 
 echo "Create directories"
 echo "  $JOBS/fail"

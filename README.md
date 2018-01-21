@@ -8,9 +8,9 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 1. Make sure your system satisfies the following criterias:
       - Ubuntu 16.04
         - Python 2.7.12
-        - pip 9.0.1
-        - setuptools 38.4.0
-        - libmysqlclient-dev
+        - pip 9.0.1 (pip install --upgrade pip)
+        - setuptools 38.4.0 (pip install setuptools)
+        - libmysqlclient-dev (sudo apt-get install libmysqlclient-dev)
         - zip 3.0
         - docker
       - macOS Hight Sierra 10.13.2
