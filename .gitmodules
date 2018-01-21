@@ -1,0 +1,4 @@
+[submodule "workflow_example"]
+	path = workflow_example
+	url = https://github.com/Barski-lab/ga4gh_challenge.git
+	branch = master

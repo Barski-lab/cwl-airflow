@@ -1,69 +1,40 @@
 # cwl-airflow
 
 ### About
-Python package to extend [Apache-Airflow 1.8.2](https://github.com/apache/incubator-airflow) functionality with [CWL v1.0](http://www.commonwl.org/v1.0/) support.
+Python package to extend **[Apache-Airflow 1.8.2](https://github.com/apache/incubator-airflow)**
+functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
 ### Installation
-1. Install cwl-airflow from source
-  ```sh
-  $ git clone --branch v0.0.2 https://github.com/Barski-lab/cwl-airflow.git
-  $ cd cwl-airflow
-  $ pip install .
-  ```
-  
-  Requirements:
-  - Ubuntu 16.04
-  - Python 2.7.12
-  - pip 9.0.1
-  - setuptools 38.4.0
-  - libmysqlclient-dev
-  - zip
-  - docker
-  
-  
-  Troubleshooting:
-  ```bash
-  ImportError: No module named setuptools
-  pip install setuptools
-  ```
-  ```bash
-  EnvironmentError: mysql_config not found
-  apt-get install -y libmysqlclient-dev
-  ```
+1. Make sure your system satisfies the following criterias:
+      - Ubuntu 16.04
+        - Python 2.7.12
+        - pip 9.0.1
+        - setuptools 38.4.0
+        - libmysqlclient-dev
+        - zip 3.0
+        - docker
+      - macOS Hight Sierra 10.13.2
+        - Python 2.7.12
+        - pip 9.0.1
+        - setuptools 38.4.0
+        - zip 3.0
+        - docker
+2. Install the latest version of `cwl-airflow` from source
+      ```sh
+      $ git clone --branch v1.0.0 https://github.com/Barski-lab/cwl-airflow.git
+      $ cd cwl-airflow
+      $ pip install . --user
+      ```
+      > To clone input data for workflow testing use 
+      `git clone --branch v1.0.0 --recursive https://github.com/Barski-lab/cwl-airflow.git`
+       
+   If **[Apache-Airflow](https://github.com/apache/incubator-airflow)** or
+   **[cwltool](http://www.commonwl.org/ "cwltool main page")** aren't installed,
+   it will be done automatically with recommended versions:
+   **Apache-Airflow v1.8.2**, **cwltool 1.0.20171107133715**
 
-  
-  
-  
-  
-  
- If [Apache-Airflow](https://github.com/apache/incubator-airflow) or [cwltool](http://www.commonwl.org/ "cwltool main page") aren't installed, it will be done automatically with recommended versions: Apache-Airflow v1.8.2, cwltool 1.0.20171107133715
-
-2. If required, add [extra packages](https://airflow.incubator.apache.org/installation.html#extra-packages) for extending Airflow functionality. Configure Airflow according to your needs following the [instructions](https://airflow.incubator.apache.org/configuration.html#configuration)
-
-3. To support CWL update ***airflow.cfg*** configuration file with the following parameters
-
-  Add [cwl] section
-
-  ```
-  [cwl]
-  cwl_jobs = absolute path to the folder with job files. Required!
-  cwl_workflows = absolute path to the folder with workflow files. Required!
-  output_folder = absolute path to the folder to save results. Required!
-  tmp_folder = absolute path to the folder to save temporary calculation results. Default: unique temporary
-    directory in /tmp folder 
-  max_jobs_to_run = maximum number of jobs to be processed at the same time, int. Default: 1
-  log_level = log level, [CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET]. Default:  INFO
-  strict = enable "strict" validation, boolean. Default: False
-  ```
-  Update [core] section
-  ```
-  [core]
-  dags_folder                 = /your/repository/location/cwl-airflow/cwl_runner/cwl_dag/cwl_dag.py
-  dags_are_paused_at_creation = False
-  load_examples               = False
-  ```
-> Pay attention, only ***cwl_jobs***, ***cwl_workflows*** and ***output_folder*** are required.
-For the rest of parameters the defaults values will be used if not provided.
+3. If required, add **[extra packages](https://airflow.incubator.apache.org/installation.html#extra-packages)**
+   for extending Airflow functionality with MySQL, PostgreSQL backend support etc.
 
 ### Preparing workflow and job files
 1. All workflow descriptor files should be placed in a folder set as ***cwl_workflows*** in Airflow configuration file. The structure of this folder is arbitrary.
