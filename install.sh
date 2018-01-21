@@ -56,7 +56,7 @@ tmp_folder = $TMP
 # Maximum number of jobs to be processed at the same time, int. Default: 1
 max_jobs_to_run = 10
 # Log level, [CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET]. Default:  INFO
-log_level = DEBUG
+log_level = ERROR
 # enable strict validation, boolean. Default: False
 strict = False
 EOL
