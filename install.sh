@@ -27,8 +27,9 @@ echo "  $JOBS/success"
 echo "  $WORKFLOWS"
 echo "  $OUTPUT"
 echo "  $TMP"
+echo "  $DAGS"
 
-mkdir -p $JOBS/fail $JOBS/new $JOBS/running $JOBS/success $OUTPUT $TMP $WORKFLOWS
+mkdir -p $DAGS $JOBS/fail $JOBS/new $JOBS/running $JOBS/success $OUTPUT $TMP $WORKFLOWS
 
 echo "Copy cwl_dag.zip to $DAGS"
 cd cwl_runner
