@@ -2,6 +2,9 @@
 
 HOME_DIR=${AIRFLOW_HOME:-~/airflow}
 
+# Update path in case of using pip install --user
+export PATH=$PATH:~/.local/bin
+
 echo "Init Airlow DB"
 airflow initdb || exit 0
 
