@@ -153,7 +153,7 @@ do the following steps:
       "genome_size": "1.2e8"
     }
     ```
-4. Move input parameters file `/home/user/airflow/cwl/workflows/workflow_example/biowardrobe_chipseq_se.json`
+4. Move input parameters file `biowardrobe_chipseq_se.json`
    into the subfolder **new** of the directory set as **cwl_jobs** parameter in the **[cwl]** section  of Airflow
    configuration file **airflow.cfg**
    ```python
