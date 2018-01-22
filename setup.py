@@ -9,7 +9,7 @@ import os
 class PostInstallCommand(install):
     """Post-installation for installation mode"""
     def run(self):
-        check_call("./install.sh".split())
+        check_call("./post_install.sh".split())
         install.run(self)
 
 class PostEggInfoCommand(egg_info):
