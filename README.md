@@ -10,7 +10,7 @@ Python package to extend [Apache-Airflow 1.8.2](https://github.com/apache/incuba
   $ cd cwl-airflow
   $ pip install .
   ```
- If [Apache-Airflow](https://github.com/apache/incubator-airflow) or [cwltool](http://www.commonwl.org/ "cwltool main page") aren't installed, it will be done automatically with recommended versions: Apache-Airflow v1.8.2, cwltool 1.0.20171107133715
+ If [Apache-Airflow](https://github.com/apache/incubator-airflow) or [cwltool](http://www.commonwl.org/ "cwltool main page") aren't installed, it will be done automatically with recommended versions: Apache-Airflow v1.8.2, cwltool 1.0.20180116213856
 
 2. If required, add [extra packages](https://airflow.incubator.apache.org/installation.html#extra-packages) for extending Airflow functionality. Configure Airflow according to your needs following the [instructions](https://airflow.incubator.apache.org/configuration.html#configuration)
 
