@@ -4,10 +4,6 @@
 Python package to extend **[Apache-Airflow 1.8.2](https://github.com/apache/incubator-airflow)**
 functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
-TODO:
-Update json file when we copy it to jobs/new to point to correct input file location
-
-
 ### Installation
 1. Make sure your system satisfies the following criteria:
       - Ubuntu 16.04.3
