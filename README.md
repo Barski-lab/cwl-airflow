@@ -134,9 +134,10 @@ do the following steps:
    mv /tmp/cwl-airflow/workflow_example /home/user/airflow/cwl/workflows
    ```
    
-3. Update input parameters file `/home/user/airflow/cwl/workflows/workflow_example/biowardrobe_chipseq_se.json`
+3. Update input parameters file `biowardrobe_chipseq_se.json`
    with the correct locations of your input files
    ```python
+    cat /home/user/airflow/cwl/workflows/workflow_example/biowardrobe_chipseq_se.json
     {
       "fastq_file": {"class": "File", "location": "/home/user/airflow/cwl/workflows/workflow_example/data/inputs/SRR1198790.fastq", "format": "http://edamontology.org/format_1930"},
       "indices_folder": {"class": "Directory", "location": "/home/user/airflow/cwl/workflows/workflow_example/data/references/dm3/bowtie_indices"},
