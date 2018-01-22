@@ -43,7 +43,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
    or **[cwltool](http://www.commonwl.org/ "cwltool main page")** aren't installed,
    it will be done automatically with recommended versions:
    **Apache-Airflow v1.8.2**, **cwltool 1.0.20180116213856**. If you have already installed
-   **Apache-Airflow v1.8.2**, set `AIRFLOW_HOME` environmental variable to point to Airflow
+   **Apache-Airflow v1.8.2**, set `AIRFLOW_HOME` environment variable to point to Airflow
    home directory, before running the following commands.
       ```sh
       $ git clone --recursive https://github.com/Barski-lab/cwl-airflow.git
