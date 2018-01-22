@@ -15,7 +15,7 @@ class PostInstallCommand(install):
 class PostEggInfoCommand(egg_info):
     """Post-installation for egg_info mode"""
     def run(self):
-        check_call("./install.sh".split())
+        check_call("./post_install.sh".split())
         egg_info.run(self)
 
 setup(
