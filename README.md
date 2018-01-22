@@ -50,7 +50,7 @@ Update json file when we copy it to jobs/new to point to correct input file loca
    **Apache-Airflow v1.8.2**, set `AIRFLOW_HOME` environmental variable to point to Airflow
    home directory, before running the following commands.
       ```sh
-      $ git clone --branch v1.0.0 --recursive https://github.com/Barski-lab/cwl-airflow.git
+      $ git clone --recursive https://github.com/Barski-lab/cwl-airflow.git
       $ cd cwl-airflow
       $ pip install --user .
       $ ./post_install.sh
