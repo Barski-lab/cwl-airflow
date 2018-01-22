@@ -31,10 +31,10 @@ suppress_stdout()
 from airflow.bin.cli import backfill
 from airflow import models, settings
 from airflow.configuration import conf
-from cwl_runner.cwldag import CWLDAG
-from cwl_runner.jobdispatcher import JobDispatcher
-from cwl_runner.jobcleanup import JobCleanup
-from cwl_runner.cwlutils import conf_get_default
+from cwl_runner.modules.cwldag import CWLDAG
+from cwl_runner.modules.jobdispatcher import JobDispatcher
+from cwl_runner.modules.jobcleanup import JobCleanup
+from cwl_runner.modules.cwlutils import conf_get_default
 restore_stdout()
 
 
