@@ -1,18 +1,22 @@
 sudo: false
 language: python
 python:
-  - 2.7
-  - 3.3
-  - 3.4
-  - 3.5
-  - 3.6
+- 2.7
 os:
-  - linux
+- linux
 install:
-  - pip install .
+- pip install .
 script: cwl-airflow-runner --help
 branches:
   only:
-    - master
+  - master
+deploy:
+  provider: pypi
+  user: misha.kotliar@gmail.com
+  password:
+    secure: "FsYSJbRaD+YjBe/jXYdC6y6mcszZWYd2vKvUajriv7b9BaLh7Q33FegDc0O/YDI/ffjvDiTujidIQS/Ev2VsBiRSKQKgEXd/WeinhOWIhdB7yi4wAdrRNaKn98A2wdxZGlUdVTpNgnztIYCHnbyEPP4gkI5x0iZuuFo8aeyZLERJYC6gDjpfYNEY3rEISyubwkSYLffKdisargMRFnvNBmHnVIz1VeUhxBpMQ8JCUKgODAaP60r3EofoEqbcCcRPxeGP385w2sAxKdAqEkLNL684W1+w9D24otik0ZM/nMZ280Rtqxg+Jxsim6ELpd6ogPlDXP2rAbu2Ah0NmSerM4zcy+qCXSrIG12hNhsB5ziBXJv2I20R10mK1NMXT0FymM9iAXENBZmnyL7izAX+AFTv4rxK4qUL08TrOyvRbqaLNvqTbhS67jFhFXs8SFmfOAoKIeTQOCiUkZxrh4NsIhJHfbbCfg7TSsesc/VZu8ciOfZUt1ftiFkfQ/lJmZnd+CNjouZ2SRacrfMwq5UWLJQHqSeZ6aw9d9hqF7JWLvwzHH2yK+uUYqAXM2oYQp3hRS0i9nOjQQZ5eRDopUt/VLS1nsA008RJAr9EMd410fxCgc5DL9EAylTBV2VGKCFmh30KL6qxWwGxFcbgqeDFN9EUfiLMwfmD4UM0lvLGQkM="
+  on:
+    branch: master
+  server: https://testpypi.python.org/pypi
 notifications:
   email: false

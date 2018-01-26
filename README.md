@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/Barski-lab/cwl-airflow.svg?branch=master)](https://travis-ci.org/Barski-lab/cwl-airflow)
 # cwl-airflow
 
 ### About
