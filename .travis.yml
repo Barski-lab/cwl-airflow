@@ -10,6 +10,7 @@ script: cwl-airflow-runner --help
 branches:
   only:
   - master
+  - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 deploy:
   provider: pypi
   user: michael_kotliar
@@ -17,7 +18,6 @@ deploy:
     secure: Mji1koR4nyt/KgoycpuvgIp9toFVNYaSxUmNY6EVt0pmIpRb/GKbw6TdyfAdtnSAwH3BcSUC/R1hCwyaXfv1GDPFYqv9Yg1MaNHR1clvo8E8KIIPt1JDqPM47lgPQQFFbwB+Cc6uSV0Nn9oDBkhWEPQqV3kI/GJkSUzSs/yjZqR4C+aZxsJzE+VX2ZzeGCD3x4mzhAAWan4MLrdgANaXQVTHhyHIhTp3l109FblYimMvx8HqKotMiM+32mVFxgwf/pMw/N8gDOFXd4VrtlaOqqHpn4VJko+jSNYuAdKn62N2KFKqExyU39ycvU9ngYaU38nmCjJdibRgNyxfdH6LfndS9xzu3KPY64ACLG1i8Ym+57Q7wSJZAb2WF/b8av1RnkKMUGHHYXBzVIGk7Abvuhde0DsV0lr9XsapQn7XySmhdBWYazZTr+AtgIdsx7AmHV1ug6nPp3tIQzW1+YAOf295Puwqbrn+SF3jYw6167jAl5M1a81kxqli1UTsLgpcaTbTD1ofwLn4gP3VuU1f4fKGzhrxl6ybHW+LpO/wkcN2wJDdBbqz5OQIYfshMQEooIODOw1OonmwbY3vcMATuvi7Hz3mIElqpu3TVxH9aoBzcvL1148wPhZF8u87T8nDgsHeUT66I56ILGcZszASolt2Cb6oPZmxg2jgajTREwk=
   on:
     tags: true
-    all_branches: true
 notifications:
   email: false
 
