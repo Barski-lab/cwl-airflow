@@ -1,22 +1,12 @@
 from setuptools import setup, find_packages
-from setuptools.command.develop import develop
-from setuptools.command.install import install
-from setuptools.command.egg_info import egg_info
-from subprocess import check_call
+import setuptools.command.egg_info as egg_info_cmd
 import os
 
-
-class PostInstallCommand(install):
-    """Post-installation for installation mode"""
-    def run(self):
-        check_call("./post_install.sh".split())
-        install.run(self)
-
-class PostEggInfoCommand(egg_info):
-    """Post-installation for egg_info mode"""
-    def run(self):
-        check_call("./post_install.sh".split())
-        egg_info.run(self)
+try:
+    import gittaggers
+    tagger = gittaggers.EggInfoFromGit
+except ImportError:
+    tagger = egg_info_cmd.egg_info
 
 setup(
     name='cwl-airflow',
@@ -38,10 +28,7 @@ setup(
         "html5lib"
     ],
     zip_safe=True,
-    cmdclass={
-        'install': PostInstallCommand,
-        'egg_info': PostEggInfoCommand
-    },
+    cmdclass={'egg_info': tagger},
     entry_points={
         'console_scripts': [
             "cwl-airflow-runner=cwl_runner.main:main",
