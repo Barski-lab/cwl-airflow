@@ -10,6 +10,7 @@ import sys
 import tempfile
 from datetime import datetime
 import cwltool.errors
+import errno
 
 
 def suppress_stdout():
@@ -164,10 +165,10 @@ def update_config(configuration):
     # set default [cwl] section if it doesn't exist
     if not configuration.conf.has_section('cwl'):
         configuration.conf.add_section('cwl')
-        configuration.set('cwl', 'cwl_workflows',    os.path.join(configuration.get('core','airflow_home'), 'cwl', 'workflows'))
-        configuration.set('cwl', 'cwl_jobs',         os.path.join(configuration.get('core','airflow_home'), 'cwl', 'jobs'))
-        configuration.set('cwl', 'output_folder',    os.path.join(configuration.get('core','airflow_home'), 'cwl', 'output'))
-        configuration.set('cwl', 'tmp_folder',       os.path.join(configuration.get('core','airflow_home'), 'cwl', 'tmp'))
+        configuration.set('cwl', 'cwl_workflows',    os.path.abspath(os.path.join(configuration.get('core','airflow_home'), 'cwl', 'workflows')))
+        configuration.set('cwl', 'cwl_jobs',         os.path.abspath(os.path.join(configuration.get('core','airflow_home'), 'cwl', 'jobs')))
+        configuration.set('cwl', 'output_folder',    os.path.abspath(os.path.join(configuration.get('core','airflow_home'), 'cwl', 'output')))
+        configuration.set('cwl', 'tmp_folder',       os.path.abspath(os.path.join(configuration.get('core','airflow_home'), 'cwl', 'tmp')))
         configuration.set('cwl', 'max_jobs_to_run', '2')
         configuration.set('cwl', 'log_level',       'ERROR')
         configuration.set('cwl', 'strict',          'False')
@@ -182,10 +183,35 @@ def copy_cwl_dag(configuration):
     set_permissions(cwl_dag_folder, dir_perm=0775, file_perm=0664)
 
 
+def create_folders(configuration):
+    '''
+    Creates all required for cwl folders.
+    If there is a problem not related to already existing folder - raise exception
+    :param configuration: airflow configuration ConfigParser
+    :return: None
+    '''
+    folder_list = []
+    folder_list.append(configuration.get('cwl', 'cwl_workflows'))
+    folder_list.append(configuration.get('cwl', 'output_folder'))
+    folder_list.append(configuration.get('cwl', 'tmp_folder'))
+    folder_list.append(os.path.join(configuration.get('cwl', 'cwl_jobs'), 'new'))
+    folder_list.append(os.path.join(configuration.get('cwl', 'cwl_jobs'), 'running'))
+    folder_list.append(os.path.join(configuration.get('cwl', 'cwl_jobs'), 'success'))
+    folder_list.append(os.path.join(configuration.get('cwl', 'cwl_jobs'), 'fail'))
+    for folder in folder_list:
+        try:
+            os.makedirs(folder)
+            set_permissions(folder, dir_perm=0775, file_perm=0664)
+        except OSError as ex:
+            if ex.errno != errno.EEXIST:
+                raise  # raises the error again if it wasn't a problem of already existed folder
+
+
 def run_init (**kwargs):
     airflow_cfg = os.path.join(os.path.expanduser(os.environ.get('AIRFLOW_HOME', '~/airflow')), 'airflow.cfg')
     update_config(configuration)
-    copy_cwl_dag (configuration)                               # raise if not enough permissions to write file
+    copy_cwl_dag (configuration)   # raise if not enough permissions to write file
+    create_folders(configuration)  # raise if not enough permissions to create a folder
     with open(airflow_cfg, 'w') as airflow_cfg_file:  # Writing changes to airflow.cfg
         configuration.conf.write(airflow_cfg_file)
 
