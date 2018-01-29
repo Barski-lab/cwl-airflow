@@ -6,7 +6,7 @@ os:
 - linux
 install:
 - pip install .
-script: cwl-airflow-runner --help
+script: cwl-airflow --help
 branches:
   only:
   - master
