@@ -77,8 +77,19 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
     <details> 
         <summary>Details</summary>
     
-    - updates `airflow.cfg` file in your `$AIRFLOW_HOME` folder with the default
-      parameters for running CWL workflow descriptor files
+    - updates `airflow.cfg` file from `$AIRFLOW_HOME` folder with the new section `[cwl]`
+      to set the default parameters for running CWL workflow descriptor files.
+      `[AIRFLOW_HOME]` will be replaced by `$AIRFLOW_HOME` value.
+      ```bash
+      [cwl]
+      cwl_workflows = [AIRFLOW_HOME]/cwl/workflows
+      cwl_jobs = [AIRFLOW_HOME]/cwl/jobs
+      output_folder = [AIRFLOW_HOME]/cwl/output
+      tmp_folder = [AIRFLOW_HOME]/cwl/tmp
+      max_jobs_to_run = 2
+      log_level = ERROR
+      strict = False
+      ```
     - creates default folders for CWL descriptor and JSON/YAML
       input parameters files based on `cwl` section from `airflow.cfg` file
     - creates `cwl_airflow` folder in the directory set as `dags_folder` parameter
@@ -96,11 +107,12 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 #### Batch mode
 1. Put your CWL descriptor files with all of the nested tools and subworkflows
    into the folder set as `cwl_workflows` parameter in `cwl` section
-   of `airflow.cfg` file
+   of `airflow.cfg` file (by default `$AIRFLOW_HOME/cwl/workflows`)
 
 2. Put your JSON/YAML input parameters files into subfolder `new`
    of the directory set as `cwl_jobs` parameter
    in `cwl` section of `airflow.cfg` file
+   (by default `$AIRFLOW_HOME/cwl/cwl_jobs/new`)
 
 3. Run Airflow scheduler:
    ```sh
@@ -112,10 +124,10 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
     - Loads `cwl_airflow` Python package from `dags_folder` to generate new DAG's
     - Loads JSON/YAML input parameters file from the subfolder `new`
       of the directory set as `cwl_jobs` parameter
-      in `cwl` section of `airflow.cfg` file
+      in `cwl` section of `airflow.cfg` file (by default `$AIRFLOW_HOME/cwl/cwl_jobs/new`)
     - Based on loaded JSON/YAML input parameters file name fetches CWL descriptor file
       from the directory set as `cwl_workflows` parameter
-      in `cwl` section of `airflow.cfg` file.
+      in `cwl` section of `airflow.cfg` file (by default `$AIRFLOW_HOME/cwl/workflows`).
       The following naming rule should be kept
       ```
       [identical].cwl                       - CWL workflow descriptor file name
@@ -145,26 +157,36 @@ and JSON/YAML input parameters files.
   into the separate folders. The name of the folder corresponds to
   JSON/YAML input parameters file name. All output folders are created
   in the directory set as `output_folder` parameter in `cwl` section
-  of `airflow.cfg` file.
+  of `airflow.cfg` file (by default `$AIRFLOW_HOME/cwl/output`).
   
 ### Running example workflow
-1. Clone **[ChIP-Seq CWL pipeline](https://github.com/Barski-lab/ga4gh_challenge)**
-   into the folder set as `cwl_workflows` parameter
-   in `cwl` section of `airflow.cfg` file.
+1. Git clone **[ChIP-Seq CWL pipeline](https://github.com/Barski-lab/ga4gh_challenge)**
+   repository into the folder set as `cwl_workflows` parameter
+   in `cwl` section of `airflow.cfg` file (by default `$AIRFLOW_HOME/cwl/workflows`).
    
    ```bash
    $ git clone --recursive --branch v0.0.2b https://github.com/Barski-lab/ga4gh_challenge.git
    ```
 2. Decompress input FASTQ file by running the script from the `data` directory of
-   repository clonned in the previous step
+   repository clonned in the previous step. If all settings are set by default the
+   location of the script will be `$AIRFLOW_HOME/cwl/workflows/ga4gh_challenge/data`
       
    ```sh
    $ ./prepare_inputs.sh
    ```
+   <details> 
+     <summary>Details</summary>
+    
+     - Decompress and combine all of the files in `./inputs`
+       directory into `SRR1198790.fastq` file
+    </details>
+   
+   
 3. Create input parameters file `biowardrobe_chipseq_se.yaml` in the subfolder `new`
-   of the directory set as `cwl_jobs` parameter in `cwl` section of `airflow.cfg` file.
-   Replace `[cwl_workflows]` with the folder set as `cwl_workflows` parameter
-   in `cwl` section of `airflow.cfg` file.
+   of the directory set as `cwl_jobs` parameter in `cwl` section of `airflow.cfg` file
+   (by default `$AIRFLOW_HOME/cwl/cwl_jobs/new`).
+   In the text below replace `[cwl_workflows]` with the folder set as `cwl_workflows` parameter
+   in `cwl` section of `airflow.cfg` file (by default `$AIRFLOW_HOME/cwl/workflows`).
    
    ```yaml
     fastq_file:
@@ -203,4 +225,4 @@ and JSON/YAML input parameters files.
    ```
    When the DAG is finished, output files will be saved into subfolder
    of the directory set as `output_folder` parameter in `cwl` section
-   of `airflow.cfg` file.
+   of `airflow.cfg` file (by default `$AIRFLOW_HOME/cwl/output`).
