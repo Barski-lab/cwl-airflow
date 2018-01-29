@@ -49,7 +49,7 @@ def get_version():
 setup(
     name='cwl-airflow',
     description='Python package to extend Airflow functionality with CWL v1.0 support',
-    long_description=open(os.path.join(os.path.dirname(__file__), 'README.rst')).read(),
+    long_description=open(os.path.join(os.path.dirname(__file__), 'README.md')).read(),
     version=get_version(),
     url='https://github.com/Barski-lab/cwl-airflow',
     download_url='https://github.com/Barski-lab/cwl-airflow',
