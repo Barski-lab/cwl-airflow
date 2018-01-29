@@ -4,6 +4,9 @@ import time
 from setuptools import setup, find_packages
 
 
+GIT_VERSION_FILE = os.path.join('cwl_airflow','git_version')
+
+
 def get_git_tag():
     return subprocess.check_output(['git', 'describe', '--contains']).strip()
 
@@ -16,14 +19,30 @@ def get_git_timestamp():
 
 
 def get_version():
-    version = '1.0.0'  # default version
+    '''
+    Tries to get pachage version with following order:
+    0. default version
+    1. from git_version file - when installing from pip, this is the only source to get version
+    2. from tag
+    3. from commit timestamp
+    Updates/creates git_version file with the package version
+    :return: package version 
+    '''
+    version = '1.0.0'                                      # set default version
     try:
-        version = get_git_tag()            # try to get version info from the closest tag
+        with open(GIT_VERSION_FILE, 'r') as input_stream:  # try to get version info from file
+            version = input_stream.read()
+    except IOError as ex:
+        pass
+    try:
+        version = get_git_tag()                            # try to get version info from the closest tag
     except subprocess.CalledProcessError:
         try:
-            version = '1.0.' + get_git_timestamp()  # try to get version info from commit date
+            version = '1.0.' + get_git_timestamp()         # try to get version info from commit date
         except subprocess.CalledProcessError:
             pass
+    with open(GIT_VERSION_FILE, 'w') as output_stream:     # save updated version to file (or the same)
+        output_stream.write(version)
     return version
 
 
@@ -38,6 +57,8 @@ setup(
     author_email='misha.kotliar@gmail.com',
     license = 'Apache-2.0',
     packages=find_packages(),
+    package_data={'cwl_airflow': ['git_version']},
+    include_package_data=True,
     install_requires=[
         'cwltool==1.0.20180116213856',
         'jsonmerge',
@@ -46,11 +67,11 @@ setup(
         "apache-airflow==1.8.2",
         "html5lib"
     ],
-    zip_safe=True,
+    zip_safe=False,
     entry_points={
         'console_scripts': [
-            "cwl-airflow-runner=cwl_runner.main:main",
-            "cwl-runner=cwl_runner.main:main"
+            "cwl-airflow=cwl_airflow.main:main",
+            "cwl-runner=cwl_airflow.main:main"
         ]
     }
 )

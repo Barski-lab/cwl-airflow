@@ -6,7 +6,7 @@ from jsonmerge import merge
 import cwltool.errors
 import shutil
 import json
-from cwl_runner.modules.cwlutils import set_permissions
+from cwl_airflow.modules.cwlutils import set_permissions
 
 class JobCleanup(BaseOperator):
 

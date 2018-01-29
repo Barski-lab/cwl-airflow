@@ -9,11 +9,11 @@ import cwltool.workflow
 import cwltool.errors
 from cwltool.resolver import tool_resolver
 from airflow.models import DAG
-from cwl_runner.modules.cwlstepoperator import CWLStepOperator
-from cwl_runner.modules.cwlutils import shortname, flatten
+from cwl_airflow.modules.cwlstepoperator import CWLStepOperator
+from cwl_airflow.modules.cwlutils import shortname, flatten
 import os
-from cwl_runner.modules.jobdispatcher import JobDispatcher
-from cwl_runner.modules.jobcleanup import JobCleanup
+from cwl_airflow.modules.jobdispatcher import JobDispatcher
+from cwl_airflow.modules.jobcleanup import JobCleanup
 import json
 from six.moves import urllib
 

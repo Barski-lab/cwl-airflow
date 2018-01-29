@@ -11,6 +11,7 @@ import tempfile
 from datetime import datetime
 import cwltool.errors
 
+
 def suppress_stdout():
     global null_fds
     null_fds = [os.open(os.devnull, os.O_RDWR) for x in xrange(2)]
@@ -30,40 +31,58 @@ def restore_stdout():
 suppress_stdout()
 from airflow.bin.cli import backfill
 from airflow import models, settings
-from airflow.configuration import conf
-from cwl_runner.modules.cwldag import CWLDAG
-from cwl_runner.modules.jobdispatcher import JobDispatcher
-from cwl_runner.modules.jobcleanup import JobCleanup
-from cwl_runner.modules.cwlutils import conf_get_default
+from airflow import configuration
+from cwl_airflow.modules.cwldag import CWLDAG
+from cwl_airflow.modules.jobdispatcher import JobDispatcher
+from cwl_airflow.modules.jobcleanup import JobCleanup
+from cwl_airflow.modules.cwlutils import (conf_get_default, set_permissions)
+
 restore_stdout()
 
 
 def arg_parser():
-    parser = argparse.ArgumentParser(description='CWL-Airflow')
+    """Returns argument parser"""
 
-    # FROM AIRFLOW
-    parser.add_argument ("-t", "--task_regex", help="The regex to filter specific task_ids to backfill (optional)")
-    parser.add_argument("-m", "--mark_success", help="Mark jobs as succeeded without running them", action="store_true")
-    parser.add_argument("-l", "--local", help="Run the task using the LocalExecutor", action="store_true")
-    parser.add_argument("-x", "--donot_pickle",
-                        help="Do not attempt to pickle the DAG object to send over to the workers, just tell the workers to run their version of the code.",
-                        action="store_true")
-    parser.add_argument("-a", "--include_adhoc", help="Include dags with the adhoc parameter.", action="store_true")
-    parser.add_argument("-i", "--ignore_dependencies", help="Skip upstream tasks, run only the tasks matching the regexp. Only works in conjunction with task_regex", action="store_true")
-    parser.add_argument("-I", "--ignore_first_depends_on_past", help="Ignores depends_on_past dependencies for the first set of tasks only (subsequent executions in the backfill DO respect depends_on_past).", action="store_true")
-    parser.add_argument("--pool", help="Resource pool to use")
-    parser.add_argument("-dr", "--dry_run", help="Perform a dry run", action="store_true")
-    #FROM CWLTOOL
-    parser.add_argument("--outdir", help="Output folder to save results")
-    parser.add_argument("--tmp-folder", help="Temp folder to store data between execution of airflow tasks/steps")
-    parser.add_argument("--tmpdir-prefix", help="Path prefix for temporary directories")
-    parser.add_argument("--tmp-outdir-prefix", help="Path prefix for intermediate output directories")
-    parser.add_argument("--quiet", action="store_true", help="Print only workflow execultion results")
-    parser.add_argument("workflow", type=Text)
-    parser.add_argument("job", type=Text)
-    # ADDITIONAL
-    parser.add_argument("--ignore-def-outdir", action="store_true", help="Disable default output directory to be set to current directory. Use OUTPUT_FOLDER from Airflow configuration file instead")
-    return parser
+    # PARENT PARSER
+    parent_parser = argparse.ArgumentParser(add_help=False)
+
+    # GENERAL PARSER
+    general_parser = argparse.ArgumentParser(description='cwl-airflow')
+    subparsers = general_parser.add_subparsers()
+    subparsers.required = True
+    init_parser = subparsers.add_parser('init', help="Init cwl-airflow", parents=[parent_parser])
+    run_parser = subparsers.add_parser('run',  help="Run workflow", parents=[parent_parser])
+
+    # INIT PARSER
+    init_parser.set_defaults(func=run_init)
+
+    # RUN PARSER
+    #    from airflow
+    run_parser.add_argument ("-t", "--task_regex", help="The regex to filter specific task_ids to backfill (optional)")
+    run_parser.add_argument("-m", "--mark_success", help="Mark jobs as succeeded without running them", action="store_true")
+    run_parser.add_argument("-l", "--local", help="Run the task using the LocalExecutor", action="store_true")
+    run_parser.add_argument("-x", "--donot_pickle",
+                            help="Do not attempt to pickle the DAG object to send over to the workers, just tell the workers to run their version of the code.",
+                            action="store_true")
+    run_parser.add_argument("-a", "--include_adhoc", help="Include dags with the adhoc parameter.", action="store_true")
+    run_parser.add_argument("-i", "--ignore_dependencies", help="Skip upstream tasks, run only the tasks matching the regexp. Only works in conjunction with task_regex", action="store_true")
+    run_parser.add_argument("-I", "--ignore_first_depends_on_past", help="Ignores depends_on_past dependencies for the first set of tasks only (subsequent executions in the backfill DO respect depends_on_past).", action="store_true")
+    run_parser.add_argument("--pool", help="Resource pool to use")
+    run_parser.add_argument("-dr", "--dry_run", help="Perform a dry run", action="store_true")
+    #    from cwltool
+    run_parser.add_argument("--outdir", help="Output folder to save results")
+    run_parser.add_argument("--tmp-folder", help="Temp folder to store data between execution of airflow tasks/steps")
+    run_parser.add_argument("--tmpdir-prefix", help="Path prefix for temporary directories")
+    run_parser.add_argument("--tmp-outdir-prefix", help="Path prefix for intermediate output directories")
+    run_parser.add_argument("--quiet", action="store_true", help="Print only workflow execultion results")
+    run_parser.add_argument("workflow", type=Text)
+    run_parser.add_argument("job", type=Text)
+    #    additional
+    run_parser.add_argument("--ignore-def-outdir", action="store_true", help="Disable default output directory to be set to current directory. Use OUTPUT_FOLDER from Airflow configuration file instead")
+    run_parser.set_defaults(func=run_job)
+
+    return general_parser
+
 
 def create_backup(args):
     with open(os.path.join(os.getcwd(), "run_param.tmp"), 'w') as backup_file:
@@ -113,13 +132,13 @@ def set_logger ():
 
 
 def get_log_filename (args):
-    log_base = os.path.expanduser(conf.get('core', 'BASE_LOG_FOLDER'))
+    log_base = os.path.expanduser(configuration.get('core', 'BASE_LOG_FOLDER'))
     directory = log_base + "/{args.dag_id}/cleanup".format(args=args)
     return "{0}/{1}".format(directory, args.start_date.isoformat())
 
 
 def clear_previous_log (args):
-    log_base = os.path.expanduser(conf.get('core', 'BASE_LOG_FOLDER'))
+    log_base = os.path.expanduser(configuration.get('core', 'BASE_LOG_FOLDER'))
     directory = log_base + "/{args.dag_id}".format(args=args)
     shutil.rmtree(directory, True)
 
@@ -137,6 +156,38 @@ def print_workflow_output (args):
             if found_output:
                 results = results + line.split('Subtask: ')[1]
     print results.rstrip('\n')
+
+
+def update_config(configuration):
+    configuration.set('core', 'dags_are_paused_at_creation', 'False')
+    configuration.set('core', 'load_examples', 'False')
+    # set default [cwl] section if it doesn't exist
+    if not configuration.conf.has_section('cwl'):
+        configuration.conf.add_section('cwl')
+        configuration.set('cwl', 'cwl_workflows',    os.path.join(configuration.get('core','airflow_home'), 'cwl', 'workflows'))
+        configuration.set('cwl', 'cwl_jobs',         os.path.join(configuration.get('core','airflow_home'), 'cwl', 'jobs'))
+        configuration.set('cwl', 'output_folder',    os.path.join(configuration.get('core','airflow_home'), 'cwl', 'output'))
+        configuration.set('cwl', 'tmp_folder',       os.path.join(configuration.get('core','airflow_home'), 'cwl', 'tmp'))
+        configuration.set('cwl', 'max_jobs_to_run', '2')
+        configuration.set('cwl', 'log_level',       'ERROR')
+        configuration.set('cwl', 'strict',          'False')
+
+
+def copy_cwl_dag(configuration):
+    current_folder = os.path.dirname (__file__)
+    cwl_dag_folder = os.path.join(configuration.get('core', 'dags_folder'), os.path.basename(current_folder))  # dags_folder/cwl_airflow
+    if os.path.exists(cwl_dag_folder):
+        shutil.rmtree(cwl_dag_folder)
+    shutil.copytree(current_folder, cwl_dag_folder, ignore=shutil.ignore_patterns('*.pyc', 'main.py', 'git_version'))
+    set_permissions(cwl_dag_folder, dir_perm=0775, file_perm=0664)
+
+
+def run_init (**kwargs):
+    airflow_cfg = os.path.join(os.path.expanduser(os.environ.get('AIRFLOW_HOME', '~/airflow')), 'airflow.cfg')
+    update_config(configuration)
+    copy_cwl_dag (configuration)                               # raise if not enough permissions to write file
+    with open(airflow_cfg, 'w') as airflow_cfg_file:  # Writing changes to airflow.cfg
+        configuration.conf.write(airflow_cfg_file)
 
 
 def run_job (**kwargs):
@@ -166,7 +217,7 @@ def main(argsl=None):
     if argsl is None:
         argsl = sys.argv[1:]
     args, _ = arg_parser().parse_known_args(argsl)
-    run_job (**args.__dict__)
+    args.func(**args.__dict__)
 
 
 def get_tmp_folder (args, job_entry, job):

@@ -3,9 +3,9 @@ import sys
 
 from airflow.configuration import conf
 from datetime import datetime
-from cwl_runner.modules.cwldag import CWLDAG
-from cwl_runner.modules.jobdispatcher import JobDispatcher
-from cwl_runner.modules.jobcleanup import JobCleanup
+from cwl_airflow.modules.cwldag import CWLDAG
+from cwl_airflow.modules.jobdispatcher import JobDispatcher
+from cwl_airflow.modules.jobcleanup import JobCleanup
 import cwltool.errors
 import os
 import shutil
@@ -13,7 +13,7 @@ import ruamel.yaml as yaml
 import logging
 import tempfile
 import re
-from cwl_runner.modules.cwlutils import conf_get_default, get_only_files
+from cwl_airflow.modules.cwlutils import conf_get_default, get_only_files
 
 class SkipException(Exception):
     pass

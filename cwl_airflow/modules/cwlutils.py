@@ -3,7 +3,7 @@
 import urlparse
 import os
 import glob
-from airflow.configuration import conf
+from airflow import configuration
 from airflow.exceptions import AirflowConfigException
 
 def shortname(n):
@@ -26,7 +26,7 @@ def url_shortname(inputid):
 
 def conf_get_default (section, key, default):
     try:
-        return conf.get(section, key)
+        return configuration.get(section, key)
     except AirflowConfigException:
         return default
 
