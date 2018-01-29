@@ -213,11 +213,23 @@ and JSON/YAML input parameters files.
     threads: 8
     genome_size: "1.2e8"
     ```
-4. Start airflow scheduler
+4. Pull all necessary Docker images
+    ```bash
+    docker pull biowardrobe2/samtools:v1.4
+    docker pull biowardrobe2/scidap:v0.0.2
+    docker pull biowardrobe2/iaintersect:v0.0.2
+    docker pull biowardrobe2/bowtie:v1.2.0
+    docker pull biowardrobe2/bedtools2:v2.26.0
+    docker pull biowardrobe2/macs2:v2.1.1
+    docker pull biowardrobe2/atdp:v0.0.1
+    docker pull biowardrobe2/ucscuserapps:v358
+    docker pull biowardrobe2/fastx_toolkit:v0.0.14
+    ```
+5. Start airflow scheduler
    ```bash
     airflow scheduler
    ```
-5. To check the status of running DAG start Airflow Webserver
+6. To check the status of running DAG start Airflow Webserver
    and open its URL link in a web browser
    (by default **[http://localhost:8080](http://localhost:8080/)**)
    ```bash
