@@ -206,5 +206,5 @@ for fn in get_only_files(jobs_list, key="running"):
         pass
     except Exception as ex:
         print "FAIL exception: ", str(ex)
-        shutil.move(fn, os.path.join('/'.join(fn.split('/')[0:-2]), 'fail'))
+        # shutil.move(fn, os.path.join('/'.join(fn.split('/')[0:-2]), 'fail'))
 
