@@ -86,6 +86,7 @@ def arg_parser():
 
 
 def create_backup(args):
+    del args['func']  # When creating backup we don't need func to be included
     with open(os.path.join(os.getcwd(), "run_param.tmp"), 'w') as backup_file:
         yaml.safe_dump(args, stream=backup_file)
 
