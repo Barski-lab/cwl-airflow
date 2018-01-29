@@ -23,8 +23,8 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
         - python 2.7.12
         - pip
           ```
-          sudo apt install python-pip
-          pip install --upgrade pip
+          wget https://bootstrap.pypa.io/get-pip.py
+          python get-pip.py --user
           ```
         - setuptools
           ```
