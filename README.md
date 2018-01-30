@@ -8,7 +8,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 ### Installation
 1. Get the latest release of `cwl-airflow`
       ```sh
-      $ pip install cwl-airflow
+      $ pip install cwl-airflow [--user]
       ```
    
     <details> 
@@ -23,8 +23,8 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
         - python 2.7.12
         - pip
           ```
-          wget https://bootstrap.pypa.io/get-pip.py
-          python get-pip.py --user
+          sudo apt install python-pip
+          pip install --upgrade pip
           ```
         - setuptools
           ```
@@ -112,7 +112,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 2. Put your JSON/YAML input parameters files into subfolder `new`
    of the directory set as `cwl_jobs` parameter
    in `cwl` section of `airflow.cfg` file
-   (by default `$AIRFLOW_HOME/cwl/cwl_jobs/new`)
+   (by default `$AIRFLOW_HOME/cwl/jobs/new`)
 
 3. Run Airflow scheduler:
    ```sh
@@ -124,7 +124,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
     - Loads `cwl_airflow` Python package from `dags_folder` to generate new DAG's
     - Loads JSON/YAML input parameters file from the subfolder `new`
       of the directory set as `cwl_jobs` parameter
-      in `cwl` section of `airflow.cfg` file (by default `$AIRFLOW_HOME/cwl/cwl_jobs/new`)
+      in `cwl` section of `airflow.cfg` file (by default `$AIRFLOW_HOME/cwl/jobs/new`)
     - Based on loaded JSON/YAML input parameters file name fetches CWL descriptor file
       from the directory set as `cwl_workflows` parameter
       in `cwl` section of `airflow.cfg` file (by default `$AIRFLOW_HOME/cwl/workflows`).
@@ -184,35 +184,36 @@ and JSON/YAML input parameters files.
    
 3. Create input parameters file `biowardrobe_chipseq_se.yaml` in the subfolder `new`
    of the directory set as `cwl_jobs` parameter in `cwl` section of `airflow.cfg` file
-   (by default `$AIRFLOW_HOME/cwl/cwl_jobs/new`).
+   (by default `$AIRFLOW_HOME/cwl/jobs/new`).
    In the text below replace `[cwl_workflows]` with the folder set as `cwl_workflows` parameter
    in `cwl` section of `airflow.cfg` file (by default `$AIRFLOW_HOME/cwl/workflows`).
+   Update `threads` is necessary.
    
    ```yaml
-    fastq_file:
-      class: File
-      location: "[cwl_workflows]/ga4gh_challenge/data/inputs/SRR1198790.fastq"
-      format: "http://edamontology.org/format_1930"
-    indices_folder:
-      class: Directory
-      location: "[cwl_workflows]/ga4gh_challenge/data/references/dm3/bowtie_indices"
-    annotation_file:
-      class: File
-      location: "[cwl_workflows]/ga4gh_challenge/data/references/dm3/refgene.tsv"
-      format: "http://edamontology.org/format_3475"
-    chrom_length:
-      class: File
-      location: "[cwl_workflows]/ga4gh_challenge/data/references/dm3/chrNameLength.txt"
-      format: "http://edamontology.org/format_2330"
-    clip_3p_end: 0
-    clip_5p_end: 0
-    remove_duplicates: false
-    exp_fragment_size: 150
-    force_fragment_size: false
-    broad_peak: false
-    threads: 8
-    genome_size: "1.2e8"
-    ```
+   fastq_file:
+     class: File
+     location: "[cwl_workflows]/ga4gh_challenge/data/inputs/SRR1198790.fastq"
+     format: "http://edamontology.org/format_1930"
+   indices_folder:
+     class: Directory
+     location: "[cwl_workflows]/ga4gh_challenge/data/references/dm3/bowtie_indices"
+   annotation_file:
+     class: File
+     location: "[cwl_workflows]/ga4gh_challenge/data/references/dm3/refgene.tsv"
+     format: "http://edamontology.org/format_3475"
+   chrom_length:
+     class: File
+     location: "[cwl_workflows]/ga4gh_challenge/data/references/dm3/chrNameLength.txt"
+     format: "http://edamontology.org/format_2330"
+   clip_3p_end: 0
+   clip_5p_end: 0
+   remove_duplicates: false
+   exp_fragment_size: 150
+   force_fragment_size: false
+   broad_peak: false
+   threads: 4
+   genome_size: "1.2e8"
+   ```
 4. Pull all necessary Docker images
     ```bash
     docker pull biowardrobe2/samtools:v1.4
