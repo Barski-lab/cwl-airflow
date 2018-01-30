@@ -18,7 +18,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
       
       Automatically installs:
       - Apache-Airflow v1.8.2 
-      - cwltool 1.0.20180116213856
+      - cwltool 1.0.20180130110340
           
       Requirements:
       - Ubuntu 16.04.3

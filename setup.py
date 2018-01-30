@@ -59,7 +59,7 @@ setup(
     package_data={'cwl_airflow': ['git_version']},
     include_package_data=True,
     install_requires=[
-        'cwltool==1.0.20180116213856',
+        'cwltool==1.0.20180130110340',
         'jsonmerge',
         'mysql-python>=1.2.5',
         'ruamel.yaml<0.15',
