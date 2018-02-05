@@ -23,6 +23,10 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
       Requirements:
       - Ubuntu 16.04.3
         - python 2.7.12
+        - git
+          ```
+          sudo apt-get install git
+          ```
         - pip
           ```
           sudo apt-get install python-pip
