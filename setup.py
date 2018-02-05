@@ -32,17 +32,20 @@ def get_version():
     try:
         with open(GIT_VERSION_FILE, 'r') as input_stream:  # try to get version info from file
             version = input_stream.read()
-    except IOError as ex:
+    except Exception:
         pass
     try:
         version = get_git_tag()                            # try to get version info from the closest tag
-    except subprocess.CalledProcessError:
+    except Exception:
         try:
             version = '1.0.' + get_git_timestamp()         # try to get version info from commit date
-        except subprocess.CalledProcessError:
+        except Exception:
             pass
-    with open(GIT_VERSION_FILE, 'w') as output_stream:     # save updated version to file (or the same)
-        output_stream.write(version)
+    try:
+        with open(GIT_VERSION_FILE, 'w') as output_stream: # save updated version to file (or the same)
+            output_stream.write(version)
+    except Exception:
+        pass
     return version
 
 
