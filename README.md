@@ -25,7 +25,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
         - python 2.7.12
         - pip
           ```
-          sudo apt install python-pip
+          sudo apt-get install python-pip
           pip install --upgrade pip
           ```
         - setuptools
