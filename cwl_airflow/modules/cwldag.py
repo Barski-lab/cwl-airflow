@@ -149,9 +149,12 @@ class CWLDAG(DAG):
 
     def assign_job_cleanup(self, task):
         for current_task in self.tasks:
-            if isinstance(current_task, JobDispatcher) or isinstance(current_task, JobCleanup):
+            if isinstance(current_task, JobCleanup):
                 continue
-            current_task_outputs_id = [shortname(current_task_output["id"]) for current_task_output in current_task.cwl_step.tool["outputs"]]
+            if isinstance(current_task, JobDispatcher):
+                current_task_outputs_id = [shortname(current_task_output["id"]) for current_task_output in current_task.dag.cwlwf.tool["inputs"]]
+            else:
+                current_task_outputs_id = [shortname(current_task_output["id"]) for current_task_output in current_task.cwl_step.tool["outputs"]]
             workflow_outputs_outputsource = [shortname(workflow_output["outputSource"]) for workflow_output in self.cwlwf.tool["outputs"]]
             # print "current_task_outputs_id: \n", yaml.round_trip_dump(current_task_outputs_id)
             # print "workflow_outputs_outputsource: \n", yaml.round_trip_dump(workflow_outputs_outputsource)
