@@ -64,10 +64,10 @@ setup(
     install_requires=[
         'cwltool>=1.0',
         'jsonmerge',
-        'mysql-python>=1.2.5',
-        'ruamel.yaml<0.15',
-        "apache-airflow==1.8.2",
-        "html5lib"
+        'mysqlclient>=1.3.6',
+        'ruamel.yaml',
+        "apache-airflow==1.9.0",
+        "cryptography"
     ],
     zip_safe=False,
     entry_points={

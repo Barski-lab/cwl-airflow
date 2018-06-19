@@ -5,19 +5,15 @@ import sys
 import os
 import tempfile
 from schema_salad.ref_resolver import Loader
-import functools
 from cwltool.pathmapper import adjustDirObjs, visit_class, trim_listing
 from cwltool.process import normalizeFilesDirs
-from cwltool.stdfsaccess import StdFsAccess
-from typing import cast, Callable, Any, Text
+from typing import Text
 import json
-from cwl_airflow.modules.cwlutils import url_shortname
+from cwl_airflow.utils.utils import url_shortname
 from six.moves import urllib
 
-class JobDispatcher(BaseOperator):
 
-    # ui_color = '#3E53B7'
-    # ui_fgcolor = '#FFF'
+class JobDispatcher(BaseOperator):
 
     @apply_defaults
     def __init__(
@@ -110,7 +106,7 @@ class JobDispatcher(BaseOperator):
 
         fragment = urllib.parse.urlsplit(self.dag.default_args["cwl_workflow"]).fragment
         fragment = fragment + '/' if fragment else ''
-        job_order_object_extended = {fragment + key: value for key, value in job_order_object.iteritems()}
+        job_order_object_extended = {fragment + key: value for key, value in job_order_object.items()}
 
         cwl_context['promises'] = job_order_object_extended
         cwl_context['outdir'] = self.mktmp()

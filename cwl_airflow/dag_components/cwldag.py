@@ -1,21 +1,18 @@
-#
-# CWLDAG creates airfow DAG where each step is CWLStepOperator
-#  to assign steps upfront of CWL
-#
-
+import os
+import json
+from six.moves import urllib
 import cwltool.main
 import cwltool.load_tool
+from cwltool.context import LoadingContext
 import cwltool.workflow
 import cwltool.errors
 from cwltool.resolver import tool_resolver
 from airflow.models import DAG
-from cwl_airflow.modules.cwlstepoperator import CWLStepOperator
-from cwl_airflow.modules.cwlutils import shortname, flatten
-import os
-from cwl_airflow.modules.jobdispatcher import JobDispatcher
-from cwl_airflow.modules.jobcleanup import JobCleanup
-import json
-from six.moves import urllib
+from cwl_airflow.dag_components.cwlstepoperator import CWLStepOperator
+from cwl_airflow.utils.utils import (shortname, flatten)
+
+from cwl_airflow.dag_components.jobdispatcher import JobDispatcher
+from cwl_airflow.dag_components.jobcleanup import JobCleanup
 
 
 def check_unsupported_feature (tool):
@@ -43,9 +40,10 @@ class CWLDAG(DAG):
                                              default_args=default_args, *args, **kwargs)
 
         self.cwlwf = cwltool.load_tool.load_tool(argsworkflow = default_args["cwl_workflow"],
-                                                 makeTool = cwltool.workflow.defaultMakeTool,
-                                                 resolver = tool_resolver,
-                                                 strict = default_args['strict'])
+                                                 loadingContext=LoadingContext(kwargs={
+                                                     "construct_tool_object": cwltool.workflow.default_make_tool,
+                                                     "resolver": tool_resolver,
+                                                     "strict": default_args['strict']}))
 
         if type(self.cwlwf) == int or check_unsupported_feature(self.cwlwf.tool)[0]:
             raise cwltool.errors.UnsupportedRequirement(check_unsupported_feature(self.cwlwf.tool)[1])
@@ -58,9 +56,10 @@ class CWLDAG(DAG):
             with open(new_workflow_name, 'w') as generated_workflow_stream:
                 generated_workflow_stream.write(json.dumps(generated_workflow, indent=4))
             self.cwlwf = cwltool.load_tool.load_tool(argsworkflow = new_workflow_name,
-                                                     makeTool = cwltool.workflow.defaultMakeTool,
-                                                     resolver=tool_resolver,
-                                                     strict = default_args['strict'])
+                                                     loadingContext=LoadingContext(kwargs={
+                                                         "construct_tool_object": cwltool.workflow.default_make_tool,
+                                                         "resolver": tool_resolver,
+                                                         "strict": default_args['strict']}))
 
         self.requirements = self.cwlwf.tool.get("requirements", [])
 

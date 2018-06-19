@@ -1,21 +1,25 @@
-#
-# CWLStepOperator is required for CWLDAG
-#   CWLStepOperator execute stage expects input job from xcom_pull
-#   and post output by xcom_push
-
-import cwltool.main
+import cwltool.executors
 import cwltool.workflow
 import cwltool.errors
 import logging
+import sys
 from airflow.models import BaseOperator
 from airflow.utils import (apply_defaults)
 from jsonmerge import merge
 import json
 import os
 import copy
-from cwl_airflow.modules.cwlutils import shortname, flatten
+from cwl_airflow.utils.utils import (shortname, flatten)
 import tempfile
 import cwltool.stdfsaccess
+from cwltool.context import RuntimeContext, getdefault
+from airflow.utils.log.logging_mixin import StreamLogWriter
+
+
+class StreamLogWriterUpdated (StreamLogWriter):
+
+    def fileno(self):
+        return -1
 
 
 class CWLStepOperator(BaseOperator):
@@ -64,13 +68,13 @@ class CWLStepOperator(BaseOperator):
         if not self.outdir:
             raise cwltool.errors.WorkflowException("Outdir is not provided, please use job dispatcher")
 
-        logging.info(
+        logging.debug(
             '{0}: Upstream data: \n {1}'.format(self.task_id, json.dumps(upstream_data,indent=4)))
 
-        logging.info(
+        logging.debug(
             '{0}: Step inputs: \n {1}'.format(self.task_id, json.dumps(self.cwl_step.tool["inputs"],indent=4)))
 
-        logging.info(
+        logging.debug(
             '{0}: Step outputs: \n {1}'.format(self.task_id, json.dumps(self.cwl_step.tool["outputs"],indent=4)))
 
         jobobj = {}
@@ -125,15 +129,21 @@ class CWLStepOperator(BaseOperator):
 
         kwargs = self.dag.default_args
         kwargs['outdir'] = tempfile.mkdtemp(prefix=os.path.join(self.outdir, "step_tmp"))
-        kwargs['tmpdir_prefix']=kwargs['tmpdir_prefix'] if kwargs.get('tmpdir_prefix') else os.path.join(kwargs['outdir'], 'cwl_tmp_')
-        kwargs['tmp_outdir_prefix']=kwargs['tmp_outdir_prefix'] if kwargs.get('tmp_outdir_prefix') else os.path.join(kwargs['outdir'], 'cwl_outdir_')
+        kwargs['tmpdir_prefix'] = kwargs['tmpdir_prefix'] if kwargs.get('tmpdir_prefix') else os.path.join(kwargs['outdir'], 'cwl_tmp_')
+        kwargs['tmp_outdir_prefix'] = kwargs['tmp_outdir_prefix'] if kwargs.get('tmp_outdir_prefix') else os.path.join(kwargs['outdir'], 'cwl_outdir_')
 
-        output, status = cwltool.main.single_job_executor(self.cwl_step.embedded_tool,
-                                                          job,
-                                                          makeTool=cwltool.workflow.defaultMakeTool,
-                                                          select_resources=None,
-                                                          make_fs_access=cwltool.stdfsaccess.StdFsAccess,
-                                                          **kwargs)
+        logger = logging.getLogger("cwltool")
+        sys.stdout = StreamLogWriterUpdated(logger, logging.INFO)
+        sys.stderr = StreamLogWriterUpdated(logger, logging.WARN)
+
+        executor = cwltool.executors.SingleJobExecutor()
+        runtimeContext = RuntimeContext(kwargs)
+        runtimeContext.make_fs_access = getdefault(runtimeContext.make_fs_access, cwltool.stdfsaccess.StdFsAccess)
+        (output, status) = executor(self.cwl_step.embedded_tool,
+                                    job,
+                                    runtimeContext,
+                                    logger=logger)
+
         if not output and status == "permanentFail":
             raise ValueError
 
