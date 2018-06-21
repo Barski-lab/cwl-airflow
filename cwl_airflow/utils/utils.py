@@ -10,10 +10,22 @@ import ruamel.yaml as yaml
 from datetime import datetime
 from airflow import configuration
 from airflow.exceptions import AirflowConfigException
+from airflow.models import DagRun
+from airflow.utils.state import State
 
 
 def shortname(n):
     return n.split("#")[-1]
+
+
+def open_file(filename):
+    """Returns list of lines from the text file. \n at the end of the lines are trimmed. Empty lines are excluded"""
+    lines = []
+    with open(filename, 'r') as infile:
+        for line in infile:
+            if line.strip():
+                lines.append(line.strip())
+    return lines
 
 
 def flatten(input_list):
@@ -48,7 +60,7 @@ def get_only_files (jobs, key, excl_key = None):
                                     (excl_key and os.path.isfile(filename) and \
                                      os.path.basename(filename) not in [os.path.basename(excl_filename) for excl_filename in glob.iglob(item[excl_key]+"/*")])\
                                     ]\
-                            )                              
+                            )
     return key_filtered
 
 
@@ -110,31 +122,24 @@ def set_logger():
     cwl_logger.setLevel(eval_log_level(conf_get_default('cwl','LOG_LEVEL','INFO').upper()))
 
 
-def get_log_filename (args):
+def get_latest_log(dag_id, task_id="cleanup", state=State.SUCCESS):
     log_base = os.path.expanduser(configuration.get('core', 'BASE_LOG_FOLDER'))
-    directory = log_base + "/{args.dag_id}/cleanup".format(args=args)
-    return "{0}/{1}".format(directory, args.start_date.isoformat())
+    dag_run = sorted(DagRun.find(dag_id, state=state), reverse=True, key=lambda x: x.execution_date)[0]
+    for task in dag_run.get_task_instances():
+        if task.task_id == task_id:
+            return f"{log_base}/{task.dag_id}/{task.task_id}/{task.execution_date.isoformat()}/{task._try_number}.log"
 
 
-def clear_previous_log (args):
-    log_base = os.path.expanduser(configuration.get('core', 'BASE_LOG_FOLDER'))
-    directory = log_base + "/{args.dag_id}".format(args=args)
-    shutil.rmtree(directory, True)
-
-
-def print_workflow_output (args):
+def get_workflow_output(dag_id):
     found_output = False
-    results = ''
-    with open(get_log_filename(args), 'r') as results_file:
-        for line in results_file.readlines():
-            if 'Subtask:' not in line: continue
-            if 'WORKFLOW RESULTS' in line:
-                found_output = True
-                results = ''
-                continue
-            if found_output:
-                results = results + line.split('Subtask: ')[1]
-    print (results.rstrip('\n'))
+    results = []
+    for line in open_file(get_latest_log(dag_id)):
+        if 'WORKFLOW RESULTS' in line:
+            found_output = True
+            continue
+        if found_output:
+            results.append(line.split('Subtask: ')[1])
+    return "\n".join(results)
 
 
 def create_output_folder (args, job_entry, job, workflow_file):
@@ -225,3 +230,8 @@ def find_workflow(job_filename):
     for key in sorted(all_workflows, key=len, reverse=True):
         if re.match(os.path.splitext(key)[0], os.path.basename(job_filename)):
             return all_workflows[key]
+
+
+def export_to_file (output_filename, data):
+    with open(output_filename, 'w') as output_file:
+        output_file.write(data)

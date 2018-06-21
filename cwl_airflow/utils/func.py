@@ -15,12 +15,11 @@ from cwl_airflow.dag_components.jobcleanup import JobCleanup
 def make_dag(args):
     set_logger()
     job = os.path.abspath(args['job'])
-    workflow = find_workflow(job)
-    dag_id = gen_dag_id(workflow, job)
+    basedir = os.path.dirname(job)
     with open(job, 'r') as input_stream:
         job_entry = yaml.safe_load(input_stream)
-
-    basedir = os.path.dirname(job)
+    workflow = job_entry.get('workflow', find_workflow(job))
+    dag_id = gen_dag_id(workflow, job)
 
     default_args = {
         'owner': job_entry.get('author', 'CWL-Airflow'),
@@ -57,8 +56,8 @@ def make_dag(args):
         'relax_path_checks': False,
         'validate': False,
         'compute_checksum': True,
-        "no_match_user" : False,
-        "cwl_workflow" : workflow
+        "no_match_user": False,
+        "cwl_workflow": workflow
     }
 
     dag = CWLDAG(
