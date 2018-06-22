@@ -42,8 +42,7 @@ class CWLDAG(DAG):
         self.cwlwf = cwltool.load_tool.load_tool(argsworkflow = default_args["cwl_workflow"],
                                                  loadingContext=LoadingContext(kwargs={
                                                      "construct_tool_object": cwltool.workflow.default_make_tool,
-                                                     "resolver": tool_resolver,
-                                                     "strict": default_args['strict']}))
+                                                     "resolver": tool_resolver}))
 
         if type(self.cwlwf) == int or check_unsupported_feature(self.cwlwf.tool)[0]:
             raise cwltool.errors.UnsupportedRequirement(check_unsupported_feature(self.cwlwf.tool)[1])
@@ -58,8 +57,7 @@ class CWLDAG(DAG):
             self.cwlwf = cwltool.load_tool.load_tool(argsworkflow = new_workflow_name,
                                                      loadingContext=LoadingContext(kwargs={
                                                          "construct_tool_object": cwltool.workflow.default_make_tool,
-                                                         "resolver": tool_resolver,
-                                                         "strict": default_args['strict']}))
+                                                         "resolver": tool_resolver}))
 
         self.requirements = self.cwlwf.tool.get("requirements", [])
 

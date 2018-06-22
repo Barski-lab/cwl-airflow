@@ -38,41 +38,11 @@ def make_dag(job):
     """
     set_logger()
     default_args = {
-        'owner': job["content"].get("author", "airflow"),
+        'owner': job["content"].get("author", "cwl-airflow"),
         'start_date': job["creation_date"],
         'output_folder': get_folder(job["content"]["output_folder"]),
         'tmp_folder':    get_folder(job["content"].get("tmp_folder", tempfile.mkdtemp())),
-        'print_deps': False,
-        'print_pre': False,
-        'print_rdf': False,
-        'print_dot': False,
-        'relative_deps': False,
-        'tmp_outdir_prefix': job["content"].get("tmp_outdir_prefix", None),
-        'use_container': True,
-        'preserve_environment': ["PATH"],
-        'preserve_entire_environment': False,
-        "rm_container": True,
-        'tmpdir_prefix': job["content"].get("tmpdir_prefix", None),
-        'print_input_deps': False,
-        'cachedir': None,
-        'rm_tmpdir': True,
-        'move_outputs': 'move',
-        'enable_pull': True,
-        'eval_timeout': 20,
-        'quiet': False,
-        'version': False,
-        'enable_dev': False,
-        'enable_ext': False,
-        'strict': False,
-        'rdf_serializer': None,
-        'basedir': os.path.abspath(os.path.dirname(job["path"])),
-        'tool_help': False,
-        'pack': False,
-        'on_error': 'continue',
-        'relax_path_checks': False,
-        'validate': False,
-        'compute_checksum': True,
-        "no_match_user": False,
+        'basedir': os.path.abspath(os.path.dirname(job["path"])),  # Get rid of it, or move to the place where it should be
         "cwl_workflow": job["content"]["workflow"]
     }
 
