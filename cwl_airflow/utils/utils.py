@@ -4,10 +4,7 @@ import urllib.parse
 import logging
 import shutil
 import errno
-import tempfile
-import re
 import ruamel.yaml as yaml
-from datetime import datetime
 from airflow import configuration
 from airflow.exceptions import AirflowConfigException
 from airflow.models import DagRun
@@ -18,6 +15,11 @@ def shortname(n):
     return n.split("#")[-1]
 
 
+def load_job(job_file):
+    with open(job_file, 'r') as input_stream:
+        return yaml.safe_load(input_stream)
+
+
 def open_file(filename):
     """Returns list of lines from the text file. \n at the end of the lines are trimmed. Empty lines are excluded"""
     lines = []
@@ -26,6 +28,24 @@ def open_file(filename):
             if line.strip():
                 lines.append(line.strip())
     return lines
+
+
+def export_to_file (output_filename, data):
+    with open(output_filename, 'w') as output_file:
+        output_file.write(data)
+
+
+def get_folder(abs_path, permissions=0o0775, exist_ok=True):
+    os.makedirs(abs_path, mode=permissions, exist_ok=exist_ok)
+    return abs_path
+
+
+def list_files(abs_path, ext=[None]):
+    all_files = []
+    for root, dirs, files in os.walk(abs_path):
+        all_files.extend([os.path.join(root, filename) for filename in files
+                          if not ext or os.path.splitext(filename)[1] in ext])
+    return all_files
 
 
 def flatten(input_list):
@@ -51,40 +71,6 @@ def conf_get_default (section, key, default):
         return default
 
 
-def get_only_files (jobs, key, excl_key = None):
-    key_filtered = []
-    for item in jobs:
-        key_filtered.extend(\
-                            [ filename for filename in glob.iglob(item[key]+"/*") if \
-                                    (not excl_key and os.path.isfile(filename)) or \
-                                    (excl_key and os.path.isfile(filename) and \
-                                     os.path.basename(filename) not in [os.path.basename(excl_filename) for excl_filename in glob.iglob(item[excl_key]+"/*")])\
-                                    ]\
-                            )
-    return key_filtered
-
-
-def get_uid (job_file):
-    with open(job_file, 'r') as input_stream:
-        job = yaml.safe_load(input_stream)
-    return job.get("uid", '.'.join(job_file.split("/")[-1].split('.')[0:-1]))
-
-
-def create_backup_args(args, filename):
-    del args['func']  # When creating backup we don't need func to be included
-    with open(os.path.join(os.getcwd(), filename), 'w') as backup_file:
-        yaml.safe_dump(args, stream=backup_file)
-
-
-def remove_backup_args(filename):
-    os.remove(os.path.join(os.getcwd(), filename))
-
-
-def read_backup_args(filename):
-    with open(os.path.join(os.getcwd(), filename), 'r') as backup_file:
-        return yaml.safe_load(backup_file)
-
-
 def set_permissions (item, dir_perm=0o0777, file_perm=0o0666, grp_own=os.getgid(), user_own=-1):
     os.chown(item, user_own, grp_own)
     if os.path.isfile(item):
@@ -101,7 +87,9 @@ def set_permissions (item, dir_perm=0o0777, file_perm=0o0666, grp_own=os.getgid(
 
 
 def gen_dag_id (workflow_file, job_file):
-    return ".".join(workflow_file.split("/")[-1].split(".")[0:-1]) + "-" + get_uid(job_file) + "-" + datetime.fromtimestamp(os.path.getctime(job_file)).isoformat().replace(':', '-')
+    workflow = ".".join(workflow_file.split("/")[-1].split(".")[0:-1])
+    job = ".".join(job_file.split("/")[-1].split(".")[0:-1])
+    return "_".join([workflow, job, load_job(job_file)["uid"].replace("-", "_")])
 
 
 def eval_log_level(key):
@@ -140,30 +128,6 @@ def get_workflow_output(dag_id):
         if found_output:
             results.append(line.split('Subtask: ')[1])
     return "\n".join(results)
-
-
-def create_output_folder (args, job_entry, job, workflow_file):
-    if not args.get('outdir'):
-        if args.get('ignore_def_outdir'):
-            default_outdir = os.path.join(conf_get_default('cwl', 'OUTPUT_FOLDER', os.getcwd()), gen_dag_id(workflow_file,job))
-        else:
-            default_outdir = os.path.abspath(os.getcwd())
-        output_folder = job_entry.get('output_folder', default_outdir)
-        output_folder = output_folder if os.path.isabs(output_folder) else os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(job)), output_folder))
-    else:
-        output_folder = os.path.abspath(args.get('outdir'))
-    os.makedirs(output_folder, mode=0o0775, exist_ok=True)
-    return output_folder
-
-
-def create_tmp_folder (args, job_entry, job):
-    if not args.get('tmp_folder'):
-        tmp_folder = job_entry.get('tmp_folder', conf_get_default('cwl', 'TMP_FOLDER', tempfile.mkdtemp()))
-        tmp_folder = tmp_folder if os.path.isabs(tmp_folder) else os.path.normpath(os.path.join(os.path.dirname(job), tmp_folder))
-    else:
-        tmp_folder = os.path.abspath(args.get('tmp_folder'))
-    os.makedirs(tmp_folder, mode=0o0775, exist_ok=True)
-    return tmp_folder
 
 
 def update_config(current_conf):
@@ -212,26 +176,3 @@ def create_folders(current_conf):
         except OSError as ex:
             if ex.errno != errno.EEXIST:
                 raise  # raises the error again if it wasn't a problem of already existed folder
-
-
-def find_workflow(job_filename):
-    workflows_folder = configuration.get('biowardrobe', 'workflows')
-    all_workflows = {}
-    for root, dirs, files in os.walk(workflows_folder):
-        all_workflows.update( \
-                              { filename: os.path.join(root, filename) \
-                                for filename in files \
-                                if  os.path.splitext(filename)[1] == '.cwl' \
-                                    and (filename not in all_workflows \
-                                                 or os.path.getctime(os.path.join(root, filename)) < \
-                                                 os.path.getctime( all_workflows[filename]) ) \
-                              } \
-                            )
-    for key in sorted(all_workflows, key=len, reverse=True):
-        if re.match(os.path.splitext(key)[0], os.path.basename(job_filename)):
-            return all_workflows[key]
-
-
-def export_to_file (output_filename, data):
-    with open(output_filename, 'w') as output_file:
-        output_file.write(data)

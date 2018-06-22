@@ -1,42 +1,58 @@
 import os
-import ruamel.yaml as yaml
+import tempfile
 from datetime import datetime
 from cwl_airflow.utils.utils import (set_logger,
-                                     find_workflow,
                                      gen_dag_id,
-                                     create_output_folder,
-                                     create_tmp_folder,
-                                     conf_get_default)
+                                     get_folder,
+                                     load_job,
+                                     list_files)
 from cwl_airflow.dag_components.cwldag import CWLDAG
 from cwl_airflow.dag_components.jobdispatcher import JobDispatcher
 from cwl_airflow.dag_components.jobcleanup import JobCleanup
 
 
-def make_dag(args):
-    set_logger()
-    job = os.path.abspath(args['job'])
-    basedir = os.path.dirname(job)
-    with open(job, 'r') as input_stream:
-        job_entry = yaml.safe_load(input_stream)
-    workflow = job_entry.get('workflow', find_workflow(job))
-    dag_id = gen_dag_id(workflow, job)
+def get_active_jobs(jobs_folder, limit=10):
+    """
+    :param jobs_folder: job_folder: abs path to the folder with job json files  
+    :param limit: max number of jobs to return
+    :return: 
+    """
+    all_jobs = []
+    for job_path in list_files(abs_path=jobs_folder, ext=[".json", ".yml", ".yaml"]):
+        job_content = load_job(job_path)
+        all_jobs.append({"content": job_content,
+                         "path": job_path,
+                         "creation_date": datetime.fromtimestamp(os.path.getctime(job_path)),
+                         "dag_id": gen_dag_id(job_content["workflow"], job_path)})
+    all_jobs = sorted(all_jobs, key=lambda k: k["creation_date"], reverse=True)
+    return all_jobs[:limit]
 
+
+def make_dag(job):
+    """
+    :param job: {"content": job_entry,
+                 "path": job,
+                 "creation_date": datetime.fromtimestamp(os.path.getctime(job_path)),
+                 "dag_id": gen_dag_id(job_entry["workflow"], job_path)}
+    :return:
+    """
+    set_logger()
     default_args = {
-        'owner': job_entry.get('author', 'CWL-Airflow'),
-        'start_date': datetime.fromtimestamp(os.path.getctime(job)),
-        'output_folder': create_output_folder(args, job_entry, job, workflow),
-        'tmp_folder': create_tmp_folder(args, job_entry, job),
+        'owner': job["content"].get("author", "airflow"),
+        'start_date': job["creation_date"],
+        'output_folder': get_folder(job["content"]["output_folder"]),
+        'tmp_folder':    get_folder(job["content"].get("tmp_folder", tempfile.mkdtemp())),
         'print_deps': False,
         'print_pre': False,
         'print_rdf': False,
         'print_dot': False,
         'relative_deps': False,
-        'tmp_outdir_prefix': os.path.abspath(args.get('tmp_outdir_prefix')) if args.get('tmp_outdir_prefix') else None,
+        'tmp_outdir_prefix': job["content"].get("tmp_outdir_prefix", None),
         'use_container': True,
         'preserve_environment': ["PATH"],
         'preserve_entire_environment': False,
         "rm_container": True,
-        'tmpdir_prefix': os.path.abspath(args.get('tmpdir_prefix')) if args.get('tmpdir_prefix') else None,
+        'tmpdir_prefix': job["content"].get("tmpdir_prefix", None),
         'print_input_deps': False,
         'cachedir': None,
         'rm_tmpdir': True,
@@ -47,9 +63,9 @@ def make_dag(args):
         'version': False,
         'enable_dev': False,
         'enable_ext': False,
-        'strict': conf_get_default('cwl', 'STRICT', 'False').lower() in ['true', '1', 't', 'y', 'yes'],
+        'strict': False,
         'rdf_serializer': None,
-        'basedir': basedir,
+        'basedir': os.path.abspath(os.path.dirname(job["path"])),
         'tool_help': False,
         'pack': False,
         'on_error': 'continue',
@@ -57,15 +73,15 @@ def make_dag(args):
         'validate': False,
         'compute_checksum': True,
         "no_match_user": False,
-        "cwl_workflow": workflow
+        "cwl_workflow": job["content"]["workflow"]
     }
 
     dag = CWLDAG(
-        dag_id=dag_id,
-        schedule_interval = '@once',
+        dag_id=job["dag_id"],
+        schedule_interval='@once',
         default_args=default_args)
     dag.create()
-    dag.assign_job_dispatcher(JobDispatcher(task_id="read", read_file=job, dag=dag))
+    dag.assign_job_dispatcher(JobDispatcher(task_id="read", read_file=job["path"], dag=dag))
     dag.assign_job_cleanup(JobCleanup(task_id="cleanup",
                                       outputs=dag.get_output_list(),
                                       dag=dag))

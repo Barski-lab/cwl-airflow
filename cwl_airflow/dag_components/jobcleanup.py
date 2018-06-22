@@ -64,8 +64,6 @@ class JobCleanup(BaseOperator):
                         shutil.move(src, dst)
                         set_permissions(dst, dir_perm=0o0775, file_perm=0o0664)
 
-
-
         shutil.rmtree(self.outdir, ignore_errors=False)
         logging.debug('{0}: Delete temporary output directory {1}'.format(self.task_id, self.outdir))
         logging.info("WORKFLOW RESULTS\n" + json.dumps(collected_workflow_outputs, indent=4))

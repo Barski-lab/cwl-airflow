@@ -1,12 +1,8 @@
 #!/usr/bin/env python
-import os
 from airflow.configuration import conf
-from cwl_airflow.utils.func import make_dag
+from cwl_airflow.utils.func import make_dag, get_active_jobs
 
 
 def create_dags():
-    dags_dict = {}
-    for job_file in os.listdir(conf.get('biowardrobe', 'jobs')):
-        kwargs = {"job": os.path.join(conf.get('biowardrobe', 'jobs'), job_file), "ignore_def_outdir": True}
-        dags_dict[job_file] = make_dag(kwargs)
-    return dags_dict
+    return {job["dag_id"]: make_dag(job) for job in get_active_jobs(jobs_folder=conf.get('biowardrobe', 'jobs'),
+                                                                    limit=int(conf.get('biowardrobe', 'limit')))}
