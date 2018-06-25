@@ -35,11 +35,11 @@ class CWLDAG(DAG):
             default_args=None,
             *args, **kwargs):
 
-        _dag_id = dag_id if dag_id else urllib.parse.urldefrag(default_args["cwl_workflow"])[0].split("/")[-1].replace(".cwl", "").replace(".", "_dot_")
+        _dag_id = dag_id if dag_id else urllib.parse.urldefrag(default_args["main_workflow"])[0].split("/")[-1].replace(".cwl", "").replace(".", "_dot_")
         super(self.__class__, self).__init__(dag_id=_dag_id,
                                              default_args=default_args, *args, **kwargs)
 
-        self.cwlwf = cwltool.load_tool.load_tool(argsworkflow = default_args["cwl_workflow"],
+        self.cwlwf = cwltool.load_tool.load_tool(argsworkflow = default_args["main_workflow"],
                                                  loadingContext=LoadingContext(kwargs={
                                                      "construct_tool_object": cwltool.workflow.default_make_tool,
                                                      "resolver": tool_resolver}))
@@ -48,10 +48,10 @@ class CWLDAG(DAG):
             raise cwltool.errors.UnsupportedRequirement(check_unsupported_feature(self.cwlwf.tool)[1])
 
         if self.cwlwf.tool["class"] == "CommandLineTool" or self.cwlwf.tool["class"] == "ExpressionTool":
-            dirname = os.path.dirname(default_args["cwl_workflow"])
-            filename, ext = os.path.splitext(os.path.basename(default_args["cwl_workflow"]))
+            dirname = os.path.dirname(default_args["main_workflow"])
+            filename, ext = os.path.splitext(os.path.basename(default_args["main_workflow"]))
             new_workflow_name = os.path.join(dirname, filename + '_workflow' + ext)
-            generated_workflow = self.gen_workflow (self.cwlwf.tool, default_args["cwl_workflow"])
+            generated_workflow = self.gen_workflow (self.cwlwf.tool, default_args["main_workflow"])
             with open(new_workflow_name, 'w') as generated_workflow_stream:
                 generated_workflow_stream.write(json.dumps(generated_workflow, indent=4))
             self.cwlwf = cwltool.load_tool.load_tool(argsworkflow = new_workflow_name,

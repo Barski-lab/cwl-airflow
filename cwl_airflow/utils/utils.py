@@ -1,7 +1,7 @@
 import os
-import glob
 import urllib.parse
 import logging
+import argparse
 import shutil
 import errno
 import ruamel.yaml as yaml
@@ -9,6 +9,17 @@ from airflow import configuration
 from airflow.exceptions import AirflowConfigException
 from airflow.models import DagRun
 from airflow.utils.state import State
+
+
+def normalize_args(args, skip_list=[]):
+    """Converts all relative path arguments to absolute ones relatively to the current working directory"""
+    normalized_args = {}
+    for key, value in args.__dict__.items():
+        if key not in skip_list:
+            normalized_args[key] = value if not value or os.path.isabs(value) else os.path.normpath(os.path.join(os.getcwd(), value))
+        else:
+            normalized_args[key]=value
+    return argparse.Namespace(**normalized_args)
 
 
 def shortname(n):
@@ -138,8 +149,8 @@ def update_config(current_conf):
         current_conf.conf.add_section('cwl')
         current_conf.set('cwl', 'cwl_workflows', os.path.abspath(os.path.join(current_conf.get('core', 'airflow_home'), 'cwl', 'workflows')))
         current_conf.set('cwl', 'cwl_jobs', os.path.abspath(os.path.join(current_conf.get('core', 'airflow_home'), 'cwl', 'jobs')))
-        current_conf.set('cwl', 'output_folder', os.path.abspath(os.path.join(current_conf.get('core', 'airflow_home'), 'cwl', 'output')))
-        current_conf.set('cwl', 'tmp_folder', os.path.abspath(os.path.join(current_conf.get('core', 'airflow_home'), 'cwl', 'tmp')))
+        current_conf.set('cwl', 'outdir', os.path.abspath(os.path.join(current_conf.get('core', 'airflow_home'), 'cwl', 'output')))
+        current_conf.set('cwl', 'tmpdir_prefix', os.path.abspath(os.path.join(current_conf.get('core', 'airflow_home'), 'cwl', 'tmp')))
         current_conf.set('cwl', 'max_jobs_to_run', '2')
         current_conf.set('cwl', 'log_level', 'ERROR')
         current_conf.set('cwl', 'strict', 'False')
@@ -163,8 +174,8 @@ def create_folders(current_conf):
     """
     folder_list = []
     folder_list.append(current_conf.get('cwl', 'cwl_workflows'))
-    folder_list.append(current_conf.get('cwl', 'output_folder'))
-    folder_list.append(current_conf.get('cwl', 'tmp_folder'))
+    folder_list.append(current_conf.get('cwl', 'outdir'))
+    folder_list.append(current_conf.get('cwl', 'tmpdir_prefix'))
     folder_list.append(os.path.join(current_conf.get('cwl', 'cwl_jobs'), 'new'))
     folder_list.append(os.path.join(current_conf.get('cwl', 'cwl_jobs'), 'running'))
     folder_list.append(os.path.join(current_conf.get('cwl', 'cwl_jobs'), 'success'))

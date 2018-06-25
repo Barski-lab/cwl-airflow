@@ -36,8 +36,6 @@ class CWLStepOperator(BaseOperator):
             op_kwargs=None,
             *args, **kwargs):
 
-        self.outdir = None
-
         self.cwl_step = cwl_step
         step_id = shortname(cwl_step.tool["id"]).split("/")[-1]
 
@@ -62,11 +60,6 @@ class CWLStepOperator(BaseOperator):
         for j in upstream_data:
             data = j
             promises = merge(promises, data["promises"])
-            if "outdir" in data:
-                self.outdir = data["outdir"]
-
-        if not self.outdir:
-            raise cwltool.errors.WorkflowException("Outdir is not provided, please use job dispatcher")
 
         logging.debug(
             '{0}: Upstream data: \n {1}'.format(self.task_id, json.dumps(upstream_data,indent=4)))
@@ -128,9 +121,9 @@ class CWLStepOperator(BaseOperator):
         # maybe need to add here scatter functionality too
 
         kwargs = self.dag.default_args
-        kwargs['outdir'] = tempfile.mkdtemp(prefix=os.path.join(self.outdir, "step_tmp"))
-        kwargs['tmpdir_prefix'] = kwargs['tmpdir_prefix'] if kwargs.get('tmpdir_prefix') else os.path.join(kwargs['outdir'], 'cwl_tmp_')
-        kwargs['tmp_outdir_prefix'] = kwargs['tmp_outdir_prefix'] if kwargs.get('tmp_outdir_prefix') else os.path.join(kwargs['outdir'], 'cwl_outdir_')
+        kwargs['outdir'] = tempfile.mkdtemp(dir=kwargs["tmp_folder"], prefix="step_tmp_")
+        kwargs['tmpdir_prefix'] = tempfile.mkdtemp(dir=kwargs["tmp_folder"], prefix="cwl_tmp_")
+        kwargs['tmp_outdir_prefix'] = tempfile.mkdtemp(dir=kwargs["tmp_folder"], prefix="cwl_outdir_tmp_")
 
         logger = logging.getLogger("cwltool")
         sys.stdout = StreamLogWriterUpdated(logger, logging.INFO)
@@ -161,9 +154,8 @@ class CWLStepOperator(BaseOperator):
 
         data = {}
         data["promises"] = promises
-        data["outdir"] = self.outdir
 
         logging.info(
-            '{0}: Output: \n {1}'.format(self.task_id, json.dumps(data,indent=4)))
+            '{0}: Output: \n {1}'.format(self.task_id, json.dumps(data, indent=4)))
 
         return data

@@ -20,8 +20,6 @@ class JobCleanup(BaseOperator):
         self.op_args = op_args or []
         self.op_kwargs = op_kwargs or {}
         self.outputs = outputs
-        self.outdir = None
-        self.output_folder = self.dag.default_args["output_folder"]
 
     def execute(self, context):
         upstream_task_ids = [t.task_id for t in self.upstream_list]
@@ -33,8 +31,6 @@ class JobCleanup(BaseOperator):
         for j in upstream_data:
             data = j
             promises = merge(promises, data["promises"])
-            if "outdir" in data:
-                self.outdir = data["outdir"]
 
         logging.info('{0}: with data: \n {1}'.format(self.task_id, json.dumps(promises, indent=4)))
         logging.info('{0}: Moving data for workflow outputs: \n {1}'.format(self.task_id, json.dumps(self.outputs, indent=4)))
@@ -57,13 +53,13 @@ class JobCleanup(BaseOperator):
                     visit(promises[out])
                     for item in item_list:
                         src = item.replace("file://", '')
-                        dst = os.path.join(self.output_folder, os.path.basename(src))
-                        logging.debug('{0}: Moving: \n {1} --> {2}'.format(self.task_id, src, dst))
+                        dst = os.path.join(self.dag.default_args["output_folder"], os.path.basename(src))
+                        logging.info('{0}: Moving: \n {1} --> {2}'.format(self.task_id, src, dst))
                         if os.path.exists(dst):
                             os.remove(dst) if promises[out]["class"] == 'File' else shutil.rmtree (dst, True)
                         shutil.move(src, dst)
                         set_permissions(dst, dir_perm=0o0775, file_perm=0o0664)
 
-        shutil.rmtree(self.outdir, ignore_errors=False)
-        logging.debug('{0}: Delete temporary output directory {1}'.format(self.task_id, self.outdir))
+        shutil.rmtree(self.dag.default_args["tmp_folder"], ignore_errors=False)
+        logging.debug('{0}: Delete temporary output directory {1}'.format(self.task_id, self.dag.default_args["tmp_folder"]))
         logging.info("WORKFLOW RESULTS\n" + json.dumps(collected_workflow_outputs, indent=4))

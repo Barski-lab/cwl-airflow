@@ -18,7 +18,6 @@ class JobDispatcher(BaseOperator):
     @apply_defaults
     def __init__(
             self,
-            monitor_folder=None,
             read_file=None,
             branches=4,
             poke_interval=30,
@@ -26,23 +25,13 @@ class JobDispatcher(BaseOperator):
             op_kwargs=None,
             *args, **kwargs):
 
-        if (not read_file and not monitor_folder) or (read_file and monitor_folder):
-            raise Exception("monitor_folder or read_file is required")
-
         super(JobDispatcher, self).__init__(*args, **kwargs)
 
-        self.monitor_folder = monitor_folder
         self.read_file = read_file
         self.op_args = op_args or []
         self.op_kwargs = op_kwargs or {}
         self.poke_interval = poke_interval
         self.branches = branches
-
-
-    def mktmp(self):
-        tmp_folder = self.dag.default_args['tmp_folder']
-        outdir = tempfile.mkdtemp(prefix=os.path.abspath(os.path.join(tmp_folder,'dag_tmp_')))
-        return outdir
 
 
     def add_defaults(self, job_order_object):
@@ -104,13 +93,11 @@ class JobDispatcher(BaseOperator):
 
         logging.info('{0}: Job object after adjustment and normalization: \n{1}'.format(self.task_id, json.dumps(job_order_object, indent=4)))
 
-        fragment = urllib.parse.urlsplit(self.dag.default_args["cwl_workflow"]).fragment
+        fragment = urllib.parse.urlsplit(self.dag.default_args["main_workflow"]).fragment
         fragment = fragment + '/' if fragment else ''
         job_order_object_extended = {fragment + key: value for key, value in job_order_object.items()}
 
         cwl_context['promises'] = job_order_object_extended
-        cwl_context['outdir'] = self.mktmp()
         logging.info(
             '{0}: Output: \n {1}'.format(self.task_id, json.dumps(cwl_context, indent=4)))
-
         return cwl_context
