@@ -2,8 +2,10 @@ import os
 import tempfile
 import ruamel.yaml as yaml
 from json import dumps
+import configparser
 from datetime import datetime
 from airflow import configuration
+from airflow.settings import DAGS_FOLDER, AIRFLOW_HOME
 from airflow.bin.cli import get_dag, CLIFactory
 from cwl_airflow.utils.utils import (set_logger,
                                      gen_dag_id,
@@ -23,14 +25,14 @@ def export_job_file(args):
         job_entry['output_folder'] = args.output_folder
         if args.tmp_folder:
             job_entry['tmp_folder'] = args.tmp_folder
-        export_to_file(os.path.join(configuration.get('biowardrobe', 'jobs'), os.path.basename(args.job)),
+        export_to_file(os.path.join(configuration.get('cwl', 'jobs'), os.path.basename(args.job)),
                        dumps(job_entry, indent=4))
 
 
 def update_args(args):
     vars(args).update({arg_name: arg_value.default for arg_name, arg_value in CLIFactory.args.items()
                        if arg_name in CLIFactory.subparsers_dict['scheduler']['args']})
-    args.dag_id = gen_dag_id(args.workflow, os.path.join(configuration.get('biowardrobe', 'jobs'), os.path.basename(args.job)))
+    args.dag_id = gen_dag_id(args.workflow, os.path.join(configuration.get('cwl', 'jobs'), os.path.basename(args.job)))
     args.num_runs = len(get_dag(args).tasks) + 3
 
 
@@ -79,3 +81,26 @@ def make_dag(job):
                                       outputs=dag.get_output_list(),
                                       dag=dag))
     return dag
+
+
+def update_config():
+    with open(configuration.AIRFLOW_CONFIG, 'w') as output_stream:
+        try:
+            configuration.conf.add_section('cwl')
+        except configparser.DuplicateSectionError:
+            pass
+        configuration.set('core', 'dags_are_paused_at_creation', 'False')
+        configuration.set('core', 'load_examples', 'False')
+        configuration.set('cwl', 'jobs', os.path.join(AIRFLOW_HOME, 'jobs'))
+        configuration.set('cwl', 'limit', '10')
+        configuration.conf.write(output_stream)
+
+
+def export_dags():
+    dag_content = u"#!/usr/bin/env python3\nfrom airflow import DAG\nfrom cwl_airflow.create_dag import create_dags\nfor id,dag in create_dags().items():\n    globals()[id] = dag"
+    export_to_file(os.path.join(DAGS_FOLDER, "cwl_dag.py"), dag_content)
+
+
+def create_folders():
+    get_folder(configuration.get('cwl', 'jobs'))
+    get_folder(DAGS_FOLDER)
