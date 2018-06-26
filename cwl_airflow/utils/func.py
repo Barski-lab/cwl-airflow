@@ -24,7 +24,7 @@ def export_job_file(args):
         job_entry['workflow'] = args.workflow
         job_entry['output_folder'] = args.output_folder
         job_entry["uid"] = args.uid
-        job_entry["basedir"] = args.basedir
+        job_entry["basedir"] = args.basedir if args.basedir else os.path.abspath(os.path.dirname(args.job))
         if args.tmp_folder:
             job_entry['tmp_folder'] = args.tmp_folder
         export_to_file(os.path.join(configuration.get('cwl', 'jobs'), os.path.basename(args.job)),
