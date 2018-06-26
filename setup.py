@@ -65,7 +65,8 @@ setup(
         'cwltool>=1.0',
         'jsonmerge',
         "apache-airflow==1.9.0",
-        "cryptography"
+        "cryptography",
+        "uuid"
     ],
     zip_safe=False,
     entry_points={

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import argparse
+import uuid
 from cwl_airflow.utils.mute import suppress_stdout, restore_stdout
 suppress_stdout()
 # Suppress output
@@ -25,6 +26,7 @@ def arg_parser():
     run_parser.set_defaults(func=run_job)
     run_parser.add_argument("-o", "--output", dest='output_folder', type=str, help="Output folder", default=".")
     run_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Temporary folder")
+    run_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Unique ID", default=uuid.uuid4())
     run_parser.add_argument("workflow", type=str)
     run_parser.add_argument("job", type=str)
 
