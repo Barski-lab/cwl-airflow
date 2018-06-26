@@ -3,6 +3,44 @@
 
 # cwl-airflow
 
+
+Install pip
+```bash
+wget https://bootstrap.pypa.io/get-pip.py
+python3 get-pip.py --user
+```
+
+Mandatory
+
+cwl-airflow package requires apache-airflow==1.9.0 that depends on
+'psutil>=4.2.0, <5.0.0'
+(https://github.com/giampaolo/psutil) which in its turn requires python-dev
+(https://github.com/giampaolo/psutil/blob/master/INSTALL.rst#linux).
+So to avoid error 
+`psutil/_psutil_common.c:9:20: fatal error: Python.h: No such file or director`
+it's necessary to install python-dev (python3-dev) to keep all header files and a static library for Python
+
+
+Optional
+
+If you are planning to use MySQL as backend you should consider installing mysqlclient>=1.3.6
+(https://github.com/apache/incubator-airflow/blob/master/setup.py). In order to do this you might need to install
+(https://github.com/PyMySQL/mysqlclient-python)
+sudo apt-get install libmysqlclient-dev
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
 ### About
 Python package to extend **[Apache-Airflow 1.8.2](https://github.com/apache/incubator-airflow)**
 functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
