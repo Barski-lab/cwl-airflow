@@ -56,7 +56,7 @@ class JobDispatcher(BaseOperator):
         loader = Loader(jobloaderctx, fetcher_constructor=None)
 
         try:
-            job_order_object, _ = loader.resolve_ref(self.read_file, checklinks=False)
+            job_order_object, _ = loader.resolve_ref(ref=self.read_file, base_url=self.dag.default_args["basedir"], checklinks=False)
         except Exception as e:
             logging.error(Text(e))
             sys.exit()
