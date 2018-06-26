@@ -24,6 +24,7 @@ def export_job_file(args):
         job_entry['workflow'] = args.workflow
         job_entry['output_folder'] = args.output_folder
         job_entry["uid"] = args.uid
+        job_entry["basedir"] = args.basedir
         if args.tmp_folder:
             job_entry['tmp_folder'] = args.tmp_folder
         export_to_file(os.path.join(configuration.get('cwl', 'jobs'), os.path.basename(args.job)),
@@ -68,7 +69,7 @@ def make_dag(job):
         'start_date':    job["creation_date"],
         'output_folder': get_folder(job["content"]["output_folder"]),
         'tmp_folder':    tempfile.mkdtemp(dir=job["content"].get("tmp_folder", None), prefix="dag_tmp_"),
-        'basedir':       os.path.abspath(os.path.dirname(job["path"])),
+        'basedir':       job["content"].get("basedir", os.path.abspath(os.path.dirname(job["path"]))),
         "main_workflow": job["content"]["workflow"]
     }
 

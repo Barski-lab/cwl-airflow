@@ -27,6 +27,7 @@ def arg_parser():
     run_parser.add_argument("-o", "--output", dest='output_folder', type=str, help="Output folder", default=".")
     run_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Temporary folder")
     run_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Unique ID", default=str(uuid.uuid4()))
+    run_parser.add_argument("-b", "--basedir", dest='basedir', type=str, help="Base directory to resolve path", default=".")
     run_parser.add_argument("workflow", type=str)
     run_parser.add_argument("job", type=str)
 
