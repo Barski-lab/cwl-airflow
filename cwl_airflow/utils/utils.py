@@ -126,7 +126,13 @@ def get_latest_log(dag_id, task_id="cleanup", state=State.SUCCESS):
     dag_run = sorted(DagRun.find(dag_id, state=state), reverse=True, key=lambda x: x.execution_date)[0]
     for task in dag_run.get_task_instances():
         if task.task_id == task_id:
-            return f"{log_base}/{task.dag_id}/{task.task_id}/{task.execution_date.isoformat()}/{task._try_number}.log"
+            kwargs = {"log_base": log_base,
+                      "dag_id": task.dag_id,
+                      "task_id": task.task_id,
+                      "execution_date": task.execution_date.isoformat(),
+                      "try_number": task._try_number
+            }
+            return "{log_base}/{dag_id}/{task_id}/{execution_date}/{try_number}.log".format(**kwargs)
 
 
 def get_workflow_output(dag_id):
