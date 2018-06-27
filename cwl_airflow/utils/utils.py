@@ -2,9 +2,8 @@ import os
 import urllib.parse
 import logging
 import argparse
-import shutil
-import errno
-import ruamel.yaml as yaml
+from schema_salad.ref_resolver import Loader
+from cwltool.load_tool import jobloaderctx
 from airflow import configuration
 from airflow.exceptions import AirflowConfigException
 from airflow.models import DagRun
@@ -27,8 +26,9 @@ def shortname(n):
 
 
 def load_job(job_file):
-    with open(job_file, 'r') as input_stream:
-        return yaml.safe_load(input_stream)
+    loader = Loader(jobloaderctx.copy())
+    job_order_object, _ = loader.resolve_ref(job_file, checklinks=False)
+    return job_order_object
 
 
 def open_file(filename):

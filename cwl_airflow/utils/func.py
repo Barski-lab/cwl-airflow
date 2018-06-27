@@ -1,6 +1,5 @@
 import os
 import tempfile
-import ruamel.yaml as yaml
 from json import dumps
 import configparser
 from datetime import datetime
@@ -19,16 +18,15 @@ from cwl_airflow.dag_components.jobcleanup import JobCleanup
 
 
 def export_job_file(args):
-    with open(args.job, 'r') as input_stream:
-        job_entry = yaml.safe_load(input_stream)
-        job_entry['workflow'] = args.workflow
-        job_entry['output_folder'] = args.output_folder
-        job_entry["uid"] = args.uid
-        job_entry["basedir"] = args.basedir if args.basedir else os.path.abspath(os.path.dirname(args.job))
-        if args.tmp_folder:
-            job_entry['tmp_folder'] = args.tmp_folder
-        export_to_file(os.path.join(configuration.get('cwl', 'jobs'), os.path.basename(args.job)),
-                       dumps(job_entry, indent=4))
+    job_entry = load_job(args.job)
+    job_entry['workflow'] = args.workflow
+    job_entry['output_folder'] = args.output_folder
+    job_entry["uid"] = args.uid
+    del job_entry["id"]
+    if args.tmp_folder:
+        job_entry['tmp_folder'] = args.tmp_folder
+    export_to_file(os.path.join(configuration.get('cwl', 'jobs'), os.path.basename(args.job)),
+                   dumps(job_entry, indent=4))
 
 
 def update_args(args):
@@ -69,7 +67,7 @@ def make_dag(job):
         'start_date':    job["creation_date"],
         'output_folder': get_folder(job["content"]["output_folder"]),
         'tmp_folder':    tempfile.mkdtemp(dir=job["content"].get("tmp_folder", None), prefix="dag_tmp_"),
-        'basedir':       job["content"].get("basedir", os.path.abspath(os.path.dirname(job["path"]))),
+        'basedir':       os.path.abspath(os.path.dirname(job["path"])),
         "main_workflow": job["content"]["workflow"]
     }
 
@@ -78,7 +76,7 @@ def make_dag(job):
         schedule_interval='@once',
         default_args=default_args)
     dag.create()
-    dag.assign_job_dispatcher(JobDispatcher(task_id="read", read_file=job["path"], dag=dag))
+    dag.assign_job_dispatcher(JobDispatcher(task_id="read", job_file=job["path"], dag=dag))
     dag.assign_job_cleanup(JobCleanup(task_id="cleanup",
                                       outputs=dag.get_output_list(),
                                       dag=dag))
