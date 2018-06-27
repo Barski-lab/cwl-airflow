@@ -52,12 +52,8 @@ def run_job(args):
 def main(argsl=None):
     if argsl is None:
         argsl = sys.argv[1:]
-    parser = arg_parser()
-    try:
-        args, _ = parser.parse_known_args(argsl)
-    except TypeError:
-        parser.print_help()
-        sys.exit(0)
+    argsl.append("")  # To avoid raising error when argsl is empty
+    args, _ = arg_parser().parse_known_args(argsl)
     args = normalize_args(args, skip_list=["func", "uid"])
     args.func(args)
 
