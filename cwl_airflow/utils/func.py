@@ -75,7 +75,7 @@ def make_dag(job):
         default_args=default_args)
     dag.create()
     dag.assign_job_dispatcher(JobDispatcher(dag=dag))
-    dag.assign_job_cleanup(JobCleanup(outputs=dag.get_output_list(), dag=dag))
+    dag.assign_job_cleanup(JobCleanup(dag=dag))
     return dag
 
 

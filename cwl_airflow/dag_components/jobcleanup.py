@@ -1,60 +1,28 @@
-import os
 import json
 import shutil
 import logging
 from jsonmerge import merge
 from airflow.models import BaseOperator
-from cwl_airflow.utils.utils import set_permissions
+from cwltool.process import relocateOutputs
+from cwltool.stdfsaccess import StdFsAccess
 
 
 class JobCleanup(BaseOperator):
 
-    def __init__(
-            self,
-            outputs,
-            *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(JobCleanup, self).__init__(task_id=self.__class__.__name__, *args, **kwargs)
-        self.outputs = outputs
 
     def execute(self, context):
-        upstream_task_ids = [t.task_id for t in self.upstream_list]
-        upstream_data = self.xcom_pull(context=context, task_ids=upstream_task_ids)
-
-        logging.info('{0}: Collecting outputs from: \n {1}'.format(self.task_id, json.dumps(upstream_task_ids, indent=4)))
-
-        promises = {}
-        for j in upstream_data:
-            data = j
-            promises = merge(promises, data["outputs"])
-
-        logging.info('{0}: with data: \n {1}'.format(self.task_id, json.dumps(promises, indent=4)))
-        logging.info('{0}: Moving data for workflow outputs: \n {1}'.format(self.task_id, json.dumps(self.outputs, indent=4)))
-
-        def visit(item):
-            item_list.append(item["location"])
-            visit_sublist(item.get("secondaryFiles", []))
-
-        def visit_sublist(sublist):
-            for item in sublist:
-                visit(item)
-
-        collected_workflow_outputs = {}
-
-        for out,val in self.outputs.items():
-            if out in promises:
-                collected_workflow_outputs = merge(collected_workflow_outputs, {val.split("/")[-1]: promises[out]})
-                if isinstance(promises[out], dict) and "class" in promises[out] and promises[out]["class"] in ['File', 'Directory']:
-                    item_list = []
-                    visit(promises[out])
-                    for item in item_list:
-                        src = item.replace("file://", '')
-                        dst = os.path.join(self.dag.default_args["job_data"]["content"]["output_folder"], os.path.basename(src))
-                        logging.info('{0}: Moving: \n {1} --> {2}'.format(self.task_id, src, dst))
-                        if os.path.exists(dst):
-                            os.remove(dst) if promises[out]["class"] == 'File' else shutil.rmtree(dst, True)
-                        shutil.move(src, dst)
-                        set_permissions(dst, dir_perm=0o0775, file_perm=0o0664)
-
+        collected_outputs = {}
+        for task_outputs in self.xcom_pull(context=context, task_ids=[task.task_id for task in self.upstream_list]):
+            collected_outputs = merge(collected_outputs, task_outputs["outputs"])
+        logging.debug('Collected outputs:\n{}'.format(json.dumps(collected_outputs, indent=4)))
+        relocated_outputs = relocateOutputs(outputObj={out_name.split("/")[-1]: collected_outputs[out_name]
+                                                       for out_name in self.dag.get_output_list().keys()},
+                                            outdir=self.dag.default_args["job_data"]["content"]["output_folder"],
+                                            output_dirs=[self.dag.default_args["job_data"]["content"]["output_folder"]],
+                                            action="move",
+                                            fs_access=StdFsAccess(""))
         shutil.rmtree(self.dag.default_args["tmp_folder"], ignore_errors=False)
-        logging.debug('{0}: Delete temporary output directory {1}'.format(self.task_id, self.dag.default_args["tmp_folder"]))
-        logging.info("WORKFLOW RESULTS\n" + json.dumps(collected_workflow_outputs, indent=4))
+        logging.debug('Delete temporary output directory {}'.format(self.dag.default_args["tmp_folder"]))
+        logging.info("WORKFLOW RESULTS\n" + json.dumps(relocated_outputs, indent=4))
