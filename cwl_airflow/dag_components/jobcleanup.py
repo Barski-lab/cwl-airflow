@@ -18,7 +18,8 @@ class JobCleanup(BaseOperator):
             collected_outputs = merge(collected_outputs, task_outputs["outputs"])
         logging.debug('Collected outputs:\n{}'.format(json.dumps(collected_outputs, indent=4)))
         relocated_outputs = relocateOutputs(outputObj={out_name.split("/")[-1]: collected_outputs[out_name]
-                                                       for out_name in self.dag.get_output_list().keys()},
+                                                       for out_name in self.dag.get_output_list().keys()
+                                                       if out_name in collected_outputs},
                                             outdir=self.dag.default_args["job_data"]["content"]["output_folder"],
                                             output_dirs=[self.dag.default_args["job_data"]["content"]["output_folder"]],
                                             action="move",
