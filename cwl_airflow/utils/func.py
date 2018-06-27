@@ -19,10 +19,10 @@ from cwl_airflow.dag_components.jobcleanup import JobCleanup
 
 def export_job_file(args):
     job_entry = load_job(args.job)
+    del job_entry["id"]
     job_entry['workflow'] = args.workflow
     job_entry['output_folder'] = args.output_folder
     job_entry["uid"] = args.uid
-    del job_entry["id"]
     if args.tmp_folder:
         job_entry['tmp_folder'] = args.tmp_folder
     export_to_file(os.path.join(configuration.get('cwl', 'jobs'), os.path.basename(args.job)),
@@ -63,12 +63,10 @@ def make_dag(job):
     """
     set_logger()
     default_args = {
-        'owner': job["content"].get("author", "cwl-airflow"),
-        'start_date':    job["creation_date"],
-        'output_folder': get_folder(job["content"]["output_folder"]),
-        'tmp_folder':    tempfile.mkdtemp(dir=job["content"].get("tmp_folder", None), prefix="dag_tmp_"),
-        'basedir':       os.path.abspath(os.path.dirname(job["path"])),
-        "main_workflow": job["content"]["workflow"]
+        'start_date': job["creation_date"],
+        "job_data":   job,
+        'tmp_folder': tempfile.mkdtemp(dir=job["content"].get("tmp_folder", None), prefix="dag_tmp_"),
+        'basedir':    os.path.abspath(os.path.dirname(job["path"]))
     }
 
     dag = CWLDAG(
@@ -76,10 +74,8 @@ def make_dag(job):
         schedule_interval='@once',
         default_args=default_args)
     dag.create()
-    dag.assign_job_dispatcher(JobDispatcher(task_id="read", job_file=job["path"], dag=dag))
-    dag.assign_job_cleanup(JobCleanup(task_id="cleanup",
-                                      outputs=dag.get_output_list(),
-                                      dag=dag))
+    dag.assign_job_dispatcher(JobDispatcher(dag=dag))
+    dag.assign_job_cleanup(JobCleanup(outputs=dag.get_output_list(), dag=dag))
     return dag
 
 

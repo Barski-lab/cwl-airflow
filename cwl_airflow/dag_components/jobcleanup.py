@@ -12,13 +12,8 @@ class JobCleanup(BaseOperator):
     def __init__(
             self,
             outputs,
-            op_args=None,
-            op_kwargs=None,
             *args, **kwargs):
-        super(JobCleanup, self).__init__(*args, **kwargs)
-
-        self.op_args = op_args or []
-        self.op_kwargs = op_kwargs or {}
+        super(JobCleanup, self).__init__(task_id=self.__class__.__name__, *args, **kwargs)
         self.outputs = outputs
 
     def execute(self, context):
@@ -30,7 +25,7 @@ class JobCleanup(BaseOperator):
         promises = {}
         for j in upstream_data:
             data = j
-            promises = merge(promises, data["promises"])
+            promises = merge(promises, data["outputs"])
 
         logging.info('{0}: with data: \n {1}'.format(self.task_id, json.dumps(promises, indent=4)))
         logging.info('{0}: Moving data for workflow outputs: \n {1}'.format(self.task_id, json.dumps(self.outputs, indent=4)))
@@ -53,10 +48,10 @@ class JobCleanup(BaseOperator):
                     visit(promises[out])
                     for item in item_list:
                         src = item.replace("file://", '')
-                        dst = os.path.join(self.dag.default_args["output_folder"], os.path.basename(src))
+                        dst = os.path.join(self.dag.default_args["job_data"]["content"]["output_folder"], os.path.basename(src))
                         logging.info('{0}: Moving: \n {1} --> {2}'.format(self.task_id, src, dst))
                         if os.path.exists(dst):
-                            os.remove(dst) if promises[out]["class"] == 'File' else shutil.rmtree (dst, True)
+                            os.remove(dst) if promises[out]["class"] == 'File' else shutil.rmtree(dst, True)
                         shutil.move(src, dst)
                         set_permissions(dst, dir_perm=0o0775, file_perm=0o0664)
 

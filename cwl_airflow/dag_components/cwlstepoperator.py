@@ -59,7 +59,7 @@ class CWLStepOperator(BaseOperator):
         promises = {}
         for j in upstream_data:
             data = j
-            promises = merge(promises, data["promises"])
+            promises = merge(promises, data["outputs"])
 
         logging.debug(
             '{0}: Upstream data: \n {1}'.format(self.task_id, json.dumps(upstream_data,indent=4)))
@@ -153,7 +153,7 @@ class CWLStepOperator(BaseOperator):
                 continue
 
         data = {}
-        data["promises"] = promises
+        data["outputs"] = promises
 
         logging.info(
             '{0}: Output: \n {1}'.format(self.task_id, json.dumps(data, indent=4)))
