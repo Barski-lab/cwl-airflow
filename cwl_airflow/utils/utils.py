@@ -6,6 +6,7 @@ import argparse
 from json import dumps
 import cwltool.context
 from cwltool.workflow import default_make_tool
+from cwltool.resolver import tool_resolver
 from cwltool.load_tool import load_tool, jobloaderctx
 from cwltool.argparser import get_default_args
 from schema_salad.ref_resolver import Loader
@@ -76,8 +77,10 @@ def gen_outputs(tool):
 
 
 def load_cwl(cwl_file):
-    cwltool.context.default_make_tool = default_make_tool
-    return load_tool(cwl_file, cwltool.context.LoadingContext(get_default_args()))
+    loading_context = cwltool.context.LoadingContext(get_default_args())
+    loading_context.construct_tool_object = cwltool.context.getdefault(loading_context.construct_tool_object, default_make_tool)
+    loading_context.resolver = cwltool.context.getdefault(loading_context.resolver, tool_resolver)
+    return load_tool(cwl_file, loading_context)
 
 
 def exit_if_unsupported_feature(cwl_file, exit_code=33):
