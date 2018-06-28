@@ -7,7 +7,7 @@ suppress_stdout()
 # Suppress output
 from airflow.bin.cli import scheduler
 from cwl_airflow.utils.func import export_job_file, update_args, update_config, export_dags, create_folders
-from cwl_airflow.utils.utils import get_workflow_output, normalize_args
+from cwl_airflow.utils.utils import get_workflow_output, normalize_args, exit_if_unsupported_feature
 # Restore output
 restore_stdout()
 
@@ -41,6 +41,7 @@ def run_init(args):
 
 def run_job(args):
     suppress_stdout()
+    exit_if_unsupported_feature(args.workflow)
     export_job_file(args)
     update_args(args)
     scheduler(args)

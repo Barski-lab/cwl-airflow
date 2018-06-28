@@ -1,13 +1,89 @@
 import os
+import sys
 import urllib.parse
 import logging
 import argparse
+from json import dumps
+import cwltool.context
+from cwltool.workflow import default_make_tool
+from cwltool.load_tool import load_tool, jobloaderctx
+from cwltool.argparser import get_default_args
 from schema_salad.ref_resolver import Loader
-from cwltool.load_tool import jobloaderctx
 from airflow import configuration
 from airflow.exceptions import AirflowConfigException
 from airflow.models import DagRun
 from airflow.utils.state import State
+
+
+def convert_to_workflow(tool, tool_file, workflow_file):
+    workflow = {"cwlVersion": "v1.0",
+                "class":      "Workflow",
+                "inputs":     gen_inputs(tool),
+                "outputs":    gen_outputs(tool)}
+    workflow["steps"] = [{"run": tool_file,
+                          "in": [{"source": inp["id"], "id": inp["id"]} for inp in workflow["inputs"]],
+                          "out": [outp["id"] for outp in workflow["outputs"]],
+                          "id": "static_step"}]
+    if tool.get("$namespaces", None):
+        workflow["$namespaces"] = tool["$namespaces"]
+    if tool.get("$schemas", None):
+        workflow["$schemas"] = tool["$schemas"]
+    if tool.get("requirements", None):
+        workflow["requirements"] = tool["requirements"]
+
+    with open(workflow_file, 'w') as output_stream:
+        output_stream.write(dumps(workflow, indent=4))
+
+    return workflow_file
+
+
+def gen_inputs(tool):
+    inputs = []
+    for inpt in tool["inputs"]:
+        custom_input = {}
+        if inpt.get("id", None):
+            custom_input["id"] = shortname(inpt["id"])
+        if inpt.get("type", None):
+            custom_input["type"] = inpt["type"]
+        if inpt.get("format", None):
+            custom_input["format"] = inpt["format"]
+        if inpt.get("doc", None):
+            custom_input["doc"] = inpt["doc"]
+        if inpt.get("label", None):
+            custom_input["label"] = inpt["label"]
+        inputs.append(custom_input)
+    return inputs
+
+
+def gen_outputs(tool):
+    outputs = []
+    for outp in tool["outputs"]:
+        custom_output = {}
+        if outp.get("id", None):
+            custom_output["id"] = shortname(outp["id"])
+        if outp.get("type", None):
+            custom_output["type"] = outp["type"]
+        if outp.get("format", None):
+            custom_output["format"] = outp["format"]
+        if outp.get("doc", None):
+            custom_output["doc"] = outp["doc"]
+        if outp.get("label", None):
+            custom_output["label"] = outp["label"]
+        if outp.get("id", None):
+            custom_output["outputSource"] = "static_step/" + shortname(outp["id"])
+        outputs.append(custom_output)
+    return outputs
+
+
+def load_cwl(cwl_file):
+    cwltool.context.default_make_tool = default_make_tool
+    return load_tool(cwl_file, cwltool.context.LoadingContext(get_default_args()))
+
+
+def exit_if_unsupported_feature(cwl_file, exit_code=33):
+    tool = load_cwl(cwl_file).tool
+    if tool["class"] == "Workflow" and [step["id"] for step in tool["steps"] if "scatter" in step]:
+        sys.exit(exit_code)
 
 
 def normalize_args(args, skip_list=[]):

@@ -93,7 +93,7 @@ def update_config():
 
 
 def export_dags():
-    dag_content = u"#!/usr/bin/env python3\nfrom airflow import DAG\nfrom cwl_airflow.create_dag import create_dags\nfor id,dag in create_dags().items():\n    globals()[id] = dag"
+    dag_content = u"#!/usr/bin/env python3\nfrom airflow import DAG\nfrom cwl_airflow.create_dag import create_dags\nfor id, dag in create_dags().items():\n    globals()[id] = dag"
     export_to_file(os.path.join(DAGS_FOLDER, "cwl_dag.py"), dag_content)
 
 

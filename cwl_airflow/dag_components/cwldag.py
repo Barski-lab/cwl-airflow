@@ -1,24 +1,10 @@
 import os
-import json
-from six.moves import urllib
-import cwltool.main
-import cwltool.load_tool
-from cwltool.context import LoadingContext
-import cwltool.workflow
-import cwltool.errors
-from cwltool.resolver import tool_resolver
 from airflow.models import DAG
 from cwl_airflow.dag_components.cwlstepoperator import CWLStepOperator
-from cwl_airflow.utils.utils import (shortname, flatten)
-
+from cwl_airflow.utils.utils import (shortname, flatten, load_cwl, convert_to_workflow)
 from cwl_airflow.dag_components.jobdispatcher import JobDispatcher
 from cwl_airflow.dag_components.jobcleanup import JobCleanup
 
-
-def check_unsupported_feature (tool):
-    if tool["class"] == "Workflow" and [step["id"] for step in tool["steps"] if "scatter" in step]:
-        return True, "Scatter is not supported"
-    return False, None
 
 class CWLDAG(DAG):
 
@@ -29,87 +15,15 @@ class CWLDAG(DAG):
         """
         return self.full_filepath
 
-    def __init__(
-            self,
-            dag_id=None,
-            default_args=None,
-            *args, **kwargs):
-
-        super(self.__class__, self).__init__(dag_id=dag_id,
-                                             default_args=default_args, *args, **kwargs)
-
-        self.cwlwf = cwltool.load_tool.load_tool(argsworkflow = default_args["job_data"]["content"]["workflow"],
-                                                 loadingContext=LoadingContext(kwargs={
-                                                     "construct_tool_object": cwltool.workflow.default_make_tool,
-                                                     "resolver": tool_resolver}))
-
-        if type(self.cwlwf) == int or check_unsupported_feature(self.cwlwf.tool)[0]:
-            raise cwltool.errors.UnsupportedRequirement(check_unsupported_feature(self.cwlwf.tool)[1])
-
+    def __init__(self, dag_id, default_args, *args, **kwargs):
+        super(self.__class__, self).__init__(dag_id=dag_id, default_args=default_args, *args, **kwargs)
+        self.cwlwf = load_cwl(default_args["job_data"]["content"]["workflow"])
         if self.cwlwf.tool["class"] == "CommandLineTool" or self.cwlwf.tool["class"] == "ExpressionTool":
-            dirname = os.path.dirname(default_args["job_data"]["content"]["workflow"])
-            filename, ext = os.path.splitext(os.path.basename(default_args["job_data"]["content"]["workflow"]))
-            new_workflow_name = os.path.join(dirname, filename + '_workflow' + ext)
-            generated_workflow = self.gen_workflow (self.cwlwf.tool, default_args["job_data"]["content"]["workflow"])
-            with open(new_workflow_name, 'w') as generated_workflow_stream:
-                generated_workflow_stream.write(json.dumps(generated_workflow, indent=4))
-            self.cwlwf = cwltool.load_tool.load_tool(argsworkflow = new_workflow_name,
-                                                     loadingContext=LoadingContext(kwargs={
-                                                         "construct_tool_object": cwltool.workflow.default_make_tool,
-                                                         "resolver": tool_resolver}))
-
+            workflow_file = os.path.join(default_args["tmp_folder"], os.path.basename(default_args["job_data"]["content"]["workflow"]))
+            self.cwlwf = load_cwl(convert_to_workflow(tool=self.cwlwf.tool,
+                                                      tool_file=default_args["job_data"]["content"]["workflow"],
+                                                      workflow_file=workflow_file))
         self.requirements = self.cwlwf.tool.get("requirements", [])
-
-
-    def gen_workflow_inputs(self, cwl_tool):
-        inputs = []
-        for input in cwl_tool["inputs"]:
-            custom_input = {}
-            if input.get("id", None): custom_input["id"] = shortname(input["id"])
-            if input.get("type", None): custom_input["type"] = input["type"]
-            if input.get("format", None): custom_input["format"] = input["format"]
-            if input.get("doc", None): custom_input["doc"] = input["doc"]
-            if input.get("label", None): custom_input["label"] = input["label"]
-            inputs.append(custom_input)
-        return inputs
-
-
-    def gen_workflow_outputs(self, cwl_tool):
-        outputs = []
-        for output in cwl_tool["outputs"]:
-            custom_output = {}
-            if output.get("id", None): custom_output["id"] = shortname(output["id"])
-            if output.get("type", None): custom_output["type"] = output["type"]
-            if output.get("format", None): custom_output["format"] = output["format"]
-            if output.get("doc", None): custom_output["doc"] = output["doc"]
-            if output.get("label", None): custom_output["label"] = output["label"]
-            if output.get("id", None): custom_output["outputSource"] = "static_step/" + shortname(output["id"])
-            outputs.append(custom_output)
-        return outputs
-
-
-    def gen_workflow_steps(self, cwl_file, workflow_inputs, workflow_outputs):
-        steps = []
-        steps.append ({ \
-                        "run": cwl_file, \
-                        "in": [{"source": workflow_input["id"], "id": workflow_input["id"]} for workflow_input in workflow_inputs], \
-                        "out": [output["id"] for output in workflow_outputs], \
-                        "id": "static_step" \
-                      })
-        return steps
-
-    def gen_workflow(self, cwl_tool, cwl_file):
-        a_workflow = {}
-        a_workflow["cwlVersion"] = "v1.0"
-        a_workflow["class"] = "Workflow"
-        a_workflow["inputs"] = self.gen_workflow_inputs(cwl_tool)
-        a_workflow["outputs"] = self.gen_workflow_outputs(cwl_tool)
-        a_workflow["steps"] = self.gen_workflow_steps(cwl_file, a_workflow["inputs"], a_workflow["outputs"])
-        if cwl_tool.get("$namespaces", None): a_workflow["$namespaces"] = cwl_tool["$namespaces"]
-        if cwl_tool.get("$schemas", None): a_workflow["$schemas"] = cwl_tool["$schemas"]
-        if cwl_tool.get("requirements", None): a_workflow["requirements"] = cwl_tool["requirements"]
-        return a_workflow
-
 
     def create(self):
         outputs = {}
