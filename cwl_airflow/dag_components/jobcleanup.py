@@ -17,9 +17,9 @@ class JobCleanup(BaseOperator):
         for task_outputs in self.xcom_pull(context=context, task_ids=[task.task_id for task in self.upstream_list]):
             collected_outputs = merge(collected_outputs, task_outputs["outputs"])
         logging.debug('Collected outputs:\n{}'.format(json.dumps(collected_outputs, indent=4)))
-        relocated_outputs = relocateOutputs(outputObj={out_name.split("/")[-1]: collected_outputs[out_name]
-                                                       for out_name in self.dag.get_output_list().keys()
-                                                       if out_name in collected_outputs},
+        relocated_outputs = relocateOutputs(outputObj={output_id: collected_outputs[output_src]
+                                                       for output_src, output_id in self.dag.get_output_list().items()
+                                                       if output_src in collected_outputs},
                                             outdir=self.dag.default_args["job_data"]["content"]["output_folder"],
                                             output_dirs=[self.dag.default_args["job_data"]["content"]["output_folder"]],
                                             action="move",
