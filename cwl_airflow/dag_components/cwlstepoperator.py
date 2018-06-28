@@ -1,18 +1,16 @@
+import sys
+import json
+import copy
+import logging
+import tempfile
+from airflow.models import BaseOperator
+from jsonmerge import merge
 import cwltool.executors
 import cwltool.workflow
 import cwltool.errors
-import logging
-import sys
-from airflow.models import BaseOperator
-from airflow.utils import (apply_defaults)
-from jsonmerge import merge
-import json
-import os
-import copy
-from cwl_airflow.utils.utils import (shortname, flatten)
-import tempfile
 import cwltool.stdfsaccess
 from cwltool.context import RuntimeContext, getdefault
+from cwl_airflow.utils.utils import (shortname, flatten)
 from airflow.utils.log.logging_mixin import StreamLogWriter
 
 
@@ -24,51 +22,16 @@ class StreamLogWriterUpdated (StreamLogWriter):
 
 class CWLStepOperator(BaseOperator):
 
-    ui_color = '#3E53B7'
-    ui_fgcolor = '#FFF'
-
-    @apply_defaults
-    def __init__(
-            self,
-            cwl_step,
-            ui_color=None,
-            op_args=None,
-            op_kwargs=None,
-            *args, **kwargs):
-
+    def __init__(self, cwl_step, *args, **kwargs):
         self.cwl_step = cwl_step
-        step_id = shortname(cwl_step.tool["id"]).split("/")[-1]
-
-        super(self.__class__, self).__init__(task_id=step_id, *args, **kwargs)
-
-        self.op_args = op_args or []
-        self.op_kwargs = op_kwargs or {}
-
-        if ui_color:
-            self.ui_color = ui_color
+        super(self.__class__, self).__init__(task_id=shortname(cwl_step.tool["id"]).split("/")[-1], *args, **kwargs)
 
     def execute(self, context):
-
-        logging.info('{0}: Running tool: \n{1}'.format(self.task_id, json.dumps(self.cwl_step.embedded_tool.tool, indent=4)))
-
-        upstream_task_ids = [t.task_id for t in self.upstream_list]
-        upstream_data = self.xcom_pull(context=context, task_ids=upstream_task_ids)
-
-        logging.info('{0}: Collecting outputs from: \n{1}'.format(self.task_id, json.dumps(upstream_task_ids, indent=4)))
-
-        promises = {}
-        for j in upstream_data:
-            data = j
-            promises = merge(promises, data["outputs"])
-
-        logging.debug(
-            '{0}: Upstream data: \n {1}'.format(self.task_id, json.dumps(upstream_data,indent=4)))
-
-        logging.debug(
-            '{0}: Step inputs: \n {1}'.format(self.task_id, json.dumps(self.cwl_step.tool["inputs"],indent=4)))
-
-        logging.debug(
-            '{0}: Step outputs: \n {1}'.format(self.task_id, json.dumps(self.cwl_step.tool["outputs"],indent=4)))
+        logging.info('Running tool: \n{}'.format(json.dumps(self.cwl_step.tool, indent=4)))
+        collected_outputs = {}
+        for task_outputs in self.xcom_pull(context=context, task_ids=[task.task_id for task in self.upstream_list]):
+            collected_outputs = merge(collected_outputs, task_outputs["outputs"])
+        logging.debug('Collected outputs:\n{}'.format(json.dumps(collected_outputs, indent=4)))
 
         jobobj = {}
 
@@ -78,7 +41,7 @@ class CWLStepOperator(BaseOperator):
             promises_outputs = []
             try:
                 source_ids = [shortname(source) for source in inp["source"]] if isinstance(inp["source"], list) else [shortname(inp["source"])]
-                promises_outputs = [promises[source_id] for source_id in source_ids if source_id in promises]
+                promises_outputs = [collected_outputs[source_id] for source_id in source_ids if source_id in collected_outputs]
             except Exception as ex:
                 logging.info("{0}: Couldn't find source field in step input:\n{1}".format(self.task_id,json.dumps(inp,indent=4)))
             logging.info('{0}: For input {1} with source_ids: {2} found upstream outputs: \n{3}'.format(self.task_id, jobobj_id, source_ids, promises_outputs))
