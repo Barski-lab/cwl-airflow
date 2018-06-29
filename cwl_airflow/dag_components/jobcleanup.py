@@ -22,7 +22,7 @@ class JobCleanup(BaseOperator):
                                                        if output_src in collected_outputs},
                                             outdir=self.dag.default_args["job_data"]["content"]["output_folder"],
                                             output_dirs=[self.dag.default_args["job_data"]["content"]["output_folder"]],
-                                            action="move",
+                                            action="copy",
                                             fs_access=StdFsAccess(""))
         shutil.rmtree(self.dag.default_args["tmp_folder"], ignore_errors=False)
         logging.debug('Delete temporary output directory {}'.format(self.dag.default_args["tmp_folder"]))
