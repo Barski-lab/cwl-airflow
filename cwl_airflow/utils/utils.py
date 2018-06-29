@@ -215,7 +215,7 @@ def get_latest_log(dag_id, task_id="JobCleanup", state=State.SUCCESS):
             return "{log_base}/{dag_id}/{task_id}/{execution_date}/{try_number}.log".format(**kwargs)
 
 
-def get_workflow_output(dag_id):
+def get_workflow_output(dag_id):  # make something more relyable that splitting by Subtask
     found_output = False
     results = []
     for line in open_file(get_latest_log(dag_id)):
@@ -223,5 +223,8 @@ def get_workflow_output(dag_id):
             found_output = True
             continue
         if found_output:
-            results.append(line.split('Subtask: ')[1])
+            try:
+                results.append(line.split('Subtask: ')[1])
+            except Exception:  # Better use IndexError instead of Exception
+                pass
     return "\n".join(results)
