@@ -24,6 +24,8 @@ class JobCleanup(BaseOperator):
                                             output_dirs=[self.dag.default_args["job_data"]["content"]["output_folder"]],
                                             action="copy",
                                             fs_access=StdFsAccess(""))
+
+        relocated_outputs = {key.split("/")[-1]: val for key, val in relocated_outputs.items()}
         shutil.rmtree(self.dag.default_args["tmp_folder"], ignore_errors=False)
         logging.debug('Delete temporary output directory {}'.format(self.dag.default_args["tmp_folder"]))
         logging.info("WORKFLOW RESULTS\n" + json.dumps(relocated_outputs, indent=4))

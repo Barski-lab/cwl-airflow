@@ -6,7 +6,7 @@ from airflow.models import BaseOperator
 from cwltool.main import init_job_order
 from cwltool.load_tool import jobloaderctx
 from schema_salad.ref_resolver import Loader
-
+from cwl_airflow.utils.utils import shortname
 
 class JobDispatcher(BaseOperator):
 
@@ -19,5 +19,12 @@ class JobDispatcher(BaseOperator):
                                                       self.dag.cwlwf,
                                                       Loader(jobloaderctx.copy()),
                                                       sys.stdout)
-        logging.info("Dispatch job\n{}".format(json.dumps(initialized_job_order_object, indent=4)))
-        return {"outputs": initialized_job_order_object}
+
+        updated_job_order_object = {}
+        for index, inp in enumerate(self.dag.cwlwf.tool["inputs"]):
+            inp_id = shortname(inp["id"])
+            if inp_id.split("/")[-1] in initialized_job_order_object:
+                updated_job_order_object[inp_id] = initialized_job_order_object[inp_id.split("/")[-1]]
+
+        logging.info("Dispatch job\n{}".format(json.dumps(updated_job_order_object, indent=4)))
+        return {"outputs": updated_job_order_object}

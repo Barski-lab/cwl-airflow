@@ -44,10 +44,10 @@ class CWLStepOperator(BaseOperator):
                 promises_outputs = [collected_outputs[source_id] for source_id in source_ids if source_id in collected_outputs]
             except Exception as ex:
                 logging.info("{0}: Couldn't find source field in step input:\n{1}".format(self.task_id,json.dumps(inp,indent=4)))
-            logging.info('{0}: For input {1} with source_ids: {2} found upstream outputs: \n{3}'.format(self.task_id, jobobj_id, source_ids, promises_outputs))
+            logging.info('For input {} with source_ids: {} found upstream outputs: \n{}'.format(jobobj_id, source_ids, promises_outputs))
             if len(promises_outputs) > 1:
                 if inp.get("linkMerge", "merge_nested") == "merge_flattened":
-                    jobobj[jobobj_id] = flatten (promises_outputs)
+                    jobobj[jobobj_id] = flatten(promises_outputs)
                 else:
                     jobobj[jobobj_id] = promises_outputs
             elif len(promises_outputs) == 1 and (promises_outputs[0] is not None): # Should also check if [None], because in this case we need to take default value
