@@ -201,9 +201,9 @@ def set_logger():
     cwl_logger.setLevel(eval_log_level(conf_get_default('cwl','LOG_LEVEL','INFO').upper()))
 
 
-def get_latest_log(dag_id, task_id="JobCleanup", state=State.SUCCESS):
+def get_latest_log(dag_id, task_id="JobCleanup"):
     log_base = os.path.expanduser(configuration.get('core', 'BASE_LOG_FOLDER'))
-    dag_run = sorted(DagRun.find(dag_id, state=state), reverse=True, key=lambda x: x.execution_date)[0]
+    dag_run = sorted(DagRun.find(dag_id), reverse=True, key=lambda x: x.execution_date)[0]
     for task in dag_run.get_task_instances():
         if task.task_id == task_id:
             kwargs = {"log_base": log_base,
