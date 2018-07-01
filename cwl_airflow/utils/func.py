@@ -91,6 +91,7 @@ def update_config(args):
         configuration.set('cwl', 'limit', str(args.limit))
         configuration.set('core', 'dagbag_import_timeout', str(args.dag_timeout))
         configuration.set('scheduler', 'min_file_process_interval', str(args.dag_interval))
+        configuration.set('scheduler', 'max_threads', str(args.threads))
         configuration.conf.write(output_stream)
 
 
