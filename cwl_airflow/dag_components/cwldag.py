@@ -19,7 +19,12 @@ class CWLDAG(DAG):
         super(self.__class__, self).__init__(dag_id=dag_id, default_args=default_args, *args, **kwargs)
         self.cwlwf = load_cwl(default_args["job_data"]["content"]["workflow"])
         if self.cwlwf.tool["class"] == "CommandLineTool" or self.cwlwf.tool["class"] == "ExpressionTool":
-            workflow_file = os.path.join(default_args["tmp_folder"], os.path.basename(default_args["job_data"]["content"]["workflow"]))
+            # workflow_file = os.path.join(default_args["tmp_folder"], os.path.basename(default_args["job_data"]["content"]["workflow"]))
+
+            tool_dirname = os.path.dirname(default_args["job_data"]["content"]["workflow"])
+            tool_filename, tool_ext = os.path.splitext(os.path.basename(default_args["job_data"]["content"]["workflow"]))
+            workflow_file = os.path.join(tool_dirname, tool_filename + '_workflow' + tool_ext)
+
             self.cwlwf = load_cwl(convert_to_workflow(tool=self.cwlwf.tool,
                                                       tool_file=default_args["job_data"]["content"]["workflow"],
                                                       workflow_file=workflow_file))
