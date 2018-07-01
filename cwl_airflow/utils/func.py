@@ -79,7 +79,7 @@ def make_dag(job):
     return dag
 
 
-def update_config():
+def update_config(args):
     with open(configuration.AIRFLOW_CONFIG, 'w') as output_stream:
         try:
             configuration.conf.add_section('cwl')
@@ -88,7 +88,7 @@ def update_config():
         configuration.set('core', 'dags_are_paused_at_creation', 'False')
         configuration.set('core', 'load_examples', 'False')
         configuration.set('cwl', 'jobs', os.path.join(AIRFLOW_HOME, 'jobs'))
-        configuration.set('cwl', 'limit', '5')
+        configuration.set('cwl', 'limit', str(args.limit))
         configuration.set('scheduler', 'scheduler_heartbeat_sec', '20')
         configuration.set('scheduler', 'min_file_process_interval', '30')
         configuration.set('core', 'dagbag_import_timeout', '60')
