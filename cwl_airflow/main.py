@@ -23,7 +23,7 @@ def arg_parser():
     init_parser.set_defaults(func=run_init)
     init_parser.add_argument("-l", "--limit", dest='limit', type=int, help="Limit job concurrancy", default=10)
     init_parser.add_argument("-t", "--timeout", dest='dag_timeout', type=int, help="How long before timing out a python file import while filling the DagBag", default=30)
-    init_parser.add_argument("-i", "--interval", dest='dag_interval', type=int, help="After how much time a new DAGs should be picked up from the filesystem", default=30)
+    init_parser.add_argument("-i", "--interval", dest='dag_interval', type=int, help="After how much time a new DAGs should be picked up from the filesystem", default=0)
 
     run_parser = subparsers.add_parser('run', help="Run workflow", parents=[parent_parser])
     run_parser.set_defaults(func=run_job)
