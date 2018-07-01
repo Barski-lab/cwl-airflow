@@ -1,4 +1,5 @@
 import sys
+import os
 import json
 import copy
 import logging
@@ -85,8 +86,10 @@ class CWLStepOperator(BaseOperator):
 
         kwargs = self.dag.default_args
         kwargs['outdir'] = tempfile.mkdtemp(dir=kwargs["tmp_folder"], prefix="step_tmp_")
-        kwargs['tmpdir_prefix'] = tempfile.mkdtemp(dir=kwargs["tmp_folder"], prefix="cwl_tmp_")
-        kwargs['tmp_outdir_prefix'] = tempfile.mkdtemp(dir=kwargs["tmp_folder"], prefix="cwl_outdir_tmp_")
+        kwargs['tmpdir_prefix'] = os.path.join(kwargs["tmp_folder"], "cwl_tmp_")
+        kwargs['tmp_outdir_prefix'] = os.path.join(kwargs["tmp_folder"], "cwl_outdir_tmp_")
+        kwargs['rm_tmpdir'] = False
+
 
         logger = logging.getLogger("cwltool")
         sys.stdout = StreamLogWriterUpdated(logger, logging.INFO)
