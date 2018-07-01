@@ -89,9 +89,6 @@ def update_config(args):
         configuration.set('core', 'load_examples', 'False')
         configuration.set('cwl', 'jobs', os.path.join(AIRFLOW_HOME, 'jobs'))
         configuration.set('cwl', 'limit', str(args.limit))
-        configuration.set('scheduler', 'scheduler_heartbeat_sec', '20')
-        configuration.set('scheduler', 'min_file_process_interval', '30')
-        configuration.set('core', 'dagbag_import_timeout', '60')
         configuration.conf.write(output_stream)
 
 
