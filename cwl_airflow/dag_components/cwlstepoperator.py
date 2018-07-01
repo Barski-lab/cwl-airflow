@@ -36,6 +36,8 @@ class CWLStepOperator(BaseOperator):
         jobobj = {}
 
         for inp in self.cwl_step.tool["inputs"]:
+            if inp.get("not_connected"):  # skip all not connected inputs
+                continue
             jobobj_id = shortname(inp["id"]).split("/")[-1]
             source_ids = []
             promises_outputs = []
