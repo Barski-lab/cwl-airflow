@@ -23,7 +23,9 @@ def export_job_file(args):
     job_entry['output_folder'] = job_entry.get("output_folder", args.output_folder)
     job_entry["uid"] = job_entry.get("uid", args.uid)
     job_entry['tmp_folder'] = job_entry.get("tmp_folder", args.tmp_folder)
-    export_to_file(os.path.join(conf.get('cwl', 'jobs'), os.path.basename(args.job)), dumps(job_entry, indent=4))
+    root, ext = os.path.splitext(os.path.basename(args.job))
+    args.job = os.path.join(conf.get('cwl', 'jobs'), root + "-" + job_entry["uid"] + ext)
+    export_to_file(args.job, dumps(job_entry, indent=4))
 
 
 def update_args(args):
@@ -87,6 +89,8 @@ def update_config(args):
         conf.set('core', 'dagbag_import_timeout', str(args.dag_timeout))
         conf.set('scheduler', 'min_file_process_interval', str(args.dag_interval))
         conf.set('scheduler', 'max_threads', str(args.threads))
+        conf.set('webserver', 'worker_refresh_interval', str(args.web_interval))
+        conf.set('webserver', 'worker_refresh_batch_size', str(args.web_workers))
         conf.conf.write(output_stream)
 
 

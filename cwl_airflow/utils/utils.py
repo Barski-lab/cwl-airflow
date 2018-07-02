@@ -181,7 +181,7 @@ def gen_dag_id(job_file):
     job_content = load_job(job_file)
     w_seg = ".".join(job_content["workflow"].split("/")[-1].split(".")[0:-1])
     j_seg = ".".join(job_file.split("/")[-1].split(".")[0:-1])
-    return "_".join([w_seg, j_seg, job_content["uid"].replace("-", "_")])
+    return "-".join([w_seg, j_seg])
 
 
 def eval_log_level(key):
