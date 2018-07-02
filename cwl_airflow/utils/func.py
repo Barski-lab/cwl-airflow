@@ -1,9 +1,8 @@
 import os
-import tempfile
 from json import dumps
 import configparser
 from datetime import datetime
-from airflow import configuration
+from airflow import conf as conf
 from airflow.settings import DAGS_FOLDER, AIRFLOW_HOME
 from airflow.bin.cli import get_dag, CLIFactory
 from cwl_airflow.utils.utils import (set_logger,
@@ -20,19 +19,17 @@ from cwl_airflow.dag_components.jobcleanup import JobCleanup
 def export_job_file(args):
     job_entry = load_job(args.job)
     del job_entry["id"]
-    job_entry['workflow'] = args.workflow
-    job_entry['output_folder'] = args.output_folder
-    job_entry["uid"] = args.uid
-    if args.tmp_folder:
-        job_entry['tmp_folder'] = args.tmp_folder
-    export_to_file(os.path.join(configuration.get('cwl', 'jobs'), os.path.basename(args.job)),
-                   dumps(job_entry, indent=4))
+    job_entry['workflow'] = job_entry.get("workflow", args.workflow)
+    job_entry['output_folder'] = job_entry.get("output_folder", args.output_folder)
+    job_entry["uid"] = job_entry.get("uid", args.uid)
+    job_entry['tmp_folder'] = job_entry.get("tmp_folder", args.tmp_folder)
+    export_to_file(os.path.join(conf.get('cwl', 'jobs'), os.path.basename(args.job)), dumps(job_entry, indent=4))
 
 
 def update_args(args):
     vars(args).update({arg_name: arg_value.default for arg_name, arg_value in CLIFactory.args.items()
                        if arg_name in CLIFactory.subparsers_dict['scheduler']['args']})
-    args.dag_id = gen_dag_id(args.workflow, os.path.join(configuration.get('cwl', 'jobs'), os.path.basename(args.job)))
+    args.dag_id = gen_dag_id(os.path.join(conf.get('cwl', 'jobs'), os.path.basename(args.job)))
     args.num_runs = len(get_dag(args).tasks) + 3
 
 
@@ -48,7 +45,7 @@ def get_active_jobs(jobs_folder, limit=10):
         all_jobs.append({"content": job_content,
                          "path": job_path,
                          "creation_date": datetime.fromtimestamp(os.path.getctime(job_path)),
-                         "dag_id": gen_dag_id(job_content["workflow"], job_path)})
+                         "dag_id": gen_dag_id(job_path)})
     all_jobs = sorted(all_jobs, key=lambda k: k["creation_date"], reverse=True)
     return all_jobs[:limit]
 
@@ -64,8 +61,7 @@ def make_dag(job):
     set_logger()
     default_args = {
         'start_date': job["creation_date"],
-        "job_data":   job,
-        'basedir':    os.path.abspath(os.path.dirname(job["path"]))
+        "job_data":   job
     }
 
     dag = CWLDAG(
@@ -79,19 +75,19 @@ def make_dag(job):
 
 
 def update_config(args):
-    with open(configuration.AIRFLOW_CONFIG, 'w') as output_stream:
+    with open(conf.AIRFLOW_CONFIG, 'w') as output_stream:
         try:
-            configuration.conf.add_section('cwl')
+            conf.conf.add_section('cwl')
         except configparser.DuplicateSectionError:
             pass
-        configuration.set('core', 'dags_are_paused_at_creation', 'False')
-        configuration.set('core', 'load_examples', 'False')
-        configuration.set('cwl', 'jobs', os.path.join(AIRFLOW_HOME, 'jobs'))
-        configuration.set('cwl', 'limit', str(args.limit))
-        configuration.set('core', 'dagbag_import_timeout', str(args.dag_timeout))
-        configuration.set('scheduler', 'min_file_process_interval', str(args.dag_interval))
-        configuration.set('scheduler', 'max_threads', str(args.threads))
-        configuration.conf.write(output_stream)
+        conf.set('core', 'dags_are_paused_at_creation', 'False')
+        conf.set('core', 'load_examples', 'False')
+        conf.set('cwl', 'jobs', os.path.join(AIRFLOW_HOME, 'jobs'))
+        conf.set('cwl', 'limit', str(args.limit))
+        conf.set('core', 'dagbag_import_timeout', str(args.dag_timeout))
+        conf.set('scheduler', 'min_file_process_interval', str(args.dag_interval))
+        conf.set('scheduler', 'max_threads', str(args.threads))
+        conf.conf.write(output_stream)
 
 
 def export_dags():
@@ -100,5 +96,5 @@ def export_dags():
 
 
 def create_folders():
-    get_folder(configuration.get('cwl', 'jobs'))
+    get_folder(conf.get('cwl', 'jobs'))
     get_folder(DAGS_FOLDER)

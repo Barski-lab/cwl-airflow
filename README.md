@@ -28,6 +28,20 @@ If you are planning to use MySQL as backend you should consider installing mysql
 (https://github.com/PyMySQL/mysqlclient-python)
 sudo apt-get install libmysqlclient-dev
 
+
+Each job file run with the scheduler should include
+uid
+output_folder
+workflow
+Optionally tmp_folder
+If job file is run from cwl-airflow run these values could be omitted
+In this case they will be initilized with help of the arguments.
+Note, all present fields will not be overwritten
+--uid (default is randomly generated)
+--outdir (devault is current folder)
+Workflow is set as the first positional argument and doens't have any flags
+optionally --tmp
+
  
 
 

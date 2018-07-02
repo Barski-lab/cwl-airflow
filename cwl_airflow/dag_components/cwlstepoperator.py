@@ -91,7 +91,7 @@ class CWLStepOperator(BaseOperator):
         kwargs['tmpdir_prefix'] = os.path.join(tmp_folder, "cwl_tmp_")
         kwargs['tmp_outdir_prefix'] = os.path.join(tmp_folder, "cwl_outdir_tmp_")
         kwargs['rm_tmpdir'] = False
-
+        kwargs["basedir"] = os.path.abspath(os.path.dirname(self.dag.default_args["job_data"]["path"]))
 
         logger = logging.getLogger("cwltool")
         sys.stdout = StreamLogWriterUpdated(logger, logging.INFO)

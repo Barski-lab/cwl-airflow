@@ -177,10 +177,11 @@ def set_permissions (item, dir_perm=0o0777, file_perm=0o0666, grp_own=os.getgid(
                 os.chown(os.path.join(root,directory), user_own, grp_own)
 
 
-def gen_dag_id (workflow_file, job_file):
-    workflow = ".".join(workflow_file.split("/")[-1].split(".")[0:-1])
-    job = ".".join(job_file.split("/")[-1].split(".")[0:-1])
-    return "_".join([workflow, job, load_job(job_file)["uid"].replace("-", "_")])
+def gen_dag_id(job_file):
+    job_content = load_job(job_file)
+    w_seg = ".".join(job_content["workflow"].split("/")[-1].split(".")[0:-1])
+    j_seg = ".".join(job_file.split("/")[-1].split(".")[0:-1])
+    return "_".join([w_seg, j_seg, job_content["uid"].replace("-", "_")])
 
 
 def eval_log_level(key):
