@@ -28,8 +28,8 @@ def arg_parser():
 
     run_parser = subparsers.add_parser('run', help="Run workflow", parents=[parent_parser])
     run_parser.set_defaults(func=run_job)
-    run_parser.add_argument("-o", "--output", dest='output_folder', type=str, help="Output folder", default=".")
-    run_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Temporary folder")
+    run_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory, default current directory", default=".")
+    run_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data")
     run_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Unique ID", default=str(uuid.uuid4()))
     run_parser.add_argument("workflow", type=str)
     run_parser.add_argument("job", type=str)
