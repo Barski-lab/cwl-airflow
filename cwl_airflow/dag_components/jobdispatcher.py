@@ -1,6 +1,7 @@
 import sys
 import json
 import logging
+import tempfile
 from argparse import Namespace
 from airflow.models import BaseOperator
 from cwltool.main import init_job_order
@@ -26,5 +27,7 @@ class JobDispatcher(BaseOperator):
             if inp_id.split("/")[-1] in initialized_job_order_object:
                 updated_job_order_object[inp_id] = initialized_job_order_object[inp_id.split("/")[-1]]
 
+        updated_job_order_object["tmp_folder"] = tempfile.mkdtemp(dir=self.dag.default_args["job_data"]["content"].get("tmp_folder", None), prefix="dag_tmp_")
+        updated_job_order_object["output_folder"] = self.dag.default_args["job_data"]["content"]["output_folder"]
         logging.info("Dispatch job\n{}".format(json.dumps(updated_job_order_object, indent=4)))
         return {"outputs": updated_job_order_object}

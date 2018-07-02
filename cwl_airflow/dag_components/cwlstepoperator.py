@@ -85,9 +85,11 @@ class CWLStepOperator(BaseOperator):
         # maybe need to add here scatter functionality too
 
         kwargs = self.dag.default_args
-        kwargs['outdir'] = tempfile.mkdtemp(dir=kwargs["tmp_folder"], prefix="step_tmp_")
-        kwargs['tmpdir_prefix'] = os.path.join(kwargs["tmp_folder"], "cwl_tmp_")
-        kwargs['tmp_outdir_prefix'] = os.path.join(kwargs["tmp_folder"], "cwl_outdir_tmp_")
+        tmp_folder = collected_outputs["tmp_folder"]
+        output_folder = collected_outputs["output_folder"]
+        kwargs['outdir'] = tempfile.mkdtemp(dir=tmp_folder, prefix="step_tmp_")
+        kwargs['tmpdir_prefix'] = os.path.join(tmp_folder, "cwl_tmp_")
+        kwargs['tmp_outdir_prefix'] = os.path.join(tmp_folder, "cwl_outdir_tmp_")
         kwargs['rm_tmpdir'] = False
 
 
@@ -123,8 +125,9 @@ class CWLStepOperator(BaseOperator):
             except:
                 continue
 
-        data = {}
-        data["outputs"] = promises
+        promises["tmp_folder"] = tmp_folder
+        promises["output_folder"] = output_folder
+        data = {"outputs": promises}
 
         logging.info(
             '{0}: Output: \n {1}'.format(self.task_id, json.dumps(data, indent=4)))

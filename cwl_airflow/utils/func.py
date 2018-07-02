@@ -65,7 +65,6 @@ def make_dag(job):
     default_args = {
         'start_date': job["creation_date"],
         "job_data":   job,
-        'tmp_folder': tempfile.mkdtemp(dir=job["content"].get("tmp_folder", None), prefix="dag_tmp_"),
         'basedir':    os.path.abspath(os.path.dirname(job["path"]))
     }
 
