@@ -50,7 +50,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
 2. Initialize `cwl-airflow` with the following command
     ```sh
-    $ cwl-airflow init
+    $ cwl-airflow init  # consider using --refresh=5 --workers=4 options if you want the webserver to react faster
     ```
     
 ### Running
