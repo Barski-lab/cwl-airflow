@@ -42,16 +42,15 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
     ```
 
 ### Configuration
-1. If you had **[Apache-Airflow v1.9.0](https://github.com/apache/incubator-airflow)**
-   already installed and configured, you may skip this step
-    ```sh
-    $ airflow initdb
-    ```
-
-2. Initialize `cwl-airflow` with the following command
+1. Initialize `cwl-airflow` with the following command
     ```sh
     $ cwl-airflow init  # consider using --refresh=5 --workers=4 options if you want the webserver to react faster
     ```
+2. If you had **[Apache-Airflow v1.9.0](https://github.com/apache/incubator-airflow)**
+   already installed and configured, you may skip this step
+    ```sh
+    $ airflow initdb
+    ``` 
     
 ### Running
 #### Batch mode
