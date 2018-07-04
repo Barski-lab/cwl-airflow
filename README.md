@@ -77,7 +77,8 @@ To perform a single run of the specific CWL workflow and job files
 ```bash
 cwl-airflow run WORKFLOW_FILE JOB_FILE
 ```
-You may adjust the following arguments:
+If `uid`, `output_folder`, `workflow` and `tmp_folder` fields are not present
+in the job file, you may set the them with the following arguments:
 ```bash
   -o, --outdir      Output directory, default current directory
   -t, --tmp         Folder to store temporary data, default /tmp
