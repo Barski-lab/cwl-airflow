@@ -12,9 +12,9 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
     - Ubuntu 16.04.4
     - python 3.5.2
     - pip3
-      ```
+      ```bash
         wget https://bootstrap.pypa.io/get-pip.py
-        python3 get-pip.py [--user]
+        python3 get-pip.py  # consider using --user option if you don't have enough permissions
       ```
     - setuptools
       ```
