@@ -38,7 +38,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
         ```
 2. Install latest release of `cwl-airflow`
     ```sh
-    $ pip3 install cwl-airflow [--user]
+    $ pip3 install cwl-airflow  # consider using --user option if you don't have enough permissions
     ```
 
 ### Configuration
