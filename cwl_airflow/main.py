@@ -6,7 +6,7 @@ from cwl_airflow.utils.mute import suppress_stdout, restore_stdout
 suppress_stdout()
 # Suppress output
 from airflow.bin.cli import scheduler
-from cwl_airflow.utils.func import export_job_file, update_args, update_config, export_dags, create_folders
+from cwl_airflow.utils.func import export_job_file, update_args, update_config, export_dags, create_folders, get_demo_workflow
 from cwl_airflow.utils.utils import get_workflow_output, normalize_args, exit_if_unsupported_feature
 # Restore output
 restore_stdout()
@@ -36,8 +36,26 @@ def arg_parser():
     run_parser.add_argument("workflow", type=str)
     run_parser.add_argument("job", type=str)
 
+    demo_parser = subparsers.add_parser('demo', help="Run demo workflows", parents=[parent_parser])
+    demo_parser.set_defaults(func=run_demo)
+    demo_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory, default current directory", default=".")
+    demo_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data")
+    demo_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Unique ID", default=str(uuid.uuid4()))
+    demo_parser.add_argument("workflow", type=str)
+
     return general_parser
 
+
+def run_demo(args):
+    if not args.workflow:
+        print("Available workflows to run:")
+        for wf in get_demo_workflow():
+            print("-",wf["workflow"]["name"])
+    else:
+        selected_demo = get_demo_workflow(args.workflow)
+        args.workflow = selected_demo[0]["workflow"]["path"]
+        args.job = selected_demo[0]["job"]["path"]
+        run_job(args)
 
 def run_init(args):
     update_config(args)

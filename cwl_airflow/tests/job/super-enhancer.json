@@ -1,0 +1,21 @@
+{
+    "islands_file": {
+        "class": "File",
+        "location": "../data/chr4_100_mapped_reads.Aligned.out_macs_peaks_iaintersect.tsv",
+        "format": "http://edamontology.org/format_3468"},
+    "bambai_pair": {
+        "class": "File",
+        "location": "../data/chr4_100_mapped_reads.Aligned.out.bam",
+        "format": "http://edamontology.org/format_2572"},
+    "annotation_file": {
+        "class": "File",
+        "location": "../data/dm3_chr4.tsv",
+        "format": "http://edamontology.org/format_3475"},
+    "chrom_length_file": {
+        "class": "File",
+        "location": "../data/chrNameLength.txt",
+        "format": "http://edamontology.org/format_2330"},
+    "stitch_distance": 20000,
+    "tss_distance": 2500,
+    "promoter_bp": 1000
+}

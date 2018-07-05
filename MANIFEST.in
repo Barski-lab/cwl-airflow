@@ -1,1 +1,4 @@
 include cwl_airflow/git_version
+include cwl_airflow/tests/cwl/*
+include cwl_airflow/tests/data/*
+include cwl_airflow/tests/job/*

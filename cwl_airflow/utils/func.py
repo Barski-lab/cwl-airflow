@@ -10,10 +10,27 @@ from cwl_airflow.utils.utils import (set_logger,
                                      get_folder,
                                      load_job,
                                      list_files,
-                                     export_to_file)
+                                     export_to_file,
+                                     norm_path,
+                                     get_files)
 from cwl_airflow.dag_components.cwldag import CWLDAG
 from cwl_airflow.dag_components.jobdispatcher import JobDispatcher
 from cwl_airflow.dag_components.jobcleanup import JobCleanup
+
+
+def get_demo_workflow(target_wf=None, job_ext=".json"):
+    workflows = get_files(norm_path(os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, "../"))), "tests/cwl")))
+    jobs = get_files(norm_path(os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, "../"))), "tests/job")))
+    combined_data = []
+    for wf_name, wf_path in workflows.items():
+        job_name = os.path.splitext(wf_name)[0] + job_ext
+        if job_name in jobs:
+            combined_data.append({"workflow": {"name": wf_name,
+                                               "path": wf_path},
+                                  "job": {"name": job_name,
+                                          "path": jobs[job_name]}
+                                  })
+    return [item for item in combined_data if item["workflow"]["name"] == os.path.basename(target_wf)] if target_wf else combined_data
 
 
 def export_job_file(args):

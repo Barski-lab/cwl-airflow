@@ -3,6 +3,7 @@ import sys
 import urllib.parse
 import logging
 import argparse
+import re
 from json import dumps
 import cwltool.context
 from cwltool.workflow import default_make_tool
@@ -13,7 +14,20 @@ from schema_salad.ref_resolver import Loader
 from airflow import configuration
 from airflow.exceptions import AirflowConfigException
 from airflow.models import DagRun
-from airflow.utils.state import State
+
+
+def norm_path(path):
+    return os.path.abspath(os.path.normpath(os.path.normcase(path)))
+
+
+def get_files(current_dir, filename_pattern=".*"):
+    """Files with the identical basenames are overwritten"""
+    files_dict = {}
+    for root, dirs, files in os.walk(current_dir):
+        files_dict.update(
+            {filename: os.path.join(root, filename) for filename in files if re.match(filename_pattern, filename)}
+        )
+    return files_dict
 
 
 def convert_to_workflow(tool, tool_file, workflow_file):
