@@ -83,3 +83,18 @@ in the job file, you may set the them with the following arguments:
   -t, --tmp         Folder to store temporary data, default /tmp
   -u, --uid         Unique ID, default random uuid
 ```
+#### Demo mode
+1. Get the list of the available demo workflows to run
+   ```bash
+   $ cwl-airflow demo
+   ```
+2. Run demo workflow from the list (if running on macOS, consider adding the directory where you
+   installed cwl-airflow package to the _**Docker / Preferences / File sharing**_ options)
+   ```bash
+   $ cwl-airflow demo super-enhancer.cwl
+   ```
+3. Optionally, run `airflow webserver` to check workflow status (default [webserver link](http://localhost:8080/))
+     ```bash
+   $ airflow webserver
+   ```
+   
