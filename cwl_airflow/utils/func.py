@@ -3,6 +3,8 @@ from json import dumps
 import configparser
 from datetime import datetime
 from airflow import conf as conf
+from airflow.models import DagRun
+from airflow.utils.state import State
 from airflow.settings import DAGS_FOLDER, AIRFLOW_HOME
 from airflow.bin.cli import get_dag, CLIFactory
 from cwl_airflow.utils.utils import (set_logger,
@@ -60,13 +62,18 @@ def get_active_jobs(jobs_folder, limit=10):
     """
     all_jobs = []
     for job_path in list_files(abs_path=jobs_folder, ext=[".json", ".yml", ".yaml"]):
-        job_content = load_job(job_path)
-        all_jobs.append({"content": job_content,
-                         "path": job_path,
+        dag_id = gen_dag_id(job_path)
+        dag_runs = DagRun.find(dag_id)
+        all_jobs.append({"path": job_path,
                          "creation_date": datetime.fromtimestamp(os.path.getctime(job_path)),
-                         "dag_id": gen_dag_id(job_path)})
-    all_jobs = sorted(all_jobs, key=lambda k: k["creation_date"], reverse=True)
-    return all_jobs[:limit]
+                         "content": load_job(job_path),
+                         "dag_id": dag_id,
+                         "state": dag_runs[0].state if len(dag_runs) > 0 else State.NONE})
+    success_jobs = sorted([j for j in all_jobs if j["state"] == State.SUCCESS], key=lambda k: k["creation_date"], reverse=True)[:limit]
+    running_jobs = sorted([j for j in all_jobs if j["state"] == State.RUNNING], key=lambda k: k["creation_date"], reverse=True)[:limit]
+    failed_jobs =  sorted([j for j in all_jobs if j["state"] == State.FAILED],  key=lambda k: k["creation_date"], reverse=True)[:limit]
+    unknown_jobs = sorted([j for j in all_jobs if j["state"] == State.NONE],    key=lambda k: k["creation_date"], reverse=True)[:limit]
+    return success_jobs + running_jobs + failed_jobs + unknown_jobs
 
 
 def make_dag(job):
