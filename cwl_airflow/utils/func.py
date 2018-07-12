@@ -19,7 +19,7 @@ from cwl_airflow.dag_components.jobcleanup import JobCleanup
 
 
 def get_demo_workflow(target_wf=None, job_ext=".json"):
-    workflows = get_files(norm_path(os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, "../"))), "tests/cwl")))
+    workflows = get_files(norm_path(os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, "../"))), "tests/cwl/workflows")))
     jobs = get_files(norm_path(os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, "../"))), "tests/job")))
     combined_data = []
     for wf_name, wf_path in workflows.items():

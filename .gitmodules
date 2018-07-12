@@ -2,3 +2,6 @@
 	path = workflow_example
 	url = https://github.com/Barski-lab/ga4gh_challenge.git
 	branch = master
+[submodule "cwl_airflow/tests"]
+	path = cwl_airflow/tests
+	url = https://github.com/michael-kotliar/cwl-airflow-workflows.git
