@@ -2,14 +2,11 @@
 import sys
 import argparse
 import uuid
-from cwl_airflow.utils.mute import suppress_stdout, restore_stdout
-suppress_stdout()
-# Suppress output
-from airflow.bin.cli import scheduler
-from cwl_airflow.utils.func import export_job_file, add_run_info, update_config, export_dags, create_folders, get_demo_workflow, get_updated_args
-from cwl_airflow.utils.utils import get_workflow_output, normalize_args, exit_if_unsupported_feature
-# Restore output
-restore_stdout()
+from cwl_airflow.utils.mute import Mute
+with Mute():  # Suppress output
+    from airflow.bin.cli import scheduler
+    from cwl_airflow.utils.func import export_job_file, add_run_info, update_config, export_dags, create_folders, get_demo_workflow, get_updated_args
+    from cwl_airflow.utils.utils import get_workflow_output, normalize_args, exit_if_unsupported_feature
 
 
 def arg_parser():
@@ -73,15 +70,13 @@ def run_init(args):
 
 
 def run_job(args):
-    suppress_stdout()
-    exit_if_unsupported_feature(args.workflow)
-    export_job_file(args)
-    restore_stdout()
+    with Mute():
+        exit_if_unsupported_feature(args.workflow)
+        export_job_file(args)
     if args.scheduler:
-        suppress_stdout()
-        add_run_info(args)
-        scheduler(args)
-        restore_stdout()
+        with Mute():
+            add_run_info(args)
+            scheduler(args)
         print(get_workflow_output(args.dag_id))
 
 
