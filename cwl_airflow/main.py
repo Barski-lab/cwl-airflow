@@ -6,7 +6,7 @@ from cwl_airflow.utils.mute import suppress_stdout, restore_stdout
 suppress_stdout()
 # Suppress output
 from airflow.bin.cli import scheduler
-from cwl_airflow.utils.func import export_job_file, update_args, update_config, export_dags, create_folders, get_demo_workflow
+from cwl_airflow.utils.func import export_job_file, add_run_info, update_config, export_dags, create_folders, get_demo_workflow, get_updated_args
 from cwl_airflow.utils.utils import get_workflow_output, normalize_args, exit_if_unsupported_feature
 # Restore output
 restore_stdout()
@@ -33,6 +33,7 @@ def arg_parser():
     run_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory, default current directory", default=".")
     run_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data")
     run_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Unique ID", default=str(uuid.uuid4()))
+    run_parser.add_argument("-s", "--scheduler", dest='scheduler', action="store_true", help="Run schedule for single job")
     run_parser.add_argument("workflow", type=str)
     run_parser.add_argument("job", type=str)
 
@@ -40,22 +41,30 @@ def arg_parser():
     demo_parser.set_defaults(func=run_demo)
     demo_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory, default current directory", default=".")
     demo_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data")
-    demo_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Unique ID", default=str(uuid.uuid4()))
+    excl_group = demo_parser.add_mutually_exclusive_group()
+    # We can't allow to set uid if we want to run all demo wokrflows. UID will be set randomly
+    excl_group.add_argument("-u", "--uid", dest='uid', type=str, help="Unique ID", default=str(uuid.uuid4()))
+    excl_group.add_argument("-a", "--all", dest='all', action="store_true", help="Schedule all demo workflows. Require running the separate scheduler")
+    demo_parser.add_argument("-s", "--scheduler", dest='scheduler', action="store_true", help="Run schedule for single job")
     demo_parser.add_argument("workflow", type=str)
 
     return general_parser
 
 
 def run_demo(args):
-    if not args.workflow:
+    if args.all:
+        for wf in get_demo_workflow():
+            run_job(get_updated_args(args, wf))
+    elif args.workflow:
+        try:
+            run_job(get_updated_args(args, get_demo_workflow(args.workflow)[0], True, True))
+        except IndexError:
+            print("{} is not found in the demo workflows list".format(args.workflow))
+    else:
         print("Available workflows to run:")
         for wf in get_demo_workflow():
-            print("-",wf["workflow"]["name"])
-    else:
-        selected_demo = get_demo_workflow(args.workflow)
-        args.workflow = selected_demo[0]["workflow"]["path"]
-        args.job = selected_demo[0]["job"]["path"]
-        run_job(args)
+            print("-", wf["workflow"]["name"])
+
 
 def run_init(args):
     update_config(args)
@@ -67,10 +76,13 @@ def run_job(args):
     suppress_stdout()
     exit_if_unsupported_feature(args.workflow)
     export_job_file(args)
-    update_args(args)
-    scheduler(args)
     restore_stdout()
-    print(get_workflow_output(args.dag_id))
+    if args.scheduler:
+        suppress_stdout()
+        add_run_info(args)
+        scheduler(args)
+        restore_stdout()
+        print(get_workflow_output(args.dag_id))
 
 
 def main(argsl=None):
@@ -78,7 +90,7 @@ def main(argsl=None):
         argsl = sys.argv[1:]
     argsl.append("")  # To avoid raising error when argsl is empty
     args, _ = arg_parser().parse_known_args(argsl)
-    args = normalize_args(args, skip_list=["func", "uid", "limit", "dag_timeout", "dag_interval", "threads", "web_interval", "web_workers"])
+    args = normalize_args(args, skip_list=["func", "uid", "limit", "dag_timeout", "dag_interval", "threads", "web_interval", "web_workers", "all", "scheduler"])
     args.func(args)
 
 

@@ -1,6 +1,8 @@
 import os
-from json import dumps
 import configparser
+import argparse
+import uuid
+from json import dumps
 from datetime import datetime
 from airflow import conf as conf
 from airflow.models import DagRun
@@ -47,11 +49,22 @@ def export_job_file(args):
     export_to_file(args.job, dumps(job_entry, indent=4))
 
 
-def update_args(args):
+def add_run_info(args):
     vars(args).update({arg_name: arg_value.default for arg_name, arg_value in CLIFactory.args.items()
                        if arg_name in CLIFactory.subparsers_dict['scheduler']['args']})
     args.dag_id = gen_dag_id(os.path.join(conf.get('cwl', 'jobs'), os.path.basename(args.job)))
     args.num_runs = len(get_dag(args).tasks) + 3
+
+
+def get_updated_args(args, workflow, keep_uid=False, keep_output_folder=False):
+    updated_args = argparse.Namespace(**vars(args))
+    updated_args.workflow = workflow["workflow"]["path"]
+    updated_args.job = workflow["job"]["path"]
+    if not keep_uid:
+        updated_args.uid = str(uuid.uuid4())
+    if not keep_output_folder:
+        updated_args.output_folder = get_folder(os.path.join(args.output_folder, updated_args.uid))
+    return updated_args
 
 
 def get_active_jobs(jobs_folder, limit=10):
