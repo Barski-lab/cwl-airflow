@@ -4,7 +4,7 @@ import argparse
 import uuid
 from cwl_airflow.utils.mute import Mute
 with Mute():  # Suppress output
-    from airflow.bin.cli import scheduler, webserver
+    from airflow.bin.cli import scheduler, webserver, initdb
     from cwl_airflow.utils.func import (export_job_file,
                                         add_run_info,
                                         update_config,
@@ -89,10 +89,10 @@ def run_demo(args):
 
 
 def run_init(args):
-    # TODO include safe way to run airflow initdb
     update_config(args)
     create_folders()
     export_dags()
+    initdb()
 
 
 def run_job(args):
