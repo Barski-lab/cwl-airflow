@@ -59,6 +59,7 @@ def arg_parser():
 
 def run_demo_auto(args):
     with Mute():
+        run_init(arg_parser().parse_known_args(["init", "-r", "5", "-w", "4"])[0])
         start_bckgrnd_scheduler()
     run_demo_manual(args)
     with Mute():
