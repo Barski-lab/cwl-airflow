@@ -2,13 +2,14 @@ import os
 import configparser
 import argparse
 import uuid
+from multiprocessing import Process
 from json import dumps
 from datetime import datetime
 from airflow import conf as conf
 from airflow.models import DagRun
 from airflow.utils.state import State
 from airflow.settings import DAGS_FOLDER, AIRFLOW_HOME
-from airflow.bin.cli import get_dag, CLIFactory
+from airflow.bin.cli import get_dag, CLIFactory, scheduler
 from cwl_airflow.utils.utils import (set_logger,
                                      gen_dag_id,
                                      get_folder,
@@ -50,8 +51,7 @@ def export_job_file(args):
 
 
 def add_run_info(args):
-    vars(args).update({arg_name: arg_value.default for arg_name, arg_value in CLIFactory.args.items()
-                       if arg_name in CLIFactory.subparsers_dict['scheduler']['args']})
+    vars(args).update(vars(get_airflow_default_args("scheduler")))
     args.dag_id = gen_dag_id(os.path.join(conf.get('cwl', 'jobs'), os.path.basename(args.job)))
     args.num_runs = len(get_dag(args).tasks) + 3
 
@@ -139,3 +139,15 @@ def export_dags():
 def create_folders():
     get_folder(conf.get('cwl', 'jobs'))
     get_folder(DAGS_FOLDER)
+
+
+def get_airflow_default_args(subparser):
+    args, _ = CLIFactory.get_parser().parse_known_args([subparser])
+    delattr(args, 'func')
+    return args
+
+
+def start_bckgrnd_scheduler():
+    scheduler_thread = Process(target=scheduler, args=(get_airflow_default_args("scheduler"),))
+    scheduler_thread.start()
+

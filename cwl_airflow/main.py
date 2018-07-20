@@ -4,8 +4,16 @@ import argparse
 import uuid
 from cwl_airflow.utils.mute import Mute
 with Mute():  # Suppress output
-    from airflow.bin.cli import scheduler
-    from cwl_airflow.utils.func import export_job_file, add_run_info, update_config, export_dags, create_folders, get_demo_workflow, get_updated_args
+    from airflow.bin.cli import scheduler, webserver
+    from cwl_airflow.utils.func import (export_job_file,
+                                        add_run_info,
+                                        update_config,
+                                        export_dags,
+                                        create_folders,
+                                        get_demo_workflow,
+                                        get_updated_args,
+                                        start_bckgrnd_scheduler,
+                                        get_airflow_default_args)
     from cwl_airflow.utils.utils import get_workflow_output, normalize_args, exit_if_unsupported_feature
 
 
@@ -30,7 +38,7 @@ def arg_parser():
     run_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory, default current directory", default=".")
     run_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data")
     run_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Unique ID", default=str(uuid.uuid4()))
-    run_parser.add_argument("-s", "--scheduler", dest='scheduler', action="store_true", help="Run schedule for single job")
+    run_parser.add_argument("-r", "--run", dest='run', action="store_true", help="Run workflow & job")
     run_parser.add_argument("workflow", type=str)
     run_parser.add_argument("job", type=str)
 
@@ -38,32 +46,50 @@ def arg_parser():
     demo_parser.set_defaults(func=run_demo)
     demo_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory, default current directory", default=".")
     demo_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data")
-    excl_group = demo_parser.add_mutually_exclusive_group()
-    # We can't allow to set uid if we want to run all demo wokrflows. UID will be set randomly
-    excl_group.add_argument("-u", "--uid", dest='uid', type=str, help="Unique ID", default=str(uuid.uuid4()))
-    excl_group.add_argument("-a", "--all", dest='all', action="store_true", help="Schedule all demo workflows. Require running the separate scheduler")
-    demo_parser.add_argument("-s", "--scheduler", dest='scheduler', action="store_true", help="Run schedule for single job")
+    demo_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Unique ID, ignored when --auto or --manual", default=str(uuid.uuid4()))
     demo_parser.add_argument("workflow", type=str)
+
+    excl_group = demo_parser.add_mutually_exclusive_group()
+    excl_group.add_argument("-a", "--auto", dest='auto', action="store_true", help="Schedule all demo workflows. Runs webserver & scheduler")
+    excl_group.add_argument("-m", "--manual", dest='manual', action="store_true", help="Schedule all demo workflows. Requires webserver & scheduler running separately")
+    excl_group.add_argument("-l", "--list", dest='list', action="store_true", help="List available demo workflows")
 
     return general_parser
 
 
+def run_demo_auto(args):
+    with Mute():
+        start_bckgrnd_scheduler()
+    run_demo_manual(args)
+    with Mute():
+        webserver(get_airflow_default_args("webserver"))
+
+
+def run_demo_manual(args):
+    for wf in get_demo_workflow():
+        run_job(get_updated_args(args, wf))
+
+
 def run_demo(args):
-    if args.all:
-        for wf in get_demo_workflow():
-            run_job(get_updated_args(args, wf))
-    elif args.workflow:
-        try:
-            run_job(get_updated_args(args, get_demo_workflow(args.workflow)[0], True, True))
-        except IndexError:
-            print("{} is not found in the demo workflows list".format(args.workflow))
-    else:
+    if args.auto:
+        run_demo_auto(args)
+    elif args.manual:
+        run_demo_manual(args)
+    elif args.list:
         print("Available workflows to run:")
         for wf in get_demo_workflow():
             print("-", wf["workflow"]["name"])
+    elif args.workflow:
+        try:
+            run_job(get_updated_args(args, get_demo_workflow(args.workflow)[0], keep_uid=True, keep_output_folder=True))
+        except IndexError:
+            print("{} is not found in the demo workflows list".format(args.workflow))
+    else:
+        arg_parser().parse_known_args(["demo", "--help"])
 
 
 def run_init(args):
+    # TODO include safe way to run airflow initdb
     update_config(args)
     create_folders()
     export_dags()
@@ -73,7 +99,7 @@ def run_job(args):
     with Mute():
         exit_if_unsupported_feature(args.workflow)
         export_job_file(args)
-    if args.scheduler:
+    if getattr(args, "run", None):
         with Mute():
             add_run_info(args)
             scheduler(args)
@@ -85,7 +111,8 @@ def main(argsl=None):
         argsl = sys.argv[1:]
     argsl.append("")  # To avoid raising error when argsl is empty
     args, _ = arg_parser().parse_known_args(argsl)
-    args = normalize_args(args, skip_list=["func", "uid", "limit", "dag_timeout", "dag_interval", "threads", "web_interval", "web_workers", "all", "scheduler"])
+    args = normalize_args(args, skip_list=["func", "uid", "limit", "dag_timeout", "dag_interval", "threads",
+                                           "web_interval", "web_workers", "run", "auto", "manual", "list"])
     args.func(args)
 
 
