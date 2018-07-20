@@ -50,7 +50,7 @@ def arg_parser():
     demo_parser.add_argument("workflow", type=str)
 
     excl_group = demo_parser.add_mutually_exclusive_group()
-    excl_group.add_argument("-a", "--auto", dest='auto', action="store_true", help="Schedule all demo workflows. Runs webserver & scheduler")
+    excl_group.add_argument("-a", "--auto", dest='auto', action="store_true", help="Schedule all demo workflows. Runs initdb & webserver & scheduler")
     excl_group.add_argument("-m", "--manual", dest='manual', action="store_true", help="Schedule all demo workflows. Requires webserver & scheduler running separately")
     excl_group.add_argument("-l", "--list", dest='list', action="store_true", help="List available demo workflows")
 
