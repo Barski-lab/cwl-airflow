@@ -92,7 +92,7 @@ def run_init(args):
     update_config(args)
     create_folders()
     export_dags()
-    initdb()
+    initdb(argparse.Namespace())
 
 
 def run_job(args):
