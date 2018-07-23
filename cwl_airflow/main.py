@@ -33,26 +33,26 @@ def arg_parser():
     init_parser.add_argument("-w", "--workers", dest='web_workers', type=int, help="Webserver workers refresh batch size", default=1)
     init_parser.add_argument("-p", "--threads", dest='threads', type=int, help="Max scheduler threads", default=2)
 
-    run_parser = subparsers.add_parser('run', help="Run workflow", parents=[parent_parser])
+    run_parser = subparsers.add_parser('run', help="Run custom workflow", parents=[parent_parser])
     run_parser.set_defaults(func=run_job)
-    run_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory, default current directory", default=".")
-    run_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data")
-    run_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Unique ID", default=str(uuid.uuid4()))
-    run_parser.add_argument("-r", "--run", dest='run', action="store_true", help="Run workflow & job")
-    run_parser.add_argument("workflow", type=str)
-    run_parser.add_argument("job", type=str)
+    run_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory. Default: ./", default=".")
+    run_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data. Default: /tmp")
+    run_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Experiment unique ID; ignored with -a/-l arguments. Default: random uuid", default=str(uuid.uuid4()))
+    run_parser.add_argument("-r", "--run", dest='run', action="store_true", help="Run workflow with Scheduler")
+    run_parser.add_argument("workflow", type=str, help="Workflow name")
+    run_parser.add_argument("job", type=str, help="Job name")
 
     demo_parser = subparsers.add_parser('demo', help="Run demo workflows", parents=[parent_parser])
     demo_parser.set_defaults(func=run_demo)
-    demo_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory, default current directory", default=".")
-    demo_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data")
-    demo_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Unique ID, ignored when --auto or --manual", default=str(uuid.uuid4()))
-    demo_parser.add_argument("workflow", type=str)
+    demo_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory. Default: ./", default=".")
+    demo_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data. Default: /tmp")
+    demo_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Experiment's unique ID; ignored with -a/-l arguments. Default: random uuid", default=str(uuid.uuid4()))
+    demo_parser.add_argument("workflow", type=str, help="Demo workflow name")
 
     excl_group = demo_parser.add_mutually_exclusive_group()
-    excl_group.add_argument("-a", "--auto", dest='auto', action="store_true", help="Schedule all demo workflows. Runs initdb & webserver & scheduler")
-    excl_group.add_argument("-m", "--manual", dest='manual', action="store_true", help="Schedule all demo workflows. Requires webserver & scheduler running separately")
-    excl_group.add_argument("-l", "--list", dest='list', action="store_true", help="List available demo workflows")
+    excl_group.add_argument("-a", "--auto", dest='auto', action="store_true", help="Run all demo workflows with Webserver & Scheduler")
+    excl_group.add_argument("-m", "--manual", dest='manual', action="store_true", help="Submit all demo workflows. Requires Webserver & Scheduler to be run separately")
+    excl_group.add_argument("-l", "--list", dest='list', action="store_true", help="List all demo workflows")
 
     return general_parser
 
@@ -77,7 +77,7 @@ def run_demo(args):
     elif args.manual:
         run_demo_manual(args)
     elif args.list:
-        print("Available workflows to run:")
+        print("Available demo workflows:")
         for wf in get_demo_workflow():
             print("-", wf["workflow"]["name"])
     elif args.workflow:
