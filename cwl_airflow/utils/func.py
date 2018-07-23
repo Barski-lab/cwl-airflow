@@ -44,7 +44,9 @@ def export_job_file(args):
     job_entry['workflow'] = job_entry.get("workflow", args.workflow)
     job_entry['output_folder'] = job_entry.get("output_folder", args.output_folder)
     job_entry["uid"] = job_entry.get("uid", args.uid)
-    job_entry['tmp_folder'] = job_entry.get("tmp_folder", args.tmp_folder)
+    tmp_folder = job_entry.get("tmp_folder", args.tmp_folder)
+    if tmp_folder:
+        job_entry['tmp_folder'] = tmp_folder
     root, ext = os.path.splitext(os.path.basename(args.job))
     args.job = os.path.join(conf.get('cwl', 'jobs'), root + "-" + job_entry["uid"] + ext)
     export_to_file(args.job, dumps(job_entry, indent=4))
