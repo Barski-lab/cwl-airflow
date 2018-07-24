@@ -2,7 +2,9 @@
 import sys
 import argparse
 import uuid
+import logging
 from cwl_airflow.utils.mute import Mute
+from cwl_airflow.utils.logger import reset_root_logger
 with Mute():  # Suppress output
     from airflow.bin.cli import scheduler, webserver, initdb
     from cwl_airflow.utils.func import (export_job_file,
@@ -12,14 +14,17 @@ with Mute():  # Suppress output
                                         create_folders,
                                         get_demo_workflow,
                                         get_updated_args,
-                                        start_bckgrnd_scheduler,
-                                        get_airflow_default_args)
+                                        start_background_scheduler,
+                                        get_airflow_default_args,
+                                        clean_jobs_folder)
     from cwl_airflow.utils.utils import get_workflow_output, normalize_args, exit_if_unsupported_feature
 
 
 def arg_parser():
     parent_parser = argparse.ArgumentParser(add_help=False)
     general_parser = argparse.ArgumentParser(description='cwl-airflow')
+
+    general_parser.add_argument("-q", "--quiet", dest='quiet', action="store_true", help="Suppress all output except warnings and errors")
 
     subparsers = general_parser.add_subparsers()
     subparsers.required = True
@@ -29,78 +34,92 @@ def arg_parser():
     init_parser.add_argument("-l", "--limit", dest='limit', type=int, help="Limit job concurrancy", default=10)
     init_parser.add_argument("-t", "--timeout", dest='dag_timeout', type=int, help="How long before timing out a python file import while filling the DagBag", default=30)
     init_parser.add_argument("-i", "--interval", dest='dag_interval', type=int, help="After how much time a new DAGs should be picked up from the filesystem", default=0)
-    init_parser.add_argument("-r", "--refresh", dest='web_interval', type=int, help="Webserver refresh interval", default=30)
+    init_parser.add_argument("-r", "--refresh", dest='web_interval', type=int, help="Webserver workers refresh interval, seconds", default=30)
     init_parser.add_argument("-w", "--workers", dest='web_workers', type=int, help="Webserver workers refresh batch size", default=1)
-    init_parser.add_argument("-p", "--threads", dest='threads', type=int, help="Max scheduler threads", default=2)
+    init_parser.add_argument("-p", "--threads", dest='threads', type=int, help="Max Airflow Scheduler threads", default=2)
 
-    run_parser = subparsers.add_parser('run', help="Run custom workflow", parents=[parent_parser])
-    run_parser.set_defaults(func=run_job)
-    run_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory. Default: ./", default=".")
-    run_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data. Default: /tmp")
-    run_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Experiment unique ID; ignored with -a/-l arguments. Default: random uuid", default=str(uuid.uuid4()))
-    run_parser.add_argument("-r", "--run", dest='run', action="store_true", help="Run workflow with Scheduler")
-    run_parser.add_argument("workflow", type=str, help="Workflow name")
-    run_parser.add_argument("job", type=str, help="Job name")
+    submit_parser = subparsers.add_parser('submit', help="Submit custom workflow", parents=[parent_parser])
+    submit_parser.set_defaults(func=submit_job)
+    submit_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory. Default: ./", default=".")
+    submit_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data. Default: /tmp")
+    submit_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Experiment unique ID. Default: random uuid", default=str(uuid.uuid4()))
+    submit_parser.add_argument("-r", "--run", dest='run', action="store_true", help="Run workflow with Airflow Scheduler")
+    submit_parser.add_argument("workflow", type=str, help="Workflow file path")
+    submit_parser.add_argument("job", type=str, help="Job file path")
 
     demo_parser = subparsers.add_parser('demo', help="Run demo workflows", parents=[parent_parser])
     demo_parser.set_defaults(func=run_demo)
     demo_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory. Default: ./", default=".")
     demo_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data. Default: /tmp")
     demo_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Experiment's unique ID; ignored with -a/-l arguments. Default: random uuid", default=str(uuid.uuid4()))
-    demo_parser.add_argument("workflow", type=str, help="Demo workflow name")
+    demo_parser.add_argument("workflow", type=str, help="Demo workflow name from the list")
 
     excl_group = demo_parser.add_mutually_exclusive_group()
-    excl_group.add_argument("-a", "--auto", dest='auto', action="store_true", help="Run all demo workflows with Webserver & Scheduler")
-    excl_group.add_argument("-m", "--manual", dest='manual', action="store_true", help="Submit all demo workflows. Requires Webserver & Scheduler to be run separately")
-    excl_group.add_argument("-l", "--list", dest='list', action="store_true", help="List all demo workflows")
+    excl_group.add_argument("-a", "--auto", dest='auto', action="store_true", help="Run all demo workflows with Airflow Webserver & Scheduler")
+    excl_group.add_argument("-m", "--manual", dest='manual', action="store_true", help="Submit all demo workflows. Requires Airflow Webserver & Scheduler to be run separately")
+    excl_group.add_argument("-l", "--list", dest='list', action="store_true", help="List demo workflows")
 
     return general_parser
 
 
 def run_demo_auto(args):
-    with Mute():
-        run_init(arg_parser().parse_known_args(["init", "-r", "5", "-w", "4"])[0])
-        start_bckgrnd_scheduler()
+    start_background_scheduler()
     run_demo_manual(args)
+    logging.info("Run Airflow Webserver")
     with Mute():
         webserver(get_airflow_default_args("webserver"))
 
 
 def run_demo_manual(args):
     for wf in get_demo_workflow():
-        run_job(get_updated_args(args, wf))
+        submit_job(get_updated_args(args, wf))
 
 
 def run_demo(args):
+    if args.auto or args.manual:
+        clean_jobs_folder()
+
+    if not args.list:
+        with Mute():
+            demo_init_args = ["init", "-r", "5", "-w", "4"]
+            run_init(arg_parser().parse_known_args(demo_init_args)[0])
+
     if args.auto:
         run_demo_auto(args)
     elif args.manual:
         run_demo_manual(args)
+        logging.info("To process submitted workflows run Airflow Scheduler separately")
     elif args.list:
         print("Available demo workflows:")
         for wf in get_demo_workflow():
             print("-", wf["workflow"]["name"])
     elif args.workflow:
         try:
-            run_job(get_updated_args(args, get_demo_workflow(args.workflow)[0], keep_uid=True, keep_output_folder=True))
+            submit_job(get_updated_args(args, get_demo_workflow(args.workflow)[0], keep_uid=True, keep_output_folder=True))
         except IndexError:
-            print("{} is not found in the demo workflows list".format(args.workflow))
+            logging.warning("{} is not found in the demo workflows list".format(args.workflow))
+        logging.info("To process submitted workflows run Airflow Scheduler separately")
     else:
         arg_parser().parse_known_args(["demo", "--help"])
 
 
 def run_init(args):
+    logging.info("Init cwl-airflow")
     update_config(args)
     create_folders()
     export_dags()
-    initdb(argparse.Namespace())
-
-
-def run_job(args):
+    logging.info("Init Airflow DB")
     with Mute():
-        exit_if_unsupported_feature(args.workflow)
-        export_job_file(args)
+        initdb(argparse.Namespace())
+    reset_root_logger(args.quiet)
+
+
+def submit_job(args):
+    logging.info("Load workflow\n- workflow: {workflow}\n- job:      {job}\n- uid:      {uid}".format(**vars(args)))
+    exit_if_unsupported_feature(args.workflow)
+    export_job_file(args)
     if getattr(args, "run", None):
+        logging.info("Run Airflow Scheduler")
         with Mute():
             add_run_info(args)
             scheduler(args)
@@ -113,7 +132,8 @@ def main(argsl=None):
     argsl.append("")  # To avoid raising error when argsl is empty
     args, _ = arg_parser().parse_known_args(argsl)
     args = normalize_args(args, skip_list=["func", "uid", "limit", "dag_timeout", "dag_interval", "threads",
-                                           "web_interval", "web_workers", "run", "auto", "manual", "list"])
+                                           "web_interval", "web_workers", "run", "auto", "manual", "list", "quiet"])
+    reset_root_logger(args.quiet)
     args.func(args)
 
 

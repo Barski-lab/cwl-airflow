@@ -10,6 +10,7 @@ from cwltool.workflow import default_make_tool
 from cwltool.resolver import tool_resolver
 import cwltool.load_tool as load
 from cwltool.argparser import get_default_args
+from cwl_airflow.utils.mute import Mute
 from schema_salad.ref_resolver import Loader
 from airflow import configuration
 from airflow.exceptions import AirflowConfigException
@@ -99,8 +100,10 @@ def load_cwl(cwl_file):
 
 
 def exit_if_unsupported_feature(cwl_file, exit_code=33):
-    tool = load_cwl(cwl_file).tool
+    with Mute():
+        tool = load_cwl(cwl_file).tool
     if tool["class"] == "Workflow" and [step["id"] for step in tool["steps"] if "scatter" in step]:
+        logging.warning("Failed to submit workflow\n- {} - scatter is not supported".format(cwl_file))
         sys.exit(exit_code)
 
 
@@ -231,6 +234,7 @@ def get_latest_log(dag_id, task_id="JobCleanup", state=None):
 
 
 def get_workflow_output(dag_id):  # make something more relyable that splitting by Subtask
+    logging.info("Workflow results")
     found_output = False
     results = []
     for line in open_file(get_latest_log(dag_id)):

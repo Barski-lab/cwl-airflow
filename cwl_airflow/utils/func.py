@@ -2,9 +2,12 @@ import os
 import configparser
 import argparse
 import uuid
+import logging
+import shutil
 from multiprocessing import Process
 from json import dumps
 from datetime import datetime
+from cwl_airflow.utils.mute import Mute
 from airflow import conf as conf
 from airflow.models import DagRun
 from airflow.utils.state import State
@@ -17,7 +20,8 @@ from cwl_airflow.utils.utils import (set_logger,
                                      list_files,
                                      export_to_file,
                                      norm_path,
-                                     get_files)
+                                     get_files,
+                                     conf_get_default)
 from cwl_airflow.dag_components.cwldag import CWLDAG
 from cwl_airflow.dag_components.jobdispatcher import JobDispatcher
 from cwl_airflow.dag_components.jobcleanup import JobCleanup
@@ -48,8 +52,19 @@ def export_job_file(args):
     if tmp_folder:
         job_entry['tmp_folder'] = tmp_folder
     root, ext = os.path.splitext(os.path.basename(args.job))
-    args.job = os.path.join(conf.get('cwl', 'jobs'), root + "-" + job_entry["uid"] + ext)
-    export_to_file(args.job, dumps(job_entry, indent=4))
+    copy_counter = 0
+    while True:
+        suffix = "" if copy_counter == 0 else "-" + str(copy_counter)
+        uid = job_entry["uid"] + suffix
+        output_filename = os.path.join(conf.get('cwl', 'jobs'), root + "-" + uid + ext)
+        if not os.path.exists(output_filename):
+            job_entry["uid"] = uid
+            args.job = output_filename
+            export_to_file(args.job, dumps(job_entry, indent=4))
+            logging.info("Save job file as\n- {}".format(args.job))
+            break
+        else:
+            copy_counter += 1
 
 
 def add_run_info(args):
@@ -116,6 +131,7 @@ def make_dag(job):
 
 
 def update_config(args):
+    logging.info("Update Airflow configuration")
     with open(conf.AIRFLOW_CONFIG, 'w') as output_stream:
         try:
             conf.conf.add_section('cwl')
@@ -134,11 +150,13 @@ def update_config(args):
 
 
 def export_dags():
+    logging.info("Export cwl_dag.py to\n- {}".format(DAGS_FOLDER))
     dag_content = u"#!/usr/bin/env python3\nfrom airflow import DAG\nfrom cwl_airflow.create_dag import create_dags\nfor id, dag in create_dags().items():\n    globals()[id] = dag"
     export_to_file(os.path.join(DAGS_FOLDER, "cwl_dag.py"), dag_content)
 
 
 def create_folders():
+    logging.info("Create folders for jobs and dags\n- {}\n- {}".format(conf.get('cwl', 'jobs'), DAGS_FOLDER))
     get_folder(conf.get('cwl', 'jobs'))
     get_folder(DAGS_FOLDER)
 
@@ -149,7 +167,20 @@ def get_airflow_default_args(subparser):
     return args
 
 
-def start_bckgrnd_scheduler():
+def start_background_scheduler():
+    logging.info("Run Airflow Scheduler in background")
     scheduler_thread = Process(target=scheduler, args=(get_airflow_default_args("scheduler"),))
-    scheduler_thread.start()
+    with Mute():
+        scheduler_thread.start()
 
+
+def clean_jobs_folder(folder=None):
+    folder = folder if folder else conf_get_default('cwl', 'jobs', None)
+    if os.path.isdir(folder):
+        logging.info("Cleaning jobs folder\n- {}".format(folder))
+        for item in os.listdir(folder):
+            path = os.path.join(folder, item)
+            try:
+                os.remove(path)
+            except OSError:
+                shutil.rmtree(path, ignore_errors=False)
