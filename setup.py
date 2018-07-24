@@ -5,6 +5,7 @@ from setuptools import setup, find_packages
 
 
 GIT_VERSION_FILE = os.path.join('cwl_airflow','git_version')
+HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 def get_git_tag():
@@ -16,6 +17,12 @@ def get_git_timestamp():
         ['git', 'log', '--first-parent', '--max-count=1',
          '--format=format:%ct', '.']).strip()
     return time.strftime('%Y%m%d%H%M%S', time.gmtime(int(gitinfo)))
+
+
+def get_description():
+    README = os.path.join(HERE, 'README.md')
+    with open(README, 'r') as f:
+        return f.read()
 
 
 def get_version():
@@ -52,6 +59,7 @@ def get_version():
 setup(
     name='cwl-airflow',
     description='Python package to extend Airflow functionality with CWL v1.0 support',
+    long_description=get_description(),
     version=get_version(),
     url='https://github.com/Barski-lab/cwl-airflow',
     download_url='https://github.com/Barski-lab/cwl-airflow',

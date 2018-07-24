@@ -7,18 +7,30 @@
 Python package to extend **[Apache-Airflow 1.9.0](https://github.com/apache/incubator-airflow)**
 functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
-### Installation
+### Check it out
+1. Install *cwl-airflow*
+    ```sh
+    $ pip3 install cwl-airflow --user --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
+    ```
+2. Run *demo*
+    ```sh
+    $ cwl-airflow demo --auto
+    ```
+3. Open your [web browser](http://localhost:8080/admin/) to see the progress 
+
+
+### Read it if you have troubles with installation
 1. Check the requirements
     - Ubuntu 16.04.4
     - python 3.5.2
     - pip3
       ```bash
         wget https://bootstrap.pypa.io/get-pip.py
-        python3 get-pip.py  # consider using --user option if you don't have enough permissions
+        python3 get-pip.py --user
       ```
     - setuptools
       ```
-      pip3 install setuptools
+      pip3 install setuptools --user
       ```
     - docker
       ```
@@ -36,10 +48,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
         ```bash
         sudo apt-get install python3-dev
         ```
-2. Install latest release of `cwl-airflow`
-    ```sh
-    $ pip3 install cwl-airflow  # consider using --user option if you don't have enough permissions
-    ```
+
 
 ### Configuration
 1. Initialize `cwl-airflow` with the following command
