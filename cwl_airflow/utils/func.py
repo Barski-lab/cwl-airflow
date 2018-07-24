@@ -174,7 +174,7 @@ def start_background_scheduler():
 
 def clean_jobs_folder(folder=None):
     folder = folder if folder else conf_get_default('cwl', 'jobs', None)
-    if os.path.isdir(folder):
+    if folder and os.path.isdir(folder):
         logging.info("Cleaning jobs folder\n- {}".format(folder))
         for item in os.listdir(folder):
             path = os.path.join(folder, item)
