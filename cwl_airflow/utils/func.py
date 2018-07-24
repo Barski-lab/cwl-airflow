@@ -55,10 +55,8 @@ def export_job_file(args):
     copy_counter = 0
     while True:
         suffix = "" if copy_counter == 0 else "-" + str(copy_counter)
-        uid = job_entry["uid"] + suffix
-        output_filename = os.path.join(conf.get('cwl', 'jobs'), root + "-" + uid + ext)
+        output_filename = os.path.join(conf.get('cwl', 'jobs'), root + suffix + ext)
         if not os.path.exists(output_filename):
-            job_entry["uid"] = uid
             args.job = output_filename
             export_to_file(args.job, dumps(job_entry, indent=4))
             logging.info("Save job file as\n- {}".format(args.job))
