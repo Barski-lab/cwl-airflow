@@ -16,7 +16,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
     ```sh
     $ cwl-airflow demo --auto
     ```
-3. Open your [web browser](http://localhost:8080/admin/) to see the progress 
+3. Open your [web browser](http://localhost:8080/admin/?showPaused=False) to see the progress 
 
 
 ### Read it if you have troubles with installation
