@@ -60,6 +60,7 @@ setup(
     name='cwl-airflow',
     description='Python package to extend Airflow functionality with CWL v1.0 support',
     long_description=get_description(),
+    long_description_content_type="text/markdown",
     version=get_version(),
     url='https://github.com/Barski-lab/cwl-airflow',
     download_url='https://github.com/Barski-lab/cwl-airflow',
