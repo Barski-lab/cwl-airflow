@@ -12,11 +12,15 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
     ```sh
     $ pip3 install cwl-airflow --user --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
     ```
-2. Run *demo*
+2. Init
+    ```sh
+    $ cwl-airflow init  # use -w 4 -r 5 to make webserver react faster
+    ```
+3. Run *demo*
     ```sh
     $ cwl-airflow demo --auto
     ```
-3. Open your [web browser](http://localhost:8080/admin/?showPaused=False) to see the progress 
+4. Open your [web browser](http://localhost:8080/admin/?showPaused=False) to see the progress 
 
 
 ### Read it if you have troubles with installation
