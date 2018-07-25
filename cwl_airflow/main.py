@@ -63,27 +63,20 @@ def arg_parser():
 
 
 def run_demo_auto(args):
-    start_background_scheduler()
     run_demo_manual(args)
+    start_background_scheduler()
     logging.info("Run Airflow Webserver")
     with Mute():
         webserver(get_airflow_default_args("webserver"))
 
 
 def run_demo_manual(args):
+    clean_jobs_folder()
     for wf in get_demo_workflow():
         submit_job(get_updated_args(args, wf))
 
 
 def run_demo(args):
-
-    if args.auto or args.manual or args.workflow:
-        if not args.workflow:
-            clean_jobs_folder()
-        with Mute():
-            demo_init_args = ["init", "-r", "5", "-w", "4"]
-            run_init(arg_parser().parse_known_args(demo_init_args)[0])
-
     if args.auto:
         run_demo_auto(args)
     elif args.manual:
@@ -111,7 +104,6 @@ def run_init(args):
     logging.info("Init Airflow DB")
     with Mute():
         initdb(argparse.Namespace())
-    reset_root_logger(args.quiet)
 
 
 def submit_job(args):
