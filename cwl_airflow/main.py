@@ -4,8 +4,8 @@ import argparse
 import uuid
 import logging
 from cwl_airflow.utils.mute import Mute
-from cwl_airflow.utils.logger import reset_root_logger
 with Mute():  # Suppress output
+    from cwl_airflow.utils.logger import reset_root_logger
     from airflow.bin.cli import scheduler, webserver, initdb
     from cwl_airflow.utils.func import (export_job_file,
                                         add_run_info,
