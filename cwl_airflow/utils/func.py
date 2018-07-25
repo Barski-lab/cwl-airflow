@@ -1,4 +1,5 @@
 import os
+import sys
 import configparser
 import argparse
 import uuid
@@ -13,6 +14,7 @@ from airflow.models import DagRun
 from airflow.utils.state import State
 from airflow.settings import DAGS_FOLDER, AIRFLOW_HOME
 from airflow.bin.cli import get_dag, CLIFactory, scheduler
+from airflow.exceptions import AirflowConfigException
 from cwl_airflow.utils.utils import (set_logger,
                                      gen_dag_id,
                                      get_folder,
@@ -183,3 +185,23 @@ def clean_jobs_folder(folder=None):
                 os.remove(path)
             except OSError:
                 shutil.rmtree(path, ignore_errors=False)
+
+
+def exit_if_not_configured():
+    try:
+        jobs = conf.get('cwl', 'jobs')
+        limit = conf.get('cwl', 'limit')
+        if not os.path.isdir(jobs):
+            raise FileExistsError(jobs)
+        if not os.path.isdir(DAGS_FOLDER):
+            raise FileExistsError(DAGS_FOLDER)
+        if not os.path.isfile(os.path.join(DAGS_FOLDER, "cwl_dag.py")):
+            raise FileExistsError(os.path.join(DAGS_FOLDER, "cwl_dag.py"))
+    except AirflowConfigException as ex:
+        logging.error("Failed to get required parameters from configuration file\n- {}".format(str(ex)))
+        logging.error("Run cwl-airflow init")
+        sys.exit(0)
+    except FileExistsError as ex:
+        logging.error("The following file or directory is missing\n- {}".format(str(ex)))
+        logging.error("Run cwl-airflow init")
+        sys.exit(0)

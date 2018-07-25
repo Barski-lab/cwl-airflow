@@ -16,7 +16,8 @@ with Mute():  # Suppress output
                                         get_updated_args,
                                         start_background_scheduler,
                                         get_airflow_default_args,
-                                        clean_jobs_folder)
+                                        clean_jobs_folder,
+                                        exit_if_not_configured)
     from cwl_airflow.utils.utils import get_workflow_output, normalize_args, exit_if_unsupported_feature
 
 
@@ -77,6 +78,7 @@ def run_demo_manual(args):
 
 
 def run_demo(args):
+    exit_if_not_configured()
     if args.auto:
         run_demo_auto(args)
     elif args.manual:
@@ -107,6 +109,7 @@ def run_init(args):
 
 
 def submit_job(args):
+    exit_if_not_configured()
     logging.info("Load workflow\n- workflow: {workflow}\n- job:      {job}\n- uid:      {uid}".format(**vars(args)))
     exit_if_unsupported_feature(args.workflow)
     export_job_file(args)
