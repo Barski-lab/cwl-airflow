@@ -144,6 +144,7 @@ def update_config(args):
         conf.set('scheduler', 'max_threads', str(args.threads))
         conf.set('webserver', 'worker_refresh_interval', str(args.web_interval))
         conf.set('webserver', 'worker_refresh_batch_size', str(args.web_workers))
+        conf.set('webserver', 'hide_paused_dags_by_default', 'True')
         conf.conf.write(output_stream)
 
 
