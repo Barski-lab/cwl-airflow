@@ -133,7 +133,8 @@ def main(argsl=None):
     args, _ = arg_parser().parse_known_args(argsl)
     args = normalize_args(args, skip_list=["func", "uid", "limit", "dag_timeout", "dag_interval", "threads",
                                            "web_interval", "web_workers", "run", "auto", "manual", "list", "quiet"])
-    reset_root_logger(args.quiet)
+    with Mute():
+        reset_root_logger(args.quiet)
     args.func(args)
 
 
