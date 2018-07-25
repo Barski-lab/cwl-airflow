@@ -76,10 +76,10 @@ def run_demo_manual(args):
 
 
 def run_demo(args):
-    if args.auto or args.manual:
-        clean_jobs_folder()
 
-    if not args.list:
+    if args.auto or args.manual or args.workflow:
+        if not args.workflow:
+            clean_jobs_folder()
         with Mute():
             demo_init_args = ["init", "-r", "5", "-w", "4"]
             run_init(arg_parser().parse_known_args(demo_init_args)[0])
