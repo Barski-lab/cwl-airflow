@@ -74,7 +74,9 @@ def run_demo_auto(args):
 
 def run_demo_manual(args):
     clean_jobs_folder()
-    for wf in get_demo_workflow():
+    workflows = get_demo_workflow()
+    for idx, wf in enumerate(workflows):
+        logging.info("Demo workflow {}/{}".format(idx+1, len(workflows)))
         submit_job(get_updated_args(args, wf))
 
 
