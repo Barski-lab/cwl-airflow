@@ -17,7 +17,7 @@ with Mute():  # Suppress output
                                         start_background_scheduler,
                                         get_airflow_default_args,
                                         clean_jobs_folder,
-                                        exit_if_not_configured)
+                                        asset_conf)
     from cwl_airflow.utils.utils import get_workflow_output, normalize_args, exit_if_unsupported_feature
 
 
@@ -78,7 +78,7 @@ def run_demo_manual(args):
 
 
 def run_demo(args):
-    exit_if_not_configured()
+    asset_conf()
     if args.auto:
         run_demo_auto(args)
     elif args.manual:
@@ -99,6 +99,7 @@ def run_demo(args):
 
 
 def run_init(args):
+    asset_conf("init")
     logging.info("Init cwl-airflow")
     update_config(args)
     create_folders()
@@ -109,7 +110,7 @@ def run_init(args):
 
 
 def submit_job(args):
-    exit_if_not_configured()
+    asset_conf()
     logging.info("Load workflow\n- workflow: {workflow}\n- job:      {job}\n- uid:      {uid}".format(**vars(args)))
     exit_if_unsupported_feature(args.workflow)
     export_job_file(args)

@@ -5,6 +5,7 @@ import argparse
 import uuid
 import logging
 import shutil
+import subprocess
 from multiprocessing import Process
 from json import dumps
 from datetime import datetime
@@ -187,21 +188,44 @@ def clean_jobs_folder(folder=None):
                 shutil.rmtree(path, ignore_errors=False)
 
 
-def exit_if_not_configured():
-    try:
-        jobs = conf.get('cwl', 'jobs')
-        limit = conf.get('cwl', 'limit')
-        if not os.path.isdir(jobs):
-            raise FileExistsError(jobs)
-        if not os.path.isdir(DAGS_FOLDER):
-            raise FileExistsError(DAGS_FOLDER)
-        if not os.path.isfile(os.path.join(DAGS_FOLDER, "cwl_dag.py")):
-            raise FileExistsError(os.path.join(DAGS_FOLDER, "cwl_dag.py"))
-    except AirflowConfigException as ex:
-        logging.error("Failed to get required parameters from configuration file\n- {}".format(str(ex)))
-        logging.error("Run cwl-airflow init")
-        sys.exit(0)
-    except FileExistsError as ex:
-        logging.error("The following file or directory is missing\n- {}".format(str(ex)))
-        logging.error("Run cwl-airflow init")
-        sys.exit(0)
+def asset_conf(mode=None):
+
+    def config():
+        conf.get('cwl', 'jobs')
+        conf.get('cwl', 'limit')
+
+    def paths():
+        items = [conf.get('cwl', 'jobs'), DAGS_FOLDER, os.path.join(DAGS_FOLDER, "cwl_dag.py")]
+        for item in items:
+            if not os.path.exists(item):
+                raise FileExistsError(item)
+
+    def docker():
+        with open(os.devnull, 'w') as devnull:
+            subprocess.run("docker -v", check=True, shell=True, stdout=devnull, stderr=devnull)
+
+    def airflow():
+        with open(os.devnull, 'w') as devnull:
+            subprocess.run("airflow -h", check=True, shell=True, stdout=devnull, stderr=devnull)
+
+    check_set = {
+        "init": [docker, airflow],
+        None:   [docker, airflow, paths, config]
+    }
+
+    for check_criteria in check_set[mode]:
+        try:
+            check_criteria()
+        except AirflowConfigException as ex:
+            logging.error("Missing required configuration\n- {}\n- run cwl-airflow init".format(str(ex)))
+            sys.exit(0)
+        except FileExistsError as ex:
+            logging.error("Missing required file or directory\n- {}\n- run cwl-airflow init".format(str(ex)))
+            sys.exit(0)
+        except subprocess.CalledProcessError as ex:
+            logging.error("Missing required installation\n- {}".format(str(ex)))
+            sys.exit(0)
+        except Exception as ex:
+            logging.error("Unexpected exception\n- {}".format(str(ex)))
+            sys.exit(1)
+
