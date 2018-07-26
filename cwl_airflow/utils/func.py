@@ -143,7 +143,6 @@ def update_config(args):
         conf.set('cwl', 'jobs', str(args.jobs))
         conf.set('cwl', 'limit', str(args.limit))
         conf.set('core', 'dagbag_import_timeout', str(args.dag_timeout))
-        conf.set('scheduler', 'min_file_process_interval', str(args.dag_interval))
         conf.set('scheduler', 'max_threads', str(args.threads))
         conf.set('webserver', 'worker_refresh_interval', str(args.web_interval))
         conf.set('webserver', 'worker_refresh_batch_size', str(args.web_workers))

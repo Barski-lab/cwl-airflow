@@ -36,9 +36,8 @@ def arg_parser():
     init_parser = subparsers.add_parser('init', help="Init cwl-airflow", parents=[parent_parser])
     init_parser.set_defaults(func=run_init)
     init_parser.add_argument("-l", "--limit",    dest='limit', type=int, help="Limit job concurrancy", default=10)
-    init_parser.add_argument("-j", "--jobs",     dest='jobs', type=str, help="Jobs folder. Default: AIRFLOW_HOME/jobs", default=os.path.join(AIRFLOW_HOME, 'jobs'))
+    init_parser.add_argument("-j", "--jobs",     dest='jobs', type=str, help="Jobs folder. Default: ~/airflow/jobs", default=os.path.join(AIRFLOW_HOME, 'jobs'))
     init_parser.add_argument("-t", "--timeout",  dest='dag_timeout', type=int, help="How long before timing out a python file import while filling the DagBag", default=30)
-    init_parser.add_argument("-i", "--interval", dest='dag_interval', type=int, help="After how much time a new DAGs should be picked up from the filesystem", default=0)
     init_parser.add_argument("-r", "--refresh",  dest='web_interval', type=int, help="Webserver workers refresh interval, seconds", default=30)
     init_parser.add_argument("-w", "--workers",  dest='web_workers', type=int, help="Webserver workers refresh batch size", default=1)
     init_parser.add_argument("-p", "--threads",  dest='threads', type=int, help="Max Airflow Scheduler threads", default=2)
@@ -133,7 +132,7 @@ def main(argsl=None):
         argsl = sys.argv[1:]
     argsl.append("")  # To avoid raising error when argsl is empty
     args, _ = arg_parser().parse_known_args(argsl)
-    args = normalize_args(args, skip_list=["func", "uid", "limit", "dag_timeout", "dag_interval", "threads",
+    args = normalize_args(args, skip_list=["func", "uid", "limit", "dag_timeout", "threads",
                                            "web_interval", "web_workers", "run", "auto", "manual", "list", "quiet"])
     with Mute():
         reset_root_logger(args.quiet)
