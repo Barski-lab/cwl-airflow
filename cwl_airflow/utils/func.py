@@ -140,7 +140,7 @@ def update_config(args):
             pass
         conf.set('core', 'dags_are_paused_at_creation', 'False')
         conf.set('core', 'load_examples', 'False')
-        conf.set('cwl', 'jobs', os.path.join(AIRFLOW_HOME, 'jobs'))
+        conf.set('cwl', 'jobs', str(args.jobs))
         conf.set('cwl', 'limit', str(args.limit))
         conf.set('core', 'dagbag_import_timeout', str(args.dag_timeout))
         conf.set('scheduler', 'min_file_process_interval', str(args.dag_interval))

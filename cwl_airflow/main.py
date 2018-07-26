@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import sys
+import os
 import argparse
 import uuid
 import logging
 from cwl_airflow.utils.mute import Mute
 with Mute():  # Suppress output
+    from airflow.settings import AIRFLOW_HOME
     from cwl_airflow.utils.logger import reset_root_logger
     from airflow.bin.cli import scheduler, webserver, initdb
     from cwl_airflow.utils.func import (export_job_file,
@@ -33,12 +35,13 @@ def arg_parser():
 
     init_parser = subparsers.add_parser('init', help="Init cwl-airflow", parents=[parent_parser])
     init_parser.set_defaults(func=run_init)
-    init_parser.add_argument("-l", "--limit", dest='limit', type=int, help="Limit job concurrancy", default=10)
-    init_parser.add_argument("-t", "--timeout", dest='dag_timeout', type=int, help="How long before timing out a python file import while filling the DagBag", default=30)
+    init_parser.add_argument("-l", "--limit",    dest='limit', type=int, help="Limit job concurrancy", default=10)
+    init_parser.add_argument("-j", "--jobs",     dest='jobs', type=str, help="Jobs folder. Default: AIRFLOW_HOME/jobs", default=os.path.join(AIRFLOW_HOME, 'jobs'))
+    init_parser.add_argument("-t", "--timeout",  dest='dag_timeout', type=int, help="How long before timing out a python file import while filling the DagBag", default=30)
     init_parser.add_argument("-i", "--interval", dest='dag_interval', type=int, help="After how much time a new DAGs should be picked up from the filesystem", default=0)
-    init_parser.add_argument("-r", "--refresh", dest='web_interval', type=int, help="Webserver workers refresh interval, seconds", default=30)
-    init_parser.add_argument("-w", "--workers", dest='web_workers', type=int, help="Webserver workers refresh batch size", default=1)
-    init_parser.add_argument("-p", "--threads", dest='threads', type=int, help="Max Airflow Scheduler threads", default=2)
+    init_parser.add_argument("-r", "--refresh",  dest='web_interval', type=int, help="Webserver workers refresh interval, seconds", default=30)
+    init_parser.add_argument("-w", "--workers",  dest='web_workers', type=int, help="Webserver workers refresh batch size", default=1)
+    init_parser.add_argument("-p", "--threads",  dest='threads', type=int, help="Max Airflow Scheduler threads", default=2)
 
     submit_parser = subparsers.add_parser('submit', help="Submit custom workflow", parents=[parent_parser])
     submit_parser.set_defaults(func=submit_job)
