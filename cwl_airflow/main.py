@@ -17,6 +17,7 @@ with Mute():  # Suppress output
                                         start_background_scheduler,
                                         get_airflow_default_args,
                                         clean_jobs_folder,
+                                        get_webserver_url,
                                         asset_conf)
     from cwl_airflow.utils.utils import get_workflow_output, normalize_args, exit_if_unsupported_feature
 
@@ -66,7 +67,7 @@ def arg_parser():
 def run_demo_auto(args):
     run_demo_manual(args)
     start_background_scheduler()
-    logging.info("Run Airflow Webserver")
+    logging.info("Run Airflow Webserver\n- {}".format(get_webserver_url()))
     with Mute():
         webserver(get_airflow_default_args("webserver"))
 

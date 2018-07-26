@@ -229,3 +229,5 @@ def asset_conf(mode=None):
             logging.error("Unexpected exception\n- {}".format(str(ex)))
             sys.exit(1)
 
+def get_webserver_url():
+    return "{}:{}".format(conf.get('webserver', 'WEB_SERVER_HOST'), conf.get('webserver', 'WEB_SERVER_PORT'))
