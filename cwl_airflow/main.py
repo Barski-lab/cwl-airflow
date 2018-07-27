@@ -21,7 +21,10 @@ with Mute():  # Suppress output
                                         clean_jobs_folder,
                                         get_webserver_url,
                                         asset_conf)
-    from cwl_airflow.utils.utils import get_workflow_output, normalize_args, exit_if_unsupported_feature
+    from cwl_airflow.utils.utils import (get_workflow_output,
+                                         normalize_args,
+                                         exit_if_unsupported_feature,
+                                         conf_get_default)
 
 
 def arg_parser():
@@ -33,14 +36,22 @@ def arg_parser():
     subparsers = general_parser.add_subparsers()
     subparsers.required = True
 
+
     init_parser = subparsers.add_parser('init', help="Init cwl-airflow", parents=[parent_parser])
     init_parser.set_defaults(func=run_init)
-    init_parser.add_argument("-l", "--limit",    dest='limit', type=int, help="Limit job concurrancy", default=10)
-    init_parser.add_argument("-j", "--jobs",     dest='jobs', type=str, help="Jobs folder. Default: ~/airflow/jobs", default=os.path.join(AIRFLOW_HOME, 'jobs'))
-    init_parser.add_argument("-t", "--timeout",  dest='dag_timeout', type=int, help="How long before timing out a python file import while filling the DagBag", default=30)
-    init_parser.add_argument("-r", "--refresh",  dest='web_interval', type=int, help="Webserver workers refresh interval, seconds", default=30)
-    init_parser.add_argument("-w", "--workers",  dest='web_workers', type=int, help="Webserver workers refresh batch size", default=1)
-    init_parser.add_argument("-p", "--threads",  dest='threads', type=int, help="Max Airflow Scheduler threads", default=2)
+    init_parser.add_argument("-l", "--limit",    dest='limit', type=int, help="Limit job concurrancy",
+                             default=conf_get_default("cwl", "limit", 10))
+    init_parser.add_argument("-j", "--jobs",     dest='jobs', type=str, help="Jobs folder. Default: ~/airflow/jobs",
+                             default=conf_get_default("cwl", "jobs", os.path.join(AIRFLOW_HOME, 'jobs')))
+    init_parser.add_argument("-t", "--timeout",  dest='dag_timeout', type=int, help="How long before timing out a python file import while filling the DagBag",
+                             default=conf_get_default("core", "dagbag_import_timeout", 30))
+    init_parser.add_argument("-r", "--refresh",  dest='web_interval', type=int, help="Webserver workers refresh interval, seconds",
+                             default=conf_get_default("webserver", "worker_refresh_interval", 30))
+    init_parser.add_argument("-w", "--workers",  dest='web_workers', type=int, help="Webserver workers refresh batch size",
+                             default=conf_get_default("webserver", "worker_refresh_batch_size", 1))
+    init_parser.add_argument("-p", "--threads",  dest='threads', type=int, help="Max Airflow Scheduler threads",
+                             default=conf_get_default("scheduler", "max_threads", 2))
+
 
     submit_parser = subparsers.add_parser('submit', help="Submit custom workflow", parents=[parent_parser])
     submit_parser.set_defaults(func=submit_job)
@@ -51,12 +62,14 @@ def arg_parser():
     submit_parser.add_argument("workflow", type=str, help="Workflow file path")
     submit_parser.add_argument("job", type=str, help="Job file path")
 
+
     demo_parser = subparsers.add_parser('demo', help="Run demo workflows", parents=[parent_parser])
     demo_parser.set_defaults(func=run_demo)
     demo_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory. Default: ./", default=".")
     demo_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data. Default: /tmp")
     demo_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Experiment's unique ID; ignored with -a/-l arguments. Default: random uuid", default=str(uuid.uuid4()))
     demo_parser.add_argument("workflow", type=str, help="Demo workflow name from the list")
+
 
     excl_group = demo_parser.add_mutually_exclusive_group()
     excl_group.add_argument("-a", "--auto", dest='auto', action="store_true", help="Run all demo workflows with Airflow Webserver & Scheduler")
