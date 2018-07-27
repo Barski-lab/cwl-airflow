@@ -82,7 +82,7 @@ def arg_parser():
 def run_demo_auto(args):
     run_demo_manual(args)
     start_background_scheduler()
-    logging.info("Run Airflow Webserver\n- {}".format(get_webserver_url()))
+    logging.info("Run Airflow Webserver in background\n- to open webserver follow the link {}".format(get_webserver_url()))
     with Mute():
         webserver(get_airflow_default_args("webserver"))
 
@@ -91,7 +91,7 @@ def run_demo_manual(args):
     clean_jobs_folder()
     workflows = get_demo_workflow()
     for idx, wf in enumerate(workflows):
-        logging.info("Demo workflow {}/{}".format(idx+1, len(workflows)))
+        logging.info("Process demo workflow {}/{}".format(idx+1, len(workflows)))
         submit_job(get_updated_args(args, wf))
 
 
