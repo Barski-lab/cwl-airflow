@@ -7,6 +7,7 @@ import logging
 import shutil
 import subprocess
 from multiprocessing import Process
+from builtins import FileExistsError
 from json import dumps
 from datetime import datetime
 from cwl_airflow.utils.mute import Mute
