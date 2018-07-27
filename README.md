@@ -3,67 +3,73 @@
 
 # cwl-airflow
 
-### About
 Python package to extend **[Apache-Airflow 1.9.0](https://github.com/apache/incubator-airflow)**
 functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
-
-### Check it out
+_________________
+### Try it out
 1. Install *cwl-airflow*
     ```sh
     $ pip3 install cwl-airflow --user --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
     ```
-2. Init
+2. Init configuration
     ```sh
-    $ cwl-airflow init  # use -w 4 -r 5 to make webserver react faster
+    $ cwl-airflow init
     ```
 3. Run *demo*
     ```sh
     $ cwl-airflow demo --auto
     ```
-4. Open your [web browser](http://localhost:8080/admin/?showPaused=False) to see the progress 
+4. When you see in the console output that Airflow Webserver is started, open the provided link 
 
+_________________
 
-### Read it if you have troubles with installation
-1. Check the requirements
-    - Ubuntu 16.04.4
-    - python 3.5.2
-    - pip3
-      ```bash
-        wget https://bootstrap.pypa.io/get-pip.py
-        python3 get-pip.py --user
-      ```
-    - setuptools
-      ```
-      pip3 install setuptools --user
-      ```
-    - docker
-      ```
-      sudo apt-get update
-      sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
-      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-      sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-      sudo apt-get update
-      sudo apt-get install docker-ce
-      sudo groupadd docker
-      sudo usermod -aG docker $USER
-      ```
-      Log out and log back in so that your group membership is re-evaluated.
-    - python3-dev
-        ```bash
-        sudo apt-get install python3-dev
-        ```
+### Installation requirements
 
+- Ubuntu 16.04.4
+- python 3.5.2
+- pip3
+  ```bash
+    wget https://bootstrap.pypa.io/get-pip.py
+    python3 get-pip.py --user
+  ```
+- setuptools
+  ```
+  pip3 install setuptools --user
+  ```
+- docker
+  ```
+  sudo apt-get update
+  sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  sudo apt-get update
+  sudo apt-get install docker-ce
+  sudo groupadd docker
+  sudo usermod -aG docker $USER
+  ```
+  Log out and log back in so that your group membership is re-evaluated.
+- python3-dev
+    ```bash
+    sudo apt-get install python3-dev
+    ```
 
 ### Configuration
-1. Initialize `cwl-airflow` with the following command
-    ```sh
-    $ cwl-airflow init  # consider using --refresh=5 --workers=4 options if you want the webserver to react faster
-    ```
-2. If you had **[Apache-Airflow v1.9.0](https://github.com/apache/incubator-airflow)**
-   already installed and configured, you may skip this step
-    ```sh
-    $ airflow initdb
-    ``` 
+
+When running `cwl-airflow init` the following parameters can be specified:
+
+- `-l LIMIT`, `--limit LIMIT` sets the number of processed jobs kept in history.
+ Default 10 for each of the category: *Running*, *Success*, *Failed* 
+- `-j JOBS`, `--jobs JOBS` sets the path to the folder where all the new jobs will be added.
+Default `~/airflow/jobs`
+- `-t DAG_TIMEOUT`, `--timeout DAG_TIMEOUT` sets timeout (in seconds) for importing all the DAGs
+from the DAG folder. Default 30 seconds 
+- `-r WEB_INTERVAL`, `--refresh WEB_INTERVAL` sets the webserver workers refresh interval (in seconds). Default 30 seconds
+- `-w WEB_WORKERS`, `--workers WEB_WORKERS` sets the number of webserver workers to be refreshed at the same time. Default 1
+- `-p THREADS`, `--threads THREADS` sets the number of threads for Airflow Scheduler. Default 2
+
+If *core/dags_folder* parameters from Airflow configuration file (default location *~/airflow/airflow.cfg*)
+has been updated manualy, make sure to rerun `cwl-airflow init`
+
     
 ### Running
 #### Batch mode
