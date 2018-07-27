@@ -201,11 +201,11 @@ def asset_conf(mode=None):
 
     def docker():
         with open(os.devnull, 'w') as devnull:
-            subprocess.run("docker -v", check=True, shell=True, stdout=devnull, stderr=devnull)
+            subprocess.check_call("docker -v", shell=True, stdout=devnull, stderr=devnull)
 
     def airflow():
         with open(os.devnull, 'w') as devnull:
-            subprocess.run("airflow -h", check=True, shell=True, stdout=devnull, stderr=devnull)
+            subprocess.check_call("airflow -h", shell=True, stdout=devnull, stderr=devnull)
 
     check_set = {
         "init": [docker, airflow],
