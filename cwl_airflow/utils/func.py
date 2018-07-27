@@ -7,7 +7,6 @@ import logging
 import shutil
 import subprocess
 from multiprocessing import Process
-from builtins import FileExistsError
 from json import dumps
 from datetime import datetime
 from cwl_airflow.utils.mute import Mute
@@ -198,7 +197,7 @@ def asset_conf(mode=None):
         items = [conf.get('cwl', 'jobs'), DAGS_FOLDER, os.path.join(DAGS_FOLDER, "cwl_dag.py")]
         for item in items:
             if not os.path.exists(item):
-                raise FileExistsError(item)
+                raise OSError(item)
 
     def docker():
         with open(os.devnull, 'w') as devnull:
@@ -219,7 +218,7 @@ def asset_conf(mode=None):
         except AirflowConfigException as ex:
             logging.error("Missing required configuration\n- {}\n- run cwl-airflow init".format(str(ex)))
             sys.exit(0)
-        except FileExistsError as ex:
+        except OSError as ex:
             logging.error("Missing required file or directory\n- {}\n- run cwl-airflow init".format(str(ex)))
             sys.exit(0)
         except subprocess.CalledProcessError as ex:
