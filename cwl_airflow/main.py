@@ -4,6 +4,7 @@ import os
 import argparse
 import uuid
 import logging
+from __future__ import print_function
 from cwl_airflow.utils.mute import Mute
 with Mute():  # Suppress output
     from airflow.settings import AIRFLOW_HOME
