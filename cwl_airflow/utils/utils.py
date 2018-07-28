@@ -1,10 +1,10 @@
 import os
 import sys
-import urllib.parse
 import logging
 import argparse
 import re
 from json import dumps
+from six.moves import urllib
 import cwltool.context
 from cwltool.workflow import default_make_tool
 from cwltool.resolver import tool_resolver
@@ -144,7 +144,11 @@ def export_to_file (output_filename, data):
 
 
 def get_folder(abs_path, permissions=0o0775, exist_ok=True):
-    os.makedirs(abs_path, mode=permissions, exist_ok=exist_ok)
+    try:
+        os.makedirs(abs_path, mode=permissions)
+    except os.error as ex:
+        if not exist_ok:
+            raise
     return abs_path
 
 

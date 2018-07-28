@@ -1,6 +1,6 @@
 import os
 import sys
-import configparser
+from six.moves import configparser
 import argparse
 import uuid
 import logging
