@@ -110,9 +110,9 @@ def run_demo(args):
     elif args.workflow:
         try:
             submit_job(get_updated_args(args, get_demo_workflow(args.workflow)[0], keep_uid=True, keep_output_folder=True))
+            logging.info("To process submitted workflows run Airflow Scheduler separately")
         except IndexError:
             logging.warning("{} is not found in the demo workflows list".format(args.workflow))
-        logging.info("To process submitted workflows run Airflow Scheduler separately")
     else:
         arg_parser().parse_known_args(["demo", "--help"])
 
