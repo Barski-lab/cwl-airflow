@@ -13,7 +13,7 @@ from cwl_airflow.utils.mute import Mute
 from airflow import conf as conf
 from airflow.models import DagRun
 from airflow.utils.state import State
-from airflow.settings import DAGS_FOLDER, AIRFLOW_HOME
+from airflow.settings import DAGS_FOLDER
 from airflow.bin.cli import get_dag, CLIFactory, scheduler
 from airflow.exceptions import AirflowConfigException
 from cwl_airflow.utils.utils import (set_logger,
@@ -227,6 +227,7 @@ def asset_conf(mode=None):
         except Exception as ex:
             logging.error("Unexpected exception\n- {}".format(str(ex)))
             sys.exit(1)
+
 
 def get_webserver_url():
     return "{}:{}".format(conf.get('webserver', 'WEB_SERVER_HOST'), conf.get('webserver', 'WEB_SERVER_PORT'))
