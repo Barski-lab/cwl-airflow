@@ -6,10 +6,10 @@
 Python package to extend **[Apache-Airflow 1.9.0](https://github.com/apache/incubator-airflow)**
 functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 _________________
-### Try it out
+### Quick guides
 1. Install *cwl-airflow*
     ```sh
-    $ pip3 install cwl-airflow --user --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
+    $ pip install cwl-airflow --user --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
     ```
 2. Init configuration
     ```sh
@@ -19,23 +19,15 @@ _________________
     ```sh
     $ cwl-airflow demo --auto
     ```
-4. When you see in the console output that Airflow Webserver is started, open the provided link 
+4. When you see in the console output that Airflow Webserver is started,
+open the provided URL address 
 
 _________________
 
 ### Installation requirements
-
-- Ubuntu 16.04.4
-- python 3.5.2
-- pip3
-  ```bash
-    wget https://bootstrap.pypa.io/get-pip.py
-    python3 get-pip.py --user
-  ```
-- setuptools
-  ```
-  pip3 install setuptools --user
-  ```
+#### OS specific
+##### Ubuntu 16.04.4
+- python 2.7/3.5 (tested on the system Python 2.7.12 and the latest available 3.5.2)
 - docker
   ```
   sudo apt-get update
@@ -48,10 +40,31 @@ _________________
   sudo usermod -aG docker $USER
   ```
   Log out and log back in so that your group membership is re-evaluated.
-- python3-dev
-    ```bash
-    sudo apt-get install python3-dev
-    ```
+- python-dev (or python3-dev if using Python 3.5)
+  ```bash
+  sudo apt-get install python-dev # python3-dev
+  ``` 
+##### macOS High Sierra 10.13.5
+- python 2.7/3.6 (tested on the system Python 2.7.10 and the latest availble 3.6.5)
+- docker (follow the official [install](https://docs.docker.com/docker-for-mac/install/) documentation)
+  
+#### Common 
+- pip
+  ```bash
+  wget https://bootstrap.pypa.io/get-pip.py
+  python get-pip.py --user
+  ```
+  When using the system Python, you might need to update your PATH variable following
+  the instruction printed on console
+- setuptools
+  ```
+  pip install -U setuptools --user
+  ```
+- Apple Command Line Tools
+  ```bash
+  xcode-select --install
+  ```
+  Click Install on the pop up when it appears.
 
 ### Configuration
 
@@ -67,27 +80,14 @@ from the DAG folder. Default 30 seconds
 - `-w WEB_WORKERS`, `--workers WEB_WORKERS` sets the number of webserver workers to be refreshed at the same time. Default 1
 - `-p THREADS`, `--threads THREADS` sets the number of threads for Airflow Scheduler. Default 2
 
-If *core/dags_folder* parameters from Airflow configuration file (default location *~/airflow/airflow.cfg*)
-has been updated manualy, make sure to rerun `cwl-airflow init`
+If you update Airflow configuration file (default location *~/airflow/airflow.cfg*) manually,
+make sure to run *cwl-airflow init* command to apply all the changes,
+especially if *core/dags_folder* or *cwl/jobs* parameters are changed.
 
     
-### Running
-#### Batch mode
-To automatically monitor and process all the job files present in a specific folder
-1. Make sure your job files include the following mandatory fields:
-   - `uid` - unique ID, string
-   - `output_folder` - absolute path the the folder to save result, string
-   - `workflow` - absolute path the the workflow to be run, string
-    
-   Aditionally, job files may also include the `tmp_folder` parameter
-   to point to the temporary folder absolute path. 
-2. Put your JSON/YAML job files into the directory
-   set as `jobs` in `cwl` section of `airflow.cfg` file
-   (by default `~/airflow/cwl/jobs`)
-3. Run Airflow scheduler:
-   ```sh
-   $ airflow scheduler
-   ```
+### Submitting a job
+To submit new cwl workflow descriptor and input parameters file for execution it's recommended to use
+ *cwl-airflow submit* command.
    
 #### Manual mode
 To perform a single run of the specific CWL workflow and job files 
