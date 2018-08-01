@@ -5,8 +5,9 @@
 
 Python package to extend **[Apache-Airflow 1.9.0](https://github.com/apache/incubator-airflow)**
 functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
-_________________
-### Quick guides
+---
+## Demo mode
+*(assuming that you already have installed and properly configured python, pip, setuptools and docker)*
 1. Install *cwl-airflow*
     ```sh
     $ pip install cwl-airflow --user --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
@@ -19,15 +20,56 @@ _________________
     ```sh
     $ cwl-airflow demo --auto
     ```
-4. When you see in the console output that Airflow Webserver is started,
-open the provided URL address 
+4. When all demo wokrflows are submitted program will provide you with the link for Airflow Webserver.
+It may take some time (usually less then half a minute) for Airflow Webserver to load and display all the data
 
-_________________
+---
 
-### Installation requirements
-#### OS specific
-##### Ubuntu 16.04.4
-- python 2.7/3.5 (tested on the system Python 2.7.12 and the latest available 3.5.2)
+
+## Table of Contents
+
+* **[How It Works](#How It Works)**
+  * [Key concepts](#Key concepts)
+* **[Installation](#Installation)**
+  * [Requirements](#Requirements)
+    * [Ubuntu 16.04.4 (Xenial Xerus)](#Ubuntu 16.04.4 (Xenial Xerus))
+    * [macOS 10.13.5 (High Sierra)](#macOS 10.13.5 (High Sierra))
+    * [Both Ubuntu and macOS](#Both Ubuntu and macOS)
+  * [Install cwl-airflow](#Install cwl-airflow)
+* **[Using cwl-airflow](#Using cwl-airflow)**
+    * [Configuration](#Configuration)
+    * [Submitting new job](#Submitting new job)
+    * [Demo mode](#Demo mode)
+---
+
+## How It Works
+### Key concepts
+
+1. **CWL descriptor file** - *YAML* or *JSON* file to describe the workflow inputs, outputs and steps.
+   File should be compatible with CWL v1.0 specification
+2. **Job file** - *YAML* or *JSON* file to set the values for the wokrflow inputs.
+   For *cwl-airflow* to function properly the Job file should include 3 mandatory and 
+   one optional fields:
+   - *workflow* - mandatory field to specify the absolute path to the CWL descriptor file
+   - *output_folder* - mandatory field to specify the absolute path to the folder
+   where all the output files should be moved after successful workflow execution
+   - *tmp_folder* - optional field to specify the absolute path to the folder
+   for storing intermediate results. After workflow execution this folder will be deleted.
+   - *uid* - mandatory field that is used for generating DAG's unique identifier. 
+3. **DAG** - directed acyclic graph that describes the workflow structure.
+4. **Jobs folder** - folder to keep all Job files scheduled for execution or the ones that
+have already been processed. The folder's location is set as *jobs* parameter of *cwl* section
+in Airflow configuration file.  
+
+*cwl-airflow* package provides the original Apache-Airflow with the script that when placed into the DAGs
+folder will parse CWL descriptor and Job files and create the new DAG for each of the Job file.
+Such a DAG will be executed when Airflow Scheduler is running.   
+
+
+## Installation
+### Requirements 
+#### Ubuntu 16.04.4 (Xenial Xerus)
+- python 2.7 or 3.5 (tested on the default Python 2.7.12 and 3.5.2)
 - docker
   ```
   sudo apt-get update
@@ -44,76 +86,135 @@ _________________
   ```bash
   sudo apt-get install python-dev # python3-dev
   ``` 
-##### macOS High Sierra 10.13.5
-- python 2.7/3.6 (tested on the system Python 2.7.10 and the latest availble 3.6.5)
-- docker (follow the official [install](https://docs.docker.com/docker-for-mac/install/) documentation)
+  *python-dev* is required in case your system needs to compile some python
+  packages during the installation. We have built python *wheels* for most of such packages
+  and provided them through *--find-links* argument while installing *cwl-airflow*.
+  Nevertheless in case of installation problems you might still be required to install
+  this dependency.
   
-#### Common 
+  
+#### macOS 10.13.5 (High Sierra)
+- python 2.7 or 3.6 (tested on the default Python 2.7.10 and the latest Python 3.6.5 availble from Homebrew)
+- docker (follow the [link](https://docs.docker.com/docker-for-mac/install/)
+  to install Docker on Mac)
+- Apple Command Line Tools
+  ```bash
+  xcode-select --install
+  ```
+  Click *Install* on the pop up when it appears, follow the instructions
+  
+#### Both Ubuntu and macOS
 - pip
   ```bash
   wget https://bootstrap.pypa.io/get-pip.py
   python get-pip.py --user
   ```
-  When using the system Python, you might need to update your PATH variable following
+  When using the system Python on MacOS, you might need to update your *PATH* variable following
   the instruction printed on console
-- setuptools
+- setuptools (should be updated to the latest)
   ```
   pip install -U setuptools --user
   ```
-- Apple Command Line Tools
-  ```bash
-  xcode-select --install
-  ```
-  Click Install on the pop up when it appears.
+### Install cwl-airflow
+```sh
+$ pip install cwl-airflow --user --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
+```
+To avoid installing *Xcode* for macOS users and *python-dev* for Ubuntu users, some
+of the Python packages have been already compiled and put into the separate
+[repository](https://michael-kotliar.github.io/cwl-airflow-wheels/)
+that is set with *--find-links* argument.
+
+
+
+## Using cwl-airflow
 
 ### Configuration
 
-When running `cwl-airflow init` the following parameters can be specified:
+Before using *cwl-airflow* it should be initialized with the default configuration by running the command
+```sh
+$ cwl-airflow init
+```
+Additionally you can specify the following optional parameters:
 
 - `-l LIMIT`, `--limit LIMIT` sets the number of processed jobs kept in history.
  Default 10 for each of the category: *Running*, *Success*, *Failed* 
 - `-j JOBS`, `--jobs JOBS` sets the path to the folder where all the new jobs will be added.
-Default `~/airflow/jobs`
+Default *~/airflow/jobs*
 - `-t DAG_TIMEOUT`, `--timeout DAG_TIMEOUT` sets timeout (in seconds) for importing all the DAGs
 from the DAG folder. Default 30 seconds 
 - `-r WEB_INTERVAL`, `--refresh WEB_INTERVAL` sets the webserver workers refresh interval (in seconds). Default 30 seconds
 - `-w WEB_WORKERS`, `--workers WEB_WORKERS` sets the number of webserver workers to be refreshed at the same time. Default 1
 - `-p THREADS`, `--threads THREADS` sets the number of threads for Airflow Scheduler. Default 2
 
-If you update Airflow configuration file (default location *~/airflow/airflow.cfg*) manually,
+If you update Airflow configuration file manually (default location is *~/airflow/airflow.cfg*),
 make sure to run *cwl-airflow init* command to apply all the changes,
-especially if *core/dags_folder* or *cwl/jobs* parameters are changed.
+especially if *core/dags_folder* or *cwl/jobs* parameters from the configuration file are changed.
 
     
-### Submitting a job
-To submit new cwl workflow descriptor and input parameters file for execution it's recommended to use
- *cwl-airflow submit* command.
-   
-#### Manual mode
-To perform a single run of the specific CWL workflow and job files 
+### Submitting new job
 
+To submit new CWL descriptor and Job files to *cwl-airflow* run the following command
 ```bash
-cwl-airflow run WORKFLOW_FILE JOB_FILE
+cwl-airflow submit WORKFLOW JOB
 ```
-If `uid`, `output_folder`, `workflow` and `tmp_folder` fields are not present
-in the job file, you may set the them with the following arguments:
+Additionally you can specify the following optional parameters
+- `-o OUTPUT_FOLDER`, `--outdir OUTPUT_FOLDER` sets the path to the folder
+   where all the output files should be moved after successful workflow execution.
+   Default: current directory
+- `-t TMP_FOLDER`, `--tmp TMP_FOLDER` sets the path to the folder for storing intermediate results.
+After workflow execution this folder will be deleted.
+Default: */tmp*
+- `-u UID`, `--uid UID` sets the ID for DAG's unique identifier generation.
+Default: *random uuid*
+- `-r`, `--run` runs submitted workflow with Airflow Scheduler
+
+Arguments `-o`, `-t` and `-u` doesn't overwrite the values set in the Job file in the fields
+*output_folder*, *tmp_folder* and *uid* correspondingly.
+
+The *submit* command will resolve all relative paths from Job file adding mandatory fields
+*workflow*, *output_folder* and *uid* (if not provided) and will copy Job file to the
+Jobs folder.
+
+The *submit* command will **not** execute submitted workflow unless *-r* argument is provided.
+Otherwise, make sure that *Airflow Scheduler* (and optionally *Airflow Webserver*) is running.
+
+To start Airflow Scheduler
 ```bash
-  -o, --outdir      Output directory, default current directory
-  -t, --tmp         Folder to store temporary data, default /tmp
-  -u, --uid         Unique ID, default random uuid
+airflow scheduler
 ```
-#### Demo mode
-1. Get the list of the available demo workflows to run
-   ```bash
-   $ cwl-airflow demo
-   ```
-2. Run demo workflow from the list (if running on macOS, consider adding the directory where you
-   installed cwl-airflow package to the _**Docker / Preferences / File sharing**_ options)
-   ```bash
-   $ cwl-airflow demo super-enhancer.cwl
-   ```
-3. Optionally, run `airflow webserver` to check workflow status (default [webserver link](http://localhost:8080/))
-     ```bash
-   $ airflow webserver
-   ```
-   
+To start Airflow Webserver
+```bash
+airflow webserver
+```
+
+The CWL descriptor file and all input files referenced in Job file should not be moved or deleted while
+workflow is running.  
+
+## Demo mode
+To get the list of the available demo workflows to run
+```bash
+$ cwl-airflow demo --list
+```
+To submit demo workflow from the list
+(to execute submitted wokrflow Airflow Scheduler should be started separately)
+```bash
+$ cwl-airflow demo super-enhancer.cwl
+```
+To submit all available demo workflows
+(to execute submitted wokrflows Airflow Scheduler should be started separately)
+```bash
+$ cwl-airflow demo --manual
+```
+To execute all available demo workflows (automatically starts Airflow Scheduler and Airflow Webserver)
+```bash
+$ cwl-airflow demo --auto
+```
+Additionally you can specify the following optional parameters
+- `-o OUTPUT_FOLDER`, `--outdir OUTPUT_FOLDER` sets the path to the folder
+   where all the output files should be moved after successful workflow execution.
+   Default: current directory
+- `-t TMP_FOLDER`, `--tmp TMP_FOLDER` sets the path to the folder for storing intermediate results.
+After workflow execution this folder will be deleted.
+Default: */tmp*
+- `-u UID`, `--uid UID` sets the ID for DAG's unique identifier generation. Ignored with *--manual* or *--auto*
+options. Default: *random uuid*

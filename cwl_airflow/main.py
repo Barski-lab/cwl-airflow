@@ -83,7 +83,7 @@ def arg_parser():
 def run_demo_auto(args):
     run_demo_manual(args)
     start_background_scheduler()
-    logging.info("Run Airflow Webserver in background\n- to open webserver follow the link {}".format(get_webserver_url()))
+    logging.info("Starting Airflow Webserver in background\n- to open webserver follow the link {}".format(get_webserver_url()))
     with Mute():
         webserver(get_airflow_default_args("webserver"))
 

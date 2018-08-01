@@ -169,7 +169,7 @@ def get_airflow_default_args(subparser):
 
 
 def start_background_scheduler():
-    logging.info("Run Airflow Scheduler in background")
+    logging.info("Starting Airflow Scheduler in background")
     scheduler_thread = Process(target=scheduler, args=(get_airflow_default_args("scheduler"),))
     with Mute():
         scheduler_thread.start()
