@@ -28,18 +28,18 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
 
 ## Table of Contents
 
-* **[How It Works](#How It Works)**
-  * [Key concepts](#Key concepts)
+* **[How It Works](#How-It-Works)**
+  * [Key concepts](#Key-concepts)
 * **[Installation](#Installation)**
   * [Requirements](#Requirements)
-    * [Ubuntu 16.04.4 (Xenial Xerus)](#Ubuntu 16.04.4 (Xenial Xerus))
-    * [macOS 10.13.5 (High Sierra)](#macOS 10.13.5 (High Sierra))
-    * [Both Ubuntu and macOS](#Both Ubuntu and macOS)
-  * [Install cwl-airflow](#Install cwl-airflow)
-* **[Using cwl-airflow](#Using cwl-airflow)**
+    * [Ubuntu 16.04.4 (Xenial Xerus)](#Ubuntu-16.04.4-(Xenial-Xerus))
+    * [macOS 10.13.5 (High Sierra)](#macOS-10.13.5-(High-Sierra))
+    * [Both Ubuntu and macOS](#Both-Ubuntu-and-macOS)
+  * [Install cwl-airflow](#Install-cwl-airflow)
+* **[Using cwl-airflow](#Using-cwl-airflow)**
     * [Configuration](#Configuration)
-    * [Submitting new job](#Submitting new job)
-    * [Demo mode](#Demo mode)
+    * [Submitting new job](#Submitting-new-job)
+    * [Demo mode](#Demo-mode)
 ---
 
 ## How It Works
