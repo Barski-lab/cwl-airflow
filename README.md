@@ -6,7 +6,7 @@
 Python package to extend **[Apache-Airflow 1.9.0](https://github.com/apache/incubator-airflow)**
 functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 ---
-## Demo mode
+## Check it out
 *(assuming that you already have installed and properly configured python, pip, setuptools and docker)*
 1. Install *cwl-airflow*
     ```sh
@@ -32,8 +32,8 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
   * [Key concepts](#key-concepts)
 * **[Installation](#installation)**
   * [Requirements](#requirements)
-    * [Ubuntu 16.04.4 (Xenial Xerus)](#ubuntu-16044-(xenial-xerus))
-    * [macOS 10.13.5 (High Sierra)](#macos-10135-(high-sierra))
+    * [Ubuntu 16.04.4 (Xenial Xerus)](#ubuntu-16044-xenial-xerus)
+    * [macOS 10.13.5 (High Sierra)](#macos-10135-high-sierra)
     * [Both Ubuntu and macOS](#both-ubuntu-and-macos)
   * [Install cwl-airflow](#install-cwl-airflow)
 * **[Using cwl-airflow](#using-cwl-airflow)**
