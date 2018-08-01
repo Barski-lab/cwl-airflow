@@ -7,7 +7,9 @@ Python package to extend **[Apache-Airflow 1.9.0](https://github.com/apache/incu
 functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
 ## Check it out
-*(assuming that you already have installed and properly configured python, pip, setuptools and docker)*
+*(assuming that you already have installed and properly configured **python**, **pip**, **setuptools**
+and **docker** that has access to pull images from the [DockerHub](https://hub.docker.com/);
+if something is missing refer to [Installation](#installation) instructions)*
 1. Install *cwl-airflow*
     ```sh
     $ pip install cwl-airflow --user --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
@@ -139,17 +141,16 @@ Before using *cwl-airflow* it should be initialized with the default configurati
 ```sh
 $ cwl-airflow init
 ```
-Additionally you can specify the following optional parameters:
+Optional parameters:
 
-- `-l LIMIT`, `--limit LIMIT` sets the number of processed jobs kept in history.
- Default 10 for each of the category: *Running*, *Success*, *Failed* 
-- `-j JOBS`, `--jobs JOBS` sets the path to the folder where all the new jobs will be added.
-Default *~/airflow/jobs*
-- `-t DAG_TIMEOUT`, `--timeout DAG_TIMEOUT` sets timeout (in seconds) for importing all the DAGs
-from the DAG folder. Default 30 seconds 
-- `-r WEB_INTERVAL`, `--refresh WEB_INTERVAL` sets the webserver workers refresh interval (in seconds). Default 30 seconds
-- `-w WEB_WORKERS`, `--workers WEB_WORKERS` sets the number of webserver workers to be refreshed at the same time. Default 1
-- `-p THREADS`, `--threads THREADS` sets the number of threads for Airflow Scheduler. Default 2
+| Short flag | Long flag      | Description                                                           | Default                                       |
+|------------|----------------|-----------------------------------------------------------------------|-----------------------------------------------|
+| -l         | --limit        | number of processed jobs kept in history, int                     | 10 x *Running*, 10 x *Success*, 10 x *Failed* |
+| -j         | --jobs         | path to the folder where all the new jobs will be added, str      | *~/airflow/jobs*                              |
+| -t         | --timeout      | timeout for importing all the DAGs from the DAG folder, sec           | 30                                            |
+| -r         | --refresh      | webserver workers refresh interval, sec                           | 30                                            |
+| -w         | --workers      | number of webserver workers to be refreshed at the same time, int | 1                                             |
+| -p         | --threads      | number of threads for Airflow Scheduler, int                      | 2                                             |
 
 If you update Airflow configuration file manually (default location is *~/airflow/airflow.cfg*),
 make sure to run *cwl-airflow init* command to apply all the changes,
@@ -161,26 +162,24 @@ To submit new CWL descriptor and Job files to *cwl-airflow* run the following co
 ```bash
 cwl-airflow submit WORKFLOW JOB
 ```
-Additionally you can specify the following optional parameters
-- `-o OUTPUT_FOLDER`, `--outdir OUTPUT_FOLDER` sets the path to the folder
-   where all the output files should be moved after successful workflow execution.
-   Default: current directory
-- `-t TMP_FOLDER`, `--tmp TMP_FOLDER` sets the path to the folder for storing intermediate results.
-After workflow execution this folder will be deleted.
-Default: */tmp*
-- `-u UID`, `--uid UID` sets the ID for DAG's unique identifier generation.
-Default: *random uuid*
-- `-r`, `--run` runs submitted workflow with Airflow Scheduler
 
-Arguments `-o`, `-t` and `-u` doesn't overwrite the values set in the Job file in the fields
+Optional parameters:
+
+| Short flag | Long flag      | Description                                                                                            | Default           |
+|------------|----------------|--------------------------------------------------------------------------------------------------------|-------------------|
+| -o         | --outdir       | path to the folder where all the output files should be moved after successful workflow execution, str | current directory |
+| -t         | --tmp          | path to the temporary folder for storing intermediate results, str                                     | */tmp*            |
+| -u         | --uid          | ID for DAG's unique identifier generation, str                                                         | random uuid       |
+| -r         | --run          | uns submitted workflow with Airflow Scheduler, bool                                                    | False             |
+
+Arguments `-o`, `-t` and `-u` doesn't overwrite the values from the Job file set in the fields
 *output_folder*, *tmp_folder* and *uid* correspondingly.
 
-The *submit* command will resolve all relative paths from Job file adding mandatory fields
-*workflow*, *output_folder* and *uid* (if not provided) and will copy Job file to the
-Jobs folder.
-
-The *submit* command will **not** execute submitted workflow unless *-r* argument is provided.
-Otherwise, make sure that *Airflow Scheduler* (and optionally *Airflow Webserver*) is running.
+The *submit* command will resolve all relative paths from Job file adding mandatory fields *workflow*, *output_folder*
+and *uid* (if not provided) and will copy Job file to the Jobs folder. The CWL descriptor file and all input files
+referenced in the Job file should not be moved or deleted while workflow is running. The *submit* command will **not** execute
+submitted workflow unless *-r* argument is provided. Otherwise, make sure that *Airflow Scheduler* (and optionally
+*Airflow Webserver*) is running.
 
 To start Airflow Scheduler
 ```bash
@@ -190,9 +189,6 @@ To start Airflow Webserver
 ```bash
 airflow webserver
 ```
-
-The CWL descriptor file and all input files referenced in Job file should not be moved or deleted while
-workflow is running.  
 
 ### Demo mode
 To get the list of the available demo workflows to run
@@ -213,12 +209,11 @@ To execute all available demo workflows (automatically starts Airflow Scheduler 
 ```bash
 $ cwl-airflow demo --auto
 ```
-Additionally you can specify the following optional parameters
-- `-o OUTPUT_FOLDER`, `--outdir OUTPUT_FOLDER` sets the path to the folder
-   where all the output files should be moved after successful workflow execution.
-   Default: current directory
-- `-t TMP_FOLDER`, `--tmp TMP_FOLDER` sets the path to the folder for storing intermediate results.
-After workflow execution this folder will be deleted.
-Default: */tmp*
-- `-u UID`, `--uid UID` sets the ID for DAG's unique identifier generation. Ignored with *--manual* or *--auto*
-options. Default: *random uuid*
+
+Optional parameters:
+
+| Short flag | Long flag      | Description                                                                                            | Default           |
+|------------|----------------|--------------------------------------------------------------------------------------------------------|-------------------|
+| -o         | --outdir       | path to the folder where all the output files should be moved after successful workflow execution, str | current directory |
+| -t         | --tmp          | path to the temporary folder for storing intermediate results, str                                     | */tmp*            |
+| -u         | --uid          | ID for DAG's unique identifier generation, str                                                         | random uuid       |
