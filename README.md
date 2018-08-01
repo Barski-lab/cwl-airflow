@@ -7,6 +7,7 @@ Python package to extend **[Apache-Airflow 1.9.0](https://github.com/apache/incu
 functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
 ---
+
 ## Check it out
 *(assuming that you already have installed and properly configured python, pip, setuptools and docker)*
 1. Install *cwl-airflow*
@@ -26,7 +27,6 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
 
 ---
 
-
 ## Table of Contents
 
 * **[How It Works](#how-it-works)**
@@ -41,6 +41,7 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
     * [Configuration](#configuration)
     * [Submitting new job](#submitting-new-job)
     * [Demo mode](#demo-mode)
+
 ---
 
 ## How It Works
@@ -66,6 +67,7 @@ in Airflow configuration file.
 folder will parse CWL descriptor and Job files and create the new DAG for each of the Job file.
 Such a DAG will be executed when Airflow Scheduler is running.   
 
+---
 
 ## Installation
 ### Requirements 
@@ -93,7 +95,6 @@ Such a DAG will be executed when Airflow Scheduler is running.
   Nevertheless in case of installation problems you might still be required to install
   this dependency.
   
-  
 #### macOS 10.13.5 (High Sierra)
 - python 2.7 or 3.6 (tested on the default Python 2.7.10 and the latest Python 3.6.5 availble from Homebrew)
 - docker (follow the [link](https://docs.docker.com/docker-for-mac/install/)
@@ -116,6 +117,7 @@ Such a DAG will be executed when Airflow Scheduler is running.
   ```
   pip install -U setuptools --user
   ```
+
 ### Install cwl-airflow
 ```sh
 $ pip install cwl-airflow --user --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
@@ -125,7 +127,7 @@ of the Python packages have been already compiled and put into the separate
 [repository](https://michael-kotliar.github.io/cwl-airflow-wheels/)
 that is set with *--find-links* argument.
 
-
+---
 
 ## Using cwl-airflow
 
@@ -150,8 +152,7 @@ from the DAG folder. Default 30 seconds
 If you update Airflow configuration file manually (default location is *~/airflow/airflow.cfg*),
 make sure to run *cwl-airflow init* command to apply all the changes,
 especially if *core/dags_folder* or *cwl/jobs* parameters from the configuration file are changed.
-
-    
+  
 ### Submitting new job
 
 To submit new CWL descriptor and Job files to *cwl-airflow* run the following command
@@ -191,7 +192,7 @@ airflow webserver
 The CWL descriptor file and all input files referenced in Job file should not be moved or deleted while
 workflow is running.  
 
-## Demo mode
+### Demo mode
 To get the list of the available demo workflows to run
 ```bash
 $ cwl-airflow demo --list
