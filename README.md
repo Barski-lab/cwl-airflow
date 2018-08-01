@@ -32,9 +32,9 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
   * [Key concepts](#key-concepts)
 * **[Installation](#installation)**
   * [Requirements](#requirements)
-    * [Ubuntu 16.04.4 (Xenial Xerus)](#ubuntu-16.04.4-(xenial-xerus))
-    * [macOS 10.13.5 (High Sierra)](#macos-10.13.5-(high-sierra))
-    * [Both Ubuntu and macOS](#both-ubuntu-and-macas)
+    * [Ubuntu 16.04.4 (Xenial Xerus)](#ubuntu-16044-(xenial-xerus))
+    * [macOS 10.13.5 (High Sierra)](#macos-10135-(high-sierra))
+    * [Both Ubuntu and macOS](#both-ubuntu-and-macos)
   * [Install cwl-airflow](#install-cwl-airflow)
 * **[Using cwl-airflow](#using-cwl-airflow)**
     * [Configuration](#configuration)
