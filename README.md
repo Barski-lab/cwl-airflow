@@ -25,6 +25,10 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 4. When all demo wokrflows are submitted program will provide you with the link for Airflow Webserver.
 It may take some time (usually less then half a minute) for Airflow Webserver to load and display all the data
 
+
+![Airflow Webserver example](docs/screen.png)
+
+
 ---
 
 ## Table of Contents
