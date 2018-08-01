@@ -6,8 +6,6 @@
 Python package to extend **[Apache-Airflow 1.9.0](https://github.com/apache/incubator-airflow)**
 functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
----
-
 ## Check it out
 *(assuming that you already have installed and properly configured python, pip, setuptools and docker)*
 1. Install *cwl-airflow*
