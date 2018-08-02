@@ -74,7 +74,6 @@ setup(
         'cwltool==1.0.20180622214234',
         'jsonmerge',
         "apache-airflow==1.9.0",
-        "cryptography",
         "uuid"
     ],
     zip_safe=False,
