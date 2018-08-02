@@ -153,6 +153,11 @@ Before using *cwl-airflow* it should be initialized with the default configurati
 ```sh
 $ cwl-airflow init
 ```
+If you have gotten *command not found*, update *PATH*
+```sh
+export PATH="$PATH:`python -m site --user-base`/bin"
+```
+
 Optional parameters:
 
 | Flag | Description                                                           | Default                                       |
