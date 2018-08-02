@@ -67,9 +67,18 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
 have already been processed. The folder's location is set as *jobs* parameter of *cwl* section
 in Airflow configuration file.  
 
-*cwl-airflow* package provides the original Apache-Airflow with the script that when placed into the DAGs
-folder will parse CWL descriptor and Job files and create the new DAG for each of the Job file.
-Such a DAG will be executed when Airflow Scheduler is running.   
+To build a workflow *cwl-airflow* uses three basic classes:
+- *CWLStepOperator* - executes a separate workflow step 
+- *JobDispatcher* - serializes the Job file and provides the worflow with input data
+- *JobCleanup* - returns the calculated results to the output folder
+
+A set of *CWLStepOperator*s, *JobDispatcher* and *JobCleanup* are
+combined in *CWLDAG* that defines a graph to reflect the workflow steps, their relationships
+and dependencies. Automatically generated *cwl_dag.py* script is placed in the DAGs folder. When Airflow
+Scheduler loads DAGs from the DAGs folder, the *cwl_dag.py* script parses all the Job files from the Jobs folder
+and creates DAGs for each of them. 
+
+![Airflow Webserver example](docs/scheme.png)
 
 ---
 
@@ -115,8 +124,7 @@ Such a DAG will be executed when Airflow Scheduler is running.
   wget https://bootstrap.pypa.io/get-pip.py
   python get-pip.py --user
   ```
-  When using the system Python on MacOS, you might need to update your *PATH* variable following
-  the instruction printed on console
+  When using the on MacOS, you might need to update your *PATH* variable following the instruction printed on console
 - setuptools (should be updated to the latest)
   ```
   pip install -U setuptools --user
