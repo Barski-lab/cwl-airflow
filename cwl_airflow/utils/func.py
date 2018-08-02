@@ -201,15 +201,25 @@ def asset_conf(mode=None):
 
     def docker():
         with open(os.devnull, 'w') as devnull:
-            subprocess.check_call("docker -v", shell=True, stdout=devnull, stderr=devnull)
+            subprocess.check_call("docker -v", shell=True, stdout=devnull)
+
+    def docker_demo_mount():
+        tests = norm_path(os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, "../"))), "tests/data"))
+        with open(os.devnull, 'w') as devnull:
+            subprocess.check_call("docker run --rm -v {}:/tmp hello-world".format(tests), shell=True, stdout=devnull)
+
+    def docker_pull():
+        with open(os.devnull, 'w') as devnull:
+            subprocess.check_call("docker pull hello-world", shell=True, stdout=devnull)
 
     def airflow():
         with open(os.devnull, 'w') as devnull:
-            subprocess.check_call("airflow -h", shell=True, stdout=devnull, stderr=devnull)
+            subprocess.check_call("airflow -h", shell=True, stdout=devnull)
 
     check_set = {
-        "init": [docker, airflow],
-        None:   [docker, airflow, paths, config]
+        "init": [airflow, docker],
+        "demo": [airflow, docker, docker_pull, docker_demo_mount, paths, config],
+        None:   [airflow, docker, paths, config]
     }
 
     for check_criteria in check_set[mode]:
@@ -222,7 +232,7 @@ def asset_conf(mode=None):
             logging.error("Missing required file or directory\n- {}\n- run cwl-airflow init".format(str(ex)))
             sys.exit(0)
         except subprocess.CalledProcessError as ex:
-            logging.error("Missing required installation\n- {}".format(str(ex)))
+            logging.error("Missing or not configured required tool\n- {}".format(str(ex)))
             sys.exit(0)
         except Exception as ex:
             logging.error("Unexpected exception\n- {}".format(str(ex)))

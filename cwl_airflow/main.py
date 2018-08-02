@@ -97,7 +97,7 @@ def run_demo_manual(args):
 
 
 def run_demo(args):
-    asset_conf()
+    asset_conf("demo")
     if args.auto:
         run_demo_auto(args)
     elif args.manual:
