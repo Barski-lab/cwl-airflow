@@ -143,14 +143,14 @@ $ cwl-airflow init
 ```
 Optional parameters:
 
-| Short flag | Long flag | Description                                                           | Default                                       |
-|------------|-----------|-----------------------------------------------------------------------|-----------------------------------------------|
-| -l         | --limit   | number of processed jobs kept in history, int                         | 10 x *Running*, 10 x *Success*, 10 x *Failed* |
-| -j         | --jobs    | path to the folder where all the new jobs will be added, str          | *~/airflow/jobs*                              |
-| -t         | --timeout | timeout for importing all the DAGs from the DAG folder, sec           | 30                                            |
-| -r         | --refresh | webserver workers refresh interval, sec                               | 30                                            |
-| -w         | --workers | number of webserver workers to be refreshed at the same time, int     | 1                                             |
-| -p         | --threads | number of threads for Airflow Scheduler, int                          | 2                                             |
+| Flag | Description                                                           | Default                                       |
+|------|-----------------------------------------------------------------------|-----------------------------------------------|
+| -l   | number of processed jobs kept in history, int                         | 10 x *Running*, 10 x *Success*, 10 x *Failed* |
+| -j   | path to the folder where all the new jobs will be added, str          | *~/airflow/jobs*                              |
+| -t   | timeout for importing all the DAGs from the DAG folder, sec           | 30                                            |
+| -r   | webserver workers refresh interval, sec                               | 30                                            |
+| -w   | number of webserver workers to be refreshed at the same time, int     | 1                                             |
+| -p   | number of threads for Airflow Scheduler, int                          | 2                                             |
 
 If you update Airflow configuration file manually (default location is *~/airflow/airflow.cfg*),
 make sure to run *cwl-airflow init* command to apply all the changes,
@@ -165,12 +165,12 @@ cwl-airflow submit WORKFLOW JOB
 
 Optional parameters:
 
-| Short flag | Long flag | Description                                                                                            | Default           |
-|------------|-----------|--------------------------------------------------------------------------------------------------------|-------------------|
-| -o         | --outdir  | path to the folder where all the output files should be moved after successful workflow execution, str | current directory |
-| -t         | --tmp     | path to the temporary folder for storing intermediate results, str                                     | */tmp*            |
-| -u         | --uid     | ID for DAG's unique identifier generation, str                                                         | random uuid       |
-| -r         | --run     | uns submitted workflow with Airflow Scheduler, bool                                                    | False             |
+| Flag | Description                                                                                            | Default           |
+|------|--------------------------------------------------------------------------------------------------------|-------------------|
+| -o   | path to the folder where all the output files should be moved after successful workflow execution, str | current directory |
+| -t   | path to the temporary folder for storing intermediate results, str                                     | */tmp*            |
+| -u   | ID for DAG's unique identifier generation, str                                                         | random uuid       |
+| -r   | uns submitted workflow with Airflow Scheduler, bool                                                    | False             |
 
 Arguments `-o`, `-t` and `-u` doesn't overwrite the values from the Job file set in the fields
 *output_folder*, *tmp_folder* and *uid* correspondingly.
@@ -212,8 +212,8 @@ $ cwl-airflow demo --auto
 
 Optional parameters:
 
-| Short flag | Long flag | Description                                                                                            | Default           |
-|------------|-----------|--------------------------------------------------------------------------------------------------------|-------------------|
-| -o         | --outdir  | path to the folder where all the output files should be moved after successful workflow execution, str | current directory |
-| -t         | --tmp     | path to the temporary folder for storing intermediate results, str                                     | */tmp*            |
-| -u         | --uid     | ID for DAG's unique identifier generation, str                                                         | random uuid       |
+| Flag | Description                                                                                            | Default           |
+|------|--------------------------------------------------------------------------------------------------------|-------------------|
+| -o   | path to the folder where all the output files should be moved after successful workflow execution, str | current directory |
+| -t   | path to the temporary folder for storing intermediate results, str                                     | */tmp*            |
+| -u   | ID for DAG's unique identifier generation, str                                                         | random uuid       |
