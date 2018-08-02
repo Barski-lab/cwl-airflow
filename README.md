@@ -7,9 +7,9 @@ Python package to extend **[Apache-Airflow 1.9.0](https://github.com/apache/incu
 functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
 ## Check it out
-*(assuming that you already have installed and properly configured **python**, **pip**, **setuptools**
+*(assuming that you already have installed and properly configured **python**, latest **pip**, latest **setuptools**
 and **docker** that has access to pull images from the [DockerHub](https://hub.docker.com/);
-if something is missing refer to [Installation](#installation) instructions)*
+if something is missing or should be updated refer to [Installation](#installation) instructions)*
 1. Install *cwl-airflow*
     ```sh
     $ pip install cwl-airflow --user --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
@@ -17,6 +17,10 @@ if something is missing refer to [Installation](#installation) instructions)*
 2. Init configuration
     ```sh
     $ cwl-airflow init
+    ```
+    If you have gotten *command not found*, update *PATH*
+    ```sh
+    export PATH="$PATH:`python -m site --user-base`/bin"
     ```
 3. Run *demo*
     ```sh
@@ -119,13 +123,13 @@ and creates DAGs for each of them.
   Click *Install* on the pop up when it appears, follow the instructions
   
 #### Both Ubuntu and macOS
-- pip
+- pip (tested on pip 18.0)
   ```bash
   wget https://bootstrap.pypa.io/get-pip.py
   python get-pip.py --user
   ```
   When using the on MacOS, you might need to update your *PATH* variable following the instruction printed on console
-- setuptools (should be updated to the latest)
+- setuptools (tested on setuptools 40.0.0)
   ```
   pip install -U setuptools --user
   ```
