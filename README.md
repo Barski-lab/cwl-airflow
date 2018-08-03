@@ -9,18 +9,14 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 ## Check it out
 *(assuming that you already have installed and properly configured **python**, latest **pip**, latest **setuptools**
 and **docker** that has access to pull images from the [DockerHub](https://hub.docker.com/);
-if something is missing or should be updated refer to [Installation](#installation) instructions)*
+if something is missing or should be updated refer to [Installation](#installation) or [Troubleshooting](Troubleshooting) sections)*
 1. Install *cwl-airflow*
     ```sh
-    $ pip install cwl-airflow --user --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
+    $ pip install cwl-airflow --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
     ```
 2. Init configuration
     ```sh
     $ cwl-airflow init
-    ```
-    If you have gotten *command not found*, update *PATH*
-    ```sh
-    export PATH="$PATH:`python -m site --user-base`/bin"
     ```
 3. Run *demo*
     ```sh
@@ -49,6 +45,7 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
     * [Configuration](#configuration)
     * [Submitting new job](#submitting-new-job)
     * [Demo mode](#demo-mode)
+* **[Troubleshooting](#Troubleshooting)**
 
 ---
 
@@ -89,7 +86,7 @@ and creates DAGs for each of them.
 ## Installation
 ### Requirements 
 #### Ubuntu 16.04.4 (Xenial Xerus)
-- python 2.7 or 3.5 (tested on the default Python 2.7.12 and 3.5.2)
+- python 2.7 or 3.5 (tested on the system Python 2.7.12 and 3.5.2)
 - docker
   ```
   sudo apt-get update
@@ -113,35 +110,45 @@ and creates DAGs for each of them.
   this dependency.
   
 #### macOS 10.13.5 (High Sierra)
-- python 2.7 or 3.6 (tested on the default Python 2.7.10 and the latest Python 3.6.5 availble from Homebrew)
+- python 2.7 or 3.6 (tested on the system Python 2.7.10 and brewed Python 2.7.15 and 3.6.5, **3.7.0 is not supported**)
 - docker (follow the [link](https://docs.docker.com/docker-for-mac/install/)
   to install Docker on Mac)
 - Apple Command Line Tools
   ```bash
   xcode-select --install
   ```
-  Click *Install* on the pop up when it appears, follow the instructions
+  Click *Install* on the pop up when it appears, follow the instructions. *Apple Command Line Tools* are required in
+  case your system needs to compile some python packages during the installation. We have built python wheels for most
+  of such packages and provided them through *--find-links* argument while installing *cwl-airflow*. Nevertheless in case
+  of installation problems you might still be required to install this dependency.
   
 #### Both Ubuntu and macOS
 - pip (tested on pip 18.0)
   ```bash
   wget https://bootstrap.pypa.io/get-pip.py
-  python get-pip.py --user
+  python get-pip.py # --user
   ```
-  When using the on MacOS, you might need to update your *PATH* variable following the instruction printed on console
 - setuptools (tested on setuptools 40.0.0)
+  ```bash
+  pip install -U setuptools # --user
   ```
-  pip install -U setuptools --user
-  ```
+  
+  `--user` - optional parameter to install all the packages into your *HOME* directory instead of the system Python
+  directories. You might need to update your *PATH* variable in order to have access to the installed packages (an easy
+  way to do it is described in [Troubleshooting](#Troubleshooting) section).
+  If installing on macOS brewed Python `--user` **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
 
 ### Install cwl-airflow
 ```sh
-$ pip install cwl-airflow --user --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
+$ pip install cwl-airflow --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/ # --user
 ```
-To avoid installing *Xcode* for macOS users and *python-dev* for Ubuntu users, some
-of the Python packages have been already compiled and put into the separate
-[repository](https://michael-kotliar.github.io/cwl-airflow-wheels/)
-that is set with *--find-links* argument.
+`--find-links` - using pre-compiled wheels from [This](https://michael-kotliar.github.io/cwl-airflow-wheels/) repository
+allows to avoid installing *Xcode* for macOS users and *python[3]-dev* for Ubuntu users
+
+`--user` - optional parameter to install all the packages into your *HOME* directory instead of the system Python
+directories. You might need to update your *PATH* variable in order to have access to the installed packages (an easy
+way to do it is described in [Troubleshooting](#Troubleshooting) section). If
+installing on macOS brewed Python `--user` **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
 
 ---
 
@@ -152,10 +159,6 @@ that is set with *--find-links* argument.
 Before using *cwl-airflow* it should be initialized with the default configuration by running the command
 ```sh
 $ cwl-airflow init
-```
-If you have gotten *command not found*, update *PATH*
-```sh
-export PATH="$PATH:`python -m site --user-base`/bin"
 ```
 
 Optional parameters:
@@ -234,3 +237,30 @@ Optional parameters:
 | -o   | path to the folder where all the output files should be moved after successful workflow execution, str | current directory |
 | -t   | path to the temporary folder for storing intermediate results, str                                     | */tmp*            |
 | -u   | ID for DAG's unique identifier generation, str                                                         | random uuid       |
+
+
+### Troubleshooting
+
+Most of the problems are already handled by *cwl-airflow* itself. User is provided
+with the full explanation and ways to correct them through the console output. Additional
+information regarding the failed workdlow steps, can be found in the task execution logs
+that are accessible through Airflow Webserver UI. 
+
+Common errors due to different Python version and different ways to install it
+- `cwl-airflow` is not found 
+   
+   Perhaps, you have installed it with *--user* option and your *PATH*
+   variable doesn't include your user based Python *bin* folder.
+   Update *PATH* with the following command
+   ```sh
+   export PATH="$PATH:`python -m site --user-base`/bin"
+   ```
+- Fails to install on the latest *Python 3.7.0*
+  
+  Unfortunatelly *Apache-Airflow 1.9.0* cannot be properly installed on the latest *Python 3.7.0*.
+  Consider using *Python 3.6* or *2.7* instead.
+  
+- Docker is unable to pull images from the Internet.
+
+  If you are using proxy, your Docker should be configured properly too.
+  Refer to the official [documentation](https://docs.docker.com/config/daemon/systemd/#httphttps-proxy) 
