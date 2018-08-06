@@ -259,6 +259,14 @@ Common errors due to different Python version and different ways to install it
   
   Unfortunatelly *Apache-Airflow 1.9.0* cannot be properly installed on the latest *Python 3.7.0*.
   Consider using *Python 3.6* or *2.7* instead.
+
+- Fails to compile *ruamel.yaml*
+   
+  Perhaps, you should update your *setuptools*. Consider using *--user* if necessary.
+  If installing on macOS brewed Python *--user* **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
+  ```bash
+  pip install -U setuptools # --user
+  ```
   
 - Docker is unable to pull images from the Internet.
 
