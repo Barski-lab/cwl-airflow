@@ -9,7 +9,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 ## Check it out
 *(assuming that you already have installed and properly configured **python**, latest **pip**, latest **setuptools**
 and **docker** that has access to pull images from the [DockerHub](https://hub.docker.com/);
-if something is missing or should be updated refer to [Installation](#installation) or [Troubleshooting](Troubleshooting) sections)*
+if something is missing or should be updated refer to [Installation](#installation) or [Troubleshooting](#troubleshooting) sections)*
 1. Install *cwl-airflow*
     ```sh
     $ pip install cwl-airflow --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
@@ -45,7 +45,7 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
     * [Configuration](#configuration)
     * [Submitting new job](#submitting-new-job)
     * [Demo mode](#demo-mode)
-* **[Troubleshooting](#Troubleshooting)**
+* **[Troubleshooting](#troubleshooting)**
 
 ---
 
@@ -135,7 +135,7 @@ and creates DAGs for each of them.
   
   `--user` - optional parameter to install all the packages into your *HOME* directory instead of the system Python
   directories. You might need to update your *PATH* variable in order to have access to the installed packages (an easy
-  way to do it is described in [Troubleshooting](#Troubleshooting) section).
+  way to do it is described in [Troubleshooting](#troubleshooting) section).
   If installing on macOS brewed Python `--user` **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
 
 ### Install cwl-airflow
@@ -147,7 +147,7 @@ allows to avoid installing *Xcode* for macOS users and *python[3]-dev* for Ubunt
 
 `--user` - optional parameter to install all the packages into your *HOME* directory instead of the system Python
 directories. You might need to update your *PATH* variable in order to have access to the installed packages (an easy
-way to do it is described in [Troubleshooting](#Troubleshooting) section). If
+way to do it is described in [Troubleshooting](#troubleshooting) section). If
 installing on macOS brewed Python `--user` **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
 
 ---
