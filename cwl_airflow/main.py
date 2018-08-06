@@ -21,7 +21,8 @@ with Mute():  # Suppress output
                                         get_airflow_default_args,
                                         clean_jobs_folder,
                                         get_webserver_url,
-                                        asset_conf)
+                                        asset_conf,
+                                        copy_demo_workflows)
     from cwl_airflow.utils.utils import (get_workflow_output,
                                          normalize_args,
                                          exit_if_unsupported_feature,
@@ -123,6 +124,7 @@ def run_init(args):
     update_config(args)
     create_folders()
     export_dags()
+    copy_demo_workflows()
     logging.info("Init Airflow DB")
     with Mute():
         initdb(argparse.Namespace())

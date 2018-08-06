@@ -13,7 +13,7 @@ from cwl_airflow.utils.mute import Mute
 from airflow import conf as conf
 from airflow.models import DagRun
 from airflow.utils.state import State
-from airflow.settings import DAGS_FOLDER
+from airflow.settings import DAGS_FOLDER, AIRFLOW_HOME
 from airflow.bin.cli import get_dag, CLIFactory, scheduler
 from airflow.exceptions import AirflowConfigException
 from cwl_airflow.utils.utils import (set_logger,
@@ -31,8 +31,8 @@ from cwl_airflow.dag_components.jobcleanup import JobCleanup
 
 
 def get_demo_workflow(target_wf=None, job_ext=".json"):
-    workflows = get_files(norm_path(os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, "../"))), "tests/cwl/workflows")))
-    jobs = get_files(norm_path(os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, "../"))), "tests/job")))
+    workflows = get_files(os.path.join(AIRFLOW_HOME, "demo/cwl/workflows"))
+    jobs = get_files(os.path.join(AIRFLOW_HOME, "demo/job"))
     combined_data = []
     for wf_name, wf_path in workflows.items():
         job_name = os.path.splitext(wf_name)[0] + job_ext
@@ -193,8 +193,7 @@ def asset_conf(mode=None):
         conf.get('cwl', 'jobs')
         conf.get('cwl', 'limit')
 
-    def paths():
-        items = [conf.get('cwl', 'jobs'), DAGS_FOLDER, os.path.join(DAGS_FOLDER, "cwl_dag.py")]
+    def paths(items=[]):
         for item in items:
             if not os.path.exists(item):
                 raise OSError(item)
@@ -204,9 +203,8 @@ def asset_conf(mode=None):
             subprocess.check_call("docker -v", shell=True, stdout=devnull)
 
     def docker_demo_mount():
-        tests = norm_path(os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, "../"))), "tests/data"))
         with open(os.devnull, 'w') as devnull:
-            subprocess.check_call("docker run --rm -v {}:/tmp hello-world".format(tests), shell=True, stdout=devnull)
+            subprocess.check_call("docker run --rm -v {}:/tmp hello-world".format(AIRFLOW_HOME), shell=True, stdout=devnull)
 
     def docker_pull():
         with open(os.devnull, 'w') as devnull:
@@ -216,10 +214,16 @@ def asset_conf(mode=None):
         with open(os.devnull, 'w') as devnull:
             subprocess.check_call("airflow -h", shell=True, stdout=devnull)
 
+    def demo_paths():
+        paths([os.path.join(AIRFLOW_HOME, "demo", name) for name in ["cwl", "data", "job"]])
+
+    def general_paths():
+        paths([conf.get('cwl', 'jobs'), DAGS_FOLDER, os.path.join(DAGS_FOLDER, "cwl_dag.py")])
+
     check_set = {
         "init": [airflow, docker],
-        "demo": [airflow, docker, docker_pull, docker_demo_mount, paths, config],
-        None:   [airflow, docker, paths, config]
+        "demo": [airflow, docker, docker_pull, docker_demo_mount, general_paths, demo_paths, config],
+        None:   [airflow, docker, general_paths, config]
     }
 
     for check_criteria in check_set[mode]:
@@ -241,3 +245,11 @@ def asset_conf(mode=None):
 
 def get_webserver_url():
     return "{}:{}".format(conf.get('webserver', 'WEB_SERVER_HOST'), conf.get('webserver', 'WEB_SERVER_PORT'))
+
+
+def copy_demo_workflows():
+    src = norm_path(os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, "../"))), "tests"))
+    dst = os.path.join(AIRFLOW_HOME, "demo")
+    logging.info("Copy demo workflows\n- from: {}\n- to: {}".format(src, dst))
+    shutil.rmtree(dst, ignore_errors=True)
+    shutil.copytree(src, dst)

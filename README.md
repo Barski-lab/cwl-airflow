@@ -263,4 +263,10 @@ Common errors due to different Python version and different ways to install it
 - Docker is unable to pull images from the Internet.
 
   If you are using proxy, your Docker should be configured properly too.
-  Refer to the official [documentation](https://docs.docker.com/config/daemon/systemd/#httphttps-proxy) 
+  Refer to the official [documentation](https://docs.docker.com/config/daemon/systemd/#httphttps-proxy)
+   
+- Docker is unable to mount directory.
+
+  For macOS docker has a list of directories that it's allowed to mount by default. If your input files are located in
+  the directories that are not included in this list, you are better of either changing the location of
+  input files and updating your Job file or adding this directories into Docker configuration *Preferences / File Sharing*.
