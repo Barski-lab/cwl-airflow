@@ -35,7 +35,7 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
 
 * **[How It Works](#how-it-works)**
   * [Key concepts](#key-concepts)
-  * [What's inside](#whats_inside)
+  * [What's inside](#whats-inside)
 * **[Installation](#installation)**
   * [Requirements](#requirements)
     * [Ubuntu 16.04.4 (Xenial Xerus)](#ubuntu-16044-xenial-xerus)
@@ -293,8 +293,7 @@ Common errors and ways to fix them
 
 - Airflow Webserver displays missing DAGs
 
-  If some of the Job files are deleted from Jobs folder it may take some time for Airflow to refresh its
-  database. It shouldn't influence the other DAGs.
+  If some of the Job files have been manually deleted, they still present in Airflow database.
   
 - Workflow execution fails
 
