@@ -98,6 +98,7 @@ def run_demo_manual(args):
 
 
 def run_demo(args):
+    print("CWL-Airflow demo mode")
     asset_conf("demo")
     if args.auto:
         run_demo_auto(args)

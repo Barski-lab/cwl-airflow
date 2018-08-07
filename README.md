@@ -35,6 +35,7 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
 
 * **[How It Works](#how-it-works)**
   * [Key concepts](#key-concepts)
+  * [What's inside](#whats_inside)
 * **[Installation](#installation)**
   * [Requirements](#requirements)
     * [Ubuntu 16.04.4 (Xenial Xerus)](#ubuntu-16044-xenial-xerus)
@@ -68,6 +69,7 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
 have already been processed. The folder's location is set as *jobs* parameter of *cwl* section
 in Airflow configuration file.  
 
+### What's inside
 To build a workflow *cwl-airflow* uses three basic classes:
 - *CWLStepOperator* - executes a separate workflow step 
 - *JobDispatcher* - serializes the Job file and provides the worflow with input data
@@ -77,7 +79,8 @@ A set of *CWLStepOperator*s, *JobDispatcher* and *JobCleanup* are
 combined in *CWLDAG* that defines a graph to reflect the workflow steps, their relationships
 and dependencies. Automatically generated *cwl_dag.py* script is placed in the DAGs folder. When Airflow
 Scheduler loads DAGs from the DAGs folder, the *cwl_dag.py* script parses all the Job files from the Jobs folder
-and creates DAGs for each of them. 
+and creates DAGs for each of them. Each DAG has a unique DAG ID that is formed accodring to the following scheme:
+`CWL descriptor file basename`-`Job file basename`-`uid field from the Job file`
 
 ![Airflow Webserver example](docs/scheme.png)
 
@@ -134,7 +137,7 @@ and creates DAGs for each of them.
   ```
   
   `--user` - optional parameter to install all the packages into your *HOME* directory instead of the system Python
-  directories. It will be helpgul if you don't have enough permissions to install new Python packages.
+  directories. It will be helpful if you don't have enough permissions to install new Python packages.
   You might also need to update your *PATH* variable in order to have access to the installed packages (an easy
   way to do it is described in [Troubleshooting](#troubleshooting) section).
   If installing on macOS brewed Python `--user` **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
@@ -147,7 +150,7 @@ $ pip install cwl-airflow --find-links https://michael-kotliar.github.io/cwl-air
 allows to avoid installing *Xcode* for macOS users and *python[3]-dev* for Ubuntu users
 
   `--user` - optional parameter to install all the packages into your *HOME* directory instead of the system Python
-  directories. It will be helpgul if you don't have enough permissions to install new Python packages.
+  directories. It will be helpful if you don't have enough permissions to install new Python packages.
   You might also need to update your *PATH* variable in order to have access to the installed packages (an easy
   way to do it is described in [Troubleshooting](#troubleshooting) section).
   If installing on macOS brewed Python `--user` **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
@@ -174,6 +177,8 @@ Optional parameters:
 | -w   | number of webserver workers to be refreshed at the same time, int     | 1                                             |
 | -p   | number of threads for Airflow Scheduler, int                          | 2                                             |
 
+Consider using `-r 5 -w 4` to make Airflow Webserver react faster on all newly created DAGs
+
 If you update Airflow configuration file manually (default location is *~/airflow/airflow.cfg*),
 make sure to run *cwl-airflow init* command to apply all the changes,
 especially if *core/dags_folder* or *cwl/jobs* parameters from the configuration file are changed.
@@ -192,10 +197,11 @@ Optional parameters:
 | -o   | path to the folder where all the output files should be moved after successful workflow execution, str | current directory |
 | -t   | path to the temporary folder for storing intermediate results, str                                     | */tmp*            |
 | -u   | ID for DAG's unique identifier generation, str                                                         | random uuid       |
-| -r   | uns submitted workflow with Airflow Scheduler, bool                                                    | False             |
+| -r   | run submitted workflow with Airflow Scheduler, bool                                                    | False             |
 
 Arguments `-o`, `-t` and `-u` doesn't overwrite the values from the Job file set in the fields
-*output_folder*, *tmp_folder* and *uid* correspondingly.
+*output_folder*, *tmp_folder* and *uid* correspondingly. The meaning of these fields is explaned in
+[Key concepts](#key_concepts) section.
 
 The *submit* command will resolve all relative paths from Job file adding mandatory fields *workflow*, *output_folder*
 and *uid* (if not provided) and will copy Job file to the Jobs folder. The CWL descriptor file and all input files
@@ -203,7 +209,11 @@ referenced in the Job file should not be moved or deleted while workflow is runn
 submitted workflow unless *-r* argument is provided. Otherwise, make sure that *Airflow Scheduler* (and optionally
 *Airflow Webserver*) is running.
 
-To start Airflow Scheduler
+Depending on your Airflow configuration it may require some time for Airflow Scheduler
+and Webserver to pick up new DAGs. Consider using `cwl-airflow init -r 5 -w 4` to make Airflow Webserver react faster on all
+newly created DAGs.  
+
+To start Airflow Scheduler (**don't** run it if *cwl-airflow submit* is used with *-r* argument)
 ```bash
 airflow scheduler
 ```
@@ -213,17 +223,17 @@ airflow webserver
 ```
 
 ### Demo mode
-To get the list of the available demo workflows to run
+To get the list of the available demo workflows
 ```bash
 $ cwl-airflow demo --list
 ```
-To submit demo workflow from the list
-(to execute submitted wokrflow Airflow Scheduler should be started separately)
+To submit the specific demo workflow from the list
+(workflow will not be run until Airflow Scheduler is started separately)
 ```bash
 $ cwl-airflow demo super-enhancer.cwl
 ```
-To submit all available demo workflows
-(to execute submitted wokrflows Airflow Scheduler should be started separately)
+To submit all demo workflows from the list
+(workflows will not be run until Airflow Scheduler is started separately)
 ```bash
 $ cwl-airflow demo --manual
 ```
@@ -238,17 +248,17 @@ Optional parameters:
 |------|--------------------------------------------------------------------------------------------------------|-------------------|
 | -o   | path to the folder where all the output files should be moved after successful workflow execution, str | current directory |
 | -t   | path to the temporary folder for storing intermediate results, str                                     | */tmp*            |
-| -u   | ID for DAG's unique identifier generation, str                                                         | random uuid       |
+| -u   | ID for DAG's unique identifier generation, str. Ignored when *--list* or *--auto* is used              | random uuid       |
 
 
 ### Troubleshooting
 
 Most of the problems are already handled by *cwl-airflow* itself. User is provided
 with the full explanation and ways to correct them through the console output. Additional
-information regarding the failed workdlow steps, can be found in the task execution logs
+information regarding the failed workflow steps, can be found in the task execution logs
 that are accessible through Airflow Webserver UI. 
 
-Common errors due to different Python version and different ways to install it
+Common errors and ways to fix them
 - `cwl-airflow` is not found 
    
    Perhaps, you have installed it with *--user* option and your *PATH*
@@ -280,3 +290,12 @@ Common errors due to different Python version and different ways to install it
   For macOS docker has a list of directories that it's allowed to mount by default. If your input files are located in
   the directories that are not included in this list, you are better of either changing the location of
   input files and updating your Job file or adding this directories into Docker configuration *Preferences / File Sharing*.
+
+- Airflow Webserver displays missing DAGs
+
+  If some of the Job files are deleted from Jobs folder it may take some time for Airflow to refresh its
+  database. It shouldn't influence the other DAGs.
+  
+- Workflow execution fails
+
+  Make sure that CWL descriptor and Job files are correct. Check them with `cwltool==1.0.20180622214234`

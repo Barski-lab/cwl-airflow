@@ -142,6 +142,7 @@ def update_config(args):
         conf.set('core', 'load_examples', 'False')
         conf.set('cwl', 'jobs', str(args.jobs))
         conf.set('cwl', 'limit', str(args.limit))
+        conf.set('cwl', 'logging_level', conf_get_default('cwl', 'logging_level', 'ERROR'))  # To supress all useless output from cwltool's functions
         conf.set('core', 'dagbag_import_timeout', str(args.dag_timeout))
         conf.set('scheduler', 'max_threads', str(args.threads))
         conf.set('webserver', 'worker_refresh_interval', str(args.web_interval))

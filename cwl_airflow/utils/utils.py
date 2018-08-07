@@ -220,7 +220,7 @@ def eval_log_level(key):
 def set_logger():
     cwl_logger = logging.getLogger("cwltool")
     cwl_logger.addHandler(logging.StreamHandler())
-    cwl_logger.setLevel(eval_log_level(conf_get_default('cwl', 'LOG_LEVEL', 'WARNING').upper()))
+    cwl_logger.setLevel(eval_log_level(conf_get_default('cwl', 'logging_level', 'ERROR').upper()))
 
 
 def get_latest_log(dag_id, task_id="JobCleanup", state=None):
