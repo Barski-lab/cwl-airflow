@@ -110,7 +110,7 @@ and creates DAGs for each of them.
   this dependency.
   
 #### macOS 10.13.5 (High Sierra)
-- python 2.7 or 3.6 (tested on the system Python 2.7.10 and brewed Python 2.7.15 and 3.6.5, **3.7.0 is not supported**)
+- python 2.7 or 3.6 (tested on the system Python 2.7.10 and brewed Python 2.7.15 / 3.6.5; **3.7.0 is not supported**)
 - docker (follow the [link](https://docs.docker.com/docker-for-mac/install/)
   to install Docker on Mac)
 - Apple Command Line Tools
@@ -134,7 +134,8 @@ and creates DAGs for each of them.
   ```
   
   `--user` - optional parameter to install all the packages into your *HOME* directory instead of the system Python
-  directories. You might need to update your *PATH* variable in order to have access to the installed packages (an easy
+  directories. It will be helpgul if you don't have enough permissions to install new Python packages.
+  You might also need to update your *PATH* variable in order to have access to the installed packages (an easy
   way to do it is described in [Troubleshooting](#troubleshooting) section).
   If installing on macOS brewed Python `--user` **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
 
@@ -145,10 +146,11 @@ $ pip install cwl-airflow --find-links https://michael-kotliar.github.io/cwl-air
 `--find-links` - using pre-compiled wheels from [This](https://michael-kotliar.github.io/cwl-airflow-wheels/) repository
 allows to avoid installing *Xcode* for macOS users and *python[3]-dev* for Ubuntu users
 
-`--user` - optional parameter to install all the packages into your *HOME* directory instead of the system Python
-directories. You might need to update your *PATH* variable in order to have access to the installed packages (an easy
-way to do it is described in [Troubleshooting](#troubleshooting) section). If
-installing on macOS brewed Python `--user` **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
+  `--user` - optional parameter to install all the packages into your *HOME* directory instead of the system Python
+  directories. It will be helpgul if you don't have enough permissions to install new Python packages.
+  You might also need to update your *PATH* variable in order to have access to the installed packages (an easy
+  way to do it is described in [Troubleshooting](#troubleshooting) section).
+  If installing on macOS brewed Python `--user` **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
 
 ---
 
