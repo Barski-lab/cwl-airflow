@@ -223,25 +223,32 @@ airflow webserver
 ```
 
 ### Demo mode
-To get the list of the available demo workflows
-```bash
-$ cwl-airflow demo --list
-```
-To submit the specific demo workflow from the list
+- To get the list of the available demo workflows
+    ```bash
+    $ cwl-airflow demo --list
+    ```
+- To submit the specific demo workflow from the list
 (workflow will not be run until Airflow Scheduler is started separately)
-```bash
-$ cwl-airflow demo super-enhancer.cwl
-```
-To submit all demo workflows from the list
-(workflows will not be run until Airflow Scheduler is started separately)
-```bash
-$ cwl-airflow demo --manual
-```
-To execute all available demo workflows (automatically starts Airflow Scheduler and Airflow Webserver)
-```bash
-$ cwl-airflow demo --auto
-```
+    ```bash
+    $ cwl-airflow demo super-enhancer.cwl
+    ```
+    Depending on your Airflow configuration it may require some time for Airflow Scheduler
+    and Webserver to pick up new DAGs. Consider using `cwl-airflow init -r 5 -w 4` to make Airflow Webserver react faster on all
+    newly created DAGs.  
 
+- To submit all demo workflows from the list
+(workflows will not be run until Airflow Scheduler is started separately)
+    ```bash
+    $ cwl-airflow demo --manual
+    ```
+    Before submitting demo workflows the Jobs folder will be automatically cleaned.
+    
+- To execute all available demo workflows (automatically starts Airflow Scheduler and Airflow Webserver)
+    ```bash
+    $ cwl-airflow demo --auto
+    ```
+    Before submitting and running demo workflows the Jobs folder will be automatically cleaned.
+    
 Optional parameters:
 
 | Flag | Description                                                                                            | Default           |
@@ -293,7 +300,9 @@ Common errors and ways to fix them
 
 - Airflow Webserver displays missing DAGs
 
-  If some of the Job files have been manually deleted, they will be still present in Airflow database.
+  If some of the Job files have been manually deleted, they will be still present in Airflow database, hence they 
+  will be displayed in Webserver's UI. Sometimes you may still see missing DAGs because of the inertness of Airflow
+  Webserver UI.
   
 - Workflow execution fails
 
