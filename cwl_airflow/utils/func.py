@@ -11,7 +11,8 @@ from json import dumps
 from datetime import datetime
 from cwl_airflow.utils.mute import Mute
 from airflow import conf as conf
-from airflow.models import DagRun
+from airflow.models import DagRun, DagPickle, TaskInstance, TaskFail, Log, DagModel, XCom, DagStat, SlaMiss
+from airflow.utils.db import provide_session
 from airflow.utils.state import State
 from airflow.settings import DAGS_FOLDER, AIRFLOW_HOME
 from airflow.bin.cli import get_dag, CLIFactory, scheduler
@@ -176,14 +177,45 @@ def start_background_scheduler():
         scheduler_thread.start()
 
 
-def clean_jobs_folder(folder=None):
+@provide_session
+def remove_dag(dag_id, session=None):
+    """
+    Clean the following tables
+    DagPickle    # dag_pickle              connected to DagModel by pickle_id
+    TaskInstance # task_instance           by dag_id
+    TaskFail     # task_fail               by dag_id
+    Log          # log                     by dag_id
+    DagModel     # dag                     by dag_id
+    XCom         # xcom                    by dag_id
+    DagStat      # dag_stats               by dag_id
+    DagRun       # dag_run                 by dag_id
+    SlaMiss      # sla_miss                by dag_id
+    :param dag_id: DAG id to delete
+    :param session: is provided by @provide_session
+    :return: None
+    """
+    logging.info("Remove dag\n- {}".format(dag_id))
+    dag = session.query(DagModel).filter(DagModel.dag_id == dag_id).first()
+    if dag and dag.pickle_id:
+        session.query(DagPickle).filter(DagPickle.id == dag.pickle_id).delete()
+        session.commit()
+    models = [TaskInstance, TaskFail, Log, DagModel, XCom, DagStat, DagRun, SlaMiss]
+    for model in models:
+        session.query(model).filter(model.dag_id == dag_id).delete()
+        session.commit()
+
+
+def clean_jobs(folder=None):
     folder = folder if folder else conf_get_default('cwl', 'jobs', None)
     if folder and os.path.isdir(folder):
         logging.info("Cleaning jobs folder\n- {}".format(folder))
         for item in os.listdir(folder):
             path = os.path.join(folder, item)
+            dag_id = gen_dag_id(path)
             try:
                 os.remove(path)
+                logging.info("Remove job file\n- {}".format(path))
+                remove_dag(dag_id)
             except OSError:
                 shutil.rmtree(path, ignore_errors=False)
 

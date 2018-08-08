@@ -19,7 +19,7 @@ with Mute():  # Suppress output
                                         get_updated_args,
                                         start_background_scheduler,
                                         get_airflow_default_args,
-                                        clean_jobs_folder,
+                                        clean_jobs,
                                         get_webserver_url,
                                         asset_conf,
                                         copy_demo_workflows)
@@ -90,7 +90,7 @@ def run_demo_auto(args):
 
 
 def run_demo_manual(args):
-    clean_jobs_folder()
+    clean_jobs()
     workflows = get_demo_workflow()
     for idx, wf in enumerate(workflows):
         logging.info("Process demo workflow {}/{}".format(idx+1, len(workflows)))
