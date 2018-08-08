@@ -293,7 +293,7 @@ Common errors and ways to fix them
 
 - Airflow Webserver displays missing DAGs
 
-  If some of the Job files have been manually deleted, they still present in Airflow database.
+  If some of the Job files have been manually deleted, they will be still present in Airflow database.
   
 - Workflow execution fails
 
