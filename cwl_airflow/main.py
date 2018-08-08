@@ -42,7 +42,7 @@ def arg_parser():
     init_parser = subparsers.add_parser('init', help="Init cwl-airflow", parents=[parent_parser])
     init_parser.set_defaults(func=run_init)
     init_parser.add_argument("-l", "--limit",    dest='limit', type=int, help="Limit job concurrancy",
-                             default=conf_get_default("cwl", "limit", 10))
+                             default=conf_get_default("cwl", "limit", 20))
     init_parser.add_argument("-j", "--jobs",     dest='jobs', type=str, help="Jobs folder. Default: ~/airflow/jobs",
                              default=conf_get_default("cwl", "jobs", os.path.join(AIRFLOW_HOME, 'jobs')))
     init_parser.add_argument("-t", "--timeout",  dest='dag_timeout', type=int, help="How long before timing out a python file import while filling the DagBag",
