@@ -201,7 +201,7 @@ Optional parameters:
 
 Arguments `-o`, `-t` and `-u` doesn't overwrite the values from the Job file set in the fields
 *output_folder*, *tmp_folder* and *uid* correspondingly. The meaning of these fields is explaned in
-[Key concepts](#key_concepts) section.
+[Key concepts](#key-concepts) section.
 
 The *submit* command will resolve all relative paths from Job file adding mandatory fields *workflow*, *output_folder*
 and *uid* (if not provided) and will copy Job file to the Jobs folder. The CWL descriptor file and all input files
@@ -278,6 +278,12 @@ Common errors and ways to fix them
   
   Unfortunatelly *Apache-Airflow 1.9.0* cannot be properly installed on the latest *Python 3.7.0*.
   Consider using *Python 3.6* or *2.7* instead.
+  
+  macOS users can install Python 3.6.5 (instead of the latest Python 3.7.0) with the following command
+  (explained [here](https://stackoverflow.com/a/51125014/8808721))
+  ```bash
+    brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/f2a764ef944b1080be64bd88dca9a1d80130c558/Formula/python.rb
+  ```
 
 - Fails to compile *ruamel.yaml*
    
@@ -306,4 +312,8 @@ Common errors and ways to fix them
   
 - Workflow execution fails
 
-  Make sure that CWL descriptor and Job files are correct. Check them with `cwltool==1.0.20180622214234`
+  Make sure that CWL descriptor and Job files are correct. You can always check them with *cwltool*
+  (trusted version 1.0.20180622214234)
+  ```bash
+  cwltool --debug WORKFLOW JOB
+  ```
