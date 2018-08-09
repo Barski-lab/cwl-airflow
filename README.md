@@ -312,6 +312,13 @@ Common errors and ways to fix them
   If some of the Job files have been manually deleted, they will be still present in Airflow database, hence they 
   will be displayed in Webserver's UI. Sometimes you may still see missing DAGs because of the inertness of Airflow
   Webserver UI.
+
+- Airflow Webserver randomly fails to display some of the pages
+
+  When new DAG is added Airflow Webserver and Scheduler require some time to update their states.
+  Consider using `cwl-airflow init -r 5 -w 4` to make Airflow Webserver react faster for all newly created DAGs.
+  Or manualy update Airflow configuration file (default location is *~/airflow/airflow.cfg*) and restart both
+  Webserver and Scheduler. Refer to the official documentation [here](https://airflow.apache.org/configuration.html) 
   
 - Workflow execution fails
 
