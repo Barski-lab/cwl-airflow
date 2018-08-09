@@ -222,6 +222,9 @@ To start Airflow Webserver
 airflow webserver
 ```
 
+Please note that both Airflow Scheduler and Webserver can be adjusted through the configuration file
+(default location is *~/airflow/airflow.cfg*). Refer to the official documentation [here](https://airflow.apache.org/configuration.html) 
+ 
 ### Demo mode
 - To get the list of the available demo workflows
     ```bash
