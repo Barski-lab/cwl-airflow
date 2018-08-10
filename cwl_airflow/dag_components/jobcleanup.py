@@ -16,7 +16,7 @@ class JobCleanup(BaseOperator):
         collected_outputs = {}
         for task_outputs in self.xcom_pull(context=context, task_ids=[task.task_id for task in self.upstream_list]):
             collected_outputs = merge(collected_outputs, task_outputs["outputs"])
-        logging.debug('Collected outputs:\n{}'.format(json.dumps(collected_outputs, indent=4)))
+        logging.debug('Collected outputs: \n{}'.format(json.dumps(collected_outputs, indent=4)))
         tmp_folder = collected_outputs["tmp_folder"]
         output_folder = collected_outputs["output_folder"]
         relocated_outputs = relocateOutputs(outputObj={output_id: collected_outputs[output_src]
@@ -29,5 +29,5 @@ class JobCleanup(BaseOperator):
 
         relocated_outputs = {key.split("/")[-1]: val for key, val in relocated_outputs.items()}
         shutil.rmtree(tmp_folder, ignore_errors=False)
-        logging.debug('Delete temporary output directory {}'.format(tmp_folder))
+        logging.debug('Delete temporary output directory: \n{}'.format(tmp_folder))
         logging.info("WORKFLOW RESULTS\n" + json.dumps(relocated_outputs, indent=4))

@@ -44,8 +44,8 @@ class CWLStepOperator(BaseOperator):
                 source_ids = [shortname(source) for source in inp["source"]] if isinstance(inp["source"], list) else [shortname(inp["source"])]
                 promises_outputs = [collected_outputs[source_id] for source_id in source_ids if source_id in collected_outputs]
             except Exception as ex:
-                logging.info("{0}: Couldn't find source field in step input:\n{1}".format(self.task_id,json.dumps(inp,indent=4)))
-            logging.info('For input {} with source_ids: {} found upstream outputs: \n{}'.format(jobobj_id, source_ids, promises_outputs))
+                logging.info("Couldn't find source field in the step input: \n{}".format(json.dumps(inp, indent=4)))
+            logging.info('For input {} with sources: \n{} \nfound upstream outputs: \n{}'.format(jobobj_id, source_ids, promises_outputs))
             if len(promises_outputs) > 1:
                 if inp.get("linkMerge", "merge_nested") == "merge_flattened":
                     jobobj[jobobj_id] = flatten(promises_outputs)
@@ -61,14 +61,13 @@ class CWLStepOperator(BaseOperator):
             else:
                 continue
 
-
-        logging.info('{0}: Collected job object: \n {1}'.format(self.task_id, json.dumps(jobobj,indent=4)))
+        logging.info('Collected job object: \n{}'.format(json.dumps(jobobj, indent=4)))
 
         valueFrom = {
             shortname(i["id"]).split("/")[-1]: i["valueFrom"] for i in self.cwl_step.tool["inputs"]
             if "valueFrom" in i}
 
-        logging.info('{0}: Step inputs with valueFrom: \n{1}'.format(self.task_id, json.dumps(valueFrom,indent=4)))
+        logging.info('Inputs with valueFrom: \n{}'.format(json.dumps(valueFrom, indent=4)))
 
         def postScatterEval(shortio):
             def valueFromFunc(k, v):
@@ -81,7 +80,7 @@ class CWLStepOperator(BaseOperator):
             return {k: valueFromFunc(k, v) for k, v in shortio.items()}
 
         job = postScatterEval(jobobj)
-        logging.info('{0}: Collected job object after valueFrom evaluation: \n {1}'.format(self.task_id, json.dumps(job,indent=4)))
+        logging.info('Collected job object after valueFrom evaluation: \n{}'.format(json.dumps(job, indent=4)))
         # maybe need to add here scatter functionality too
 
         kwargs = self.dag.default_args
@@ -113,8 +112,7 @@ class CWLStepOperator(BaseOperator):
         if not output and status == "permanentFail":
             raise ValueError
 
-        logging.info(
-            '{0}: Embedded tool outputs: \n {1}'.format(self.task_id, json.dumps(output,indent=4)))
+        logging.debug('Embedded tool outputs: \n{}'.format(json.dumps(output, indent=4)))
 
         promises = {}
         for out in self.cwl_step.tool["outputs"]:
@@ -129,7 +127,6 @@ class CWLStepOperator(BaseOperator):
         promises["output_folder"] = output_folder
         data = {"outputs": promises}
 
-        logging.info(
-            '{0}: Output: \n {1}'.format(self.task_id, json.dumps(data, indent=4)))
+        logging.info('Outputs: \n{}'.format(json.dumps(data, indent=4)))
 
         return data
