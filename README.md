@@ -46,7 +46,7 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
     * [Configuration](#configuration)
     * [Submitting new job](#submitting-new-job)
     * [Demo mode](#demo-mode)
-    * [Running sample ChIP-Seq-SE workflow](#running-sample-chip-seq-workflow-se)
+    * [Running sample ChIP-Seq-SE workflow](#running-sample-chip-seq-se-workflow)
 * **[Troubleshooting](#troubleshooting)**
 
 ---
