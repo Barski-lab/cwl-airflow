@@ -46,6 +46,7 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
     * [Configuration](#configuration)
     * [Submitting new job](#submitting-new-job)
     * [Demo mode](#demo-mode)
+    * [Running sample ChIP-Seq-SE workflow](#running-sample-chip-seq-workflow-se)
 * **[Troubleshooting](#troubleshooting)**
 
 ---
@@ -217,7 +218,7 @@ To start Airflow Scheduler (**don't** run it if *cwl-airflow submit* is used wit
 ```bash
 airflow scheduler
 ```
-To start Airflow Webserver
+To start Airflow Webserver (by default is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/))
 ```bash
 airflow webserver
 ```
@@ -260,6 +261,41 @@ Optional parameters:
 | -t   | path to the temporary folder for storing intermediate results, str                                     | */tmp*            |
 | -u   | ID for DAG's unique identifier generation, str. Ignored when *--list* or *--auto* is used              | random uuid       |
 
+### Running sample ChIP-Seq-SE workflow
+This [ChIP-Seq-SE workflow](https://barski-lab.github.io/ga4gh_challenge/) is a CWL version of
+a Python pipeline from [BioWardrobe](https://github.com/Barski-lab/biowardrobe/wiki).
+It starts by extracting an input FASTQ file (if it was compressed). Next step runs
+[BowTie](http://bowtie-bio.sourceforge.net/index.shtml) to perform alignment to a reference genome,
+resulting in an unsorted SAM file. The SAM file is then sorted and indexed with
+[Samtools](http://samtools.sourceforge.net/) to obtain a BAM file and a BAI index.
+Next [MACS2](https://github.com/taoliu/MACS/wiki) is used to call peaks and to estimate fragment size.
+In the last few steps, the coverage by estimated fragments is calculated from the BAM file and is
+reported in bigWig format. The pipeline also reports statistics, such as read quality, peak number
+and base frequency, as long as other troubleshooting information using tools such as
+[Fastx-toolkit](http://hannonlab.cshl.edu/fastx_toolkit/) and
+[Bamtools](https://github.com/pezmaster31/bamtools).
+
+To get sample workflow with input data
+```bash
+$ git clone --recursive https://github.com/Barski-lab/ga4gh_challenge.git --branch v0.0.3
+$ ./ga4gh_challenge/data/prepare_inputs.sh
+```
+Please, be patient it may take some time to clone submodule with input data.
+Runing the script *prepare_inputs.sh* will uncompress input FASTQ file.
+
+To submit worflow for execution
+```bash
+cwl-airflow submit ga4gh_challenge/biowardrobe_chipseq_se.cwl ga4gh_challenge/biowardrobe_chipseq_se.yaml
+```
+To start Airflow Scheduler (**don't** run it if *cwl-airflow submit* is used with *-r* argument)
+```bash
+airflow scheduler
+```
+To start Airflow Webserver (by default is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/))
+```bash
+airflow webserver
+```
+
 
 ### Troubleshooting
 
@@ -269,7 +305,7 @@ information regarding the failed workflow steps, can be found in the task execut
 that are accessible through Airflow Webserver UI. 
 
 Common errors and ways to fix them
-- `cwl-airflow` is not found 
+- ***`cwl-airflow` is not found*** 
    
    Perhaps, you have installed it with *--user* option and your *PATH*
    variable doesn't include your user based Python *bin* folder.
@@ -277,7 +313,7 @@ Common errors and ways to fix them
    ```sh
    export PATH="$PATH:`python -m site --user-base`/bin"
    ```
-- Fails to install on the latest *Python 3.7.0*
+- ***Fails to install on the latest Python 3.7.0***
   
   Unfortunatelly *Apache-Airflow 1.9.0* cannot be properly installed on the latest *Python 3.7.0*.
   Consider using *Python 3.6* or *2.7* instead.
@@ -288,7 +324,7 @@ Common errors and ways to fix them
     brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/f2a764ef944b1080be64bd88dca9a1d80130c558/Formula/python.rb
   ```
 
-- Fails to compile *ruamel.yaml*
+- ***Fails to compile ruamel.yaml***
    
   Perhaps, you should update your *setuptools*. Consider using *--user* if necessary.
   If installing on macOS brewed Python *--user* **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
@@ -296,31 +332,31 @@ Common errors and ways to fix them
   pip install -U setuptools # --user
   ```
   
-- Docker is unable to pull images from the Internet.
+- ***Docker is unable to pull images from the Internet***
 
   If you are using proxy, your Docker should be configured properly too.
   Refer to the official [documentation](https://docs.docker.com/config/daemon/systemd/#httphttps-proxy)
    
-- Docker is unable to mount directory.
+- ***Docker is unable to mount directory***
 
   For macOS docker has a list of directories that it's allowed to mount by default. If your input files are located in
   the directories that are not included in this list, you are better of either changing the location of
   input files and updating your Job file or adding this directories into Docker configuration *Preferences / File Sharing*.
 
-- Airflow Webserver displays missing DAGs
+- ***Airflow Webserver displays missing DAGs***
 
   If some of the Job files have been manually deleted, they will be still present in Airflow database, hence they 
   will be displayed in Webserver's UI. Sometimes you may still see missing DAGs because of the inertness of Airflow
   Webserver UI.
 
-- Airflow Webserver randomly fails to display some of the pages
+- ***Airflow Webserver randomly fails to display some of the pages***
 
   When new DAG is added Airflow Webserver and Scheduler require some time to update their states.
   Consider using `cwl-airflow init -r 5 -w 4` to make Airflow Webserver react faster for all newly created DAGs.
   Or manualy update Airflow configuration file (default location is *~/airflow/airflow.cfg*) and restart both
   Webserver and Scheduler. Refer to the official documentation [here](https://airflow.apache.org/configuration.html) 
   
-- Workflow execution fails
+- ***Workflow execution fails***
 
   Make sure that CWL descriptor and Job files are correct. You can always check them with *cwltool*
   (trusted version 1.0.20180622214234)
