@@ -296,6 +296,19 @@ To start Airflow Webserver (by default is accessible from your [localhost:8080](
 airflow webserver
 ```
 
+Pipeline was tested with
+- macOS 10.13.6 (High Sierra)
+- Docker
+  * Engine: 18.06.0-ce
+  * Machine: 0.15.0
+  * Preferences
+    * CPUs: 4
+    * Memory: 2.0 GiB
+    * Swap: 1.0 GiB
+- Elapsed time: 23 min (may vary depending on you Internet connection bandwidth,
+  especially when pipeline is run for the first time and all Docker images
+  are being fetched from DockerHub)
+
 
 ### Troubleshooting
 
