@@ -48,6 +48,8 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
     * [Demo mode](#demo-mode)
     * [Running sample ChIP-Seq-SE workflow](#running-sample-chip-seq-se-workflow)
 * **[Troubleshooting](#troubleshooting)**
+* **[Citation](#citation)**
+* **[License](#license)**
 
 ---
 
@@ -376,3 +378,12 @@ Common errors and ways to fix them
   ```bash
   cwltool --debug WORKFLOW JOB
   ```
+
+ 
+### Citation
+
+*[CWL-Airflow: a lightweight pipeline manager supporting Common Workflow Language](https://www.biorxiv.org/content/early/2018/01/17/249243)*
+
+### License
+
+[Apache License Version 2.0](https://www.apache.org/licenses/LICENSE-2.0)
