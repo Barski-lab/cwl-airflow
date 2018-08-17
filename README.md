@@ -22,7 +22,8 @@ if something is missing or should be updated refer to [Installation](#installati
     ```sh
     $ cwl-airflow demo --auto
     ```
-4. When all demo wokrflows are submitted program will provide you with the link for Airflow Webserver.
+4. When all demo wokrflows are submitted the program will provide you with the link for Airflow Webserver
+(by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/)).
 It may take some time (usually less then half a minute) for Airflow Webserver to load and display all the data
 
 
@@ -93,18 +94,9 @@ and creates DAGs for each of them. Each DAG has a unique DAG ID that is formed a
 ### Requirements 
 #### Ubuntu 16.04.4 (Xenial Xerus)
 - python 2.7 or 3.5 (tested on the system Python 2.7.12 and 3.5.2)
-- docker
-  ```
-  sudo apt-get update
-  sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-  sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-  sudo apt-get update
-  sudo apt-get install docker-ce
-  sudo groupadd docker
-  sudo usermod -aG docker $USER
-  ```
-  Log out and log back in so that your group membership is re-evaluated.
+- docker (follow the [link](https://docs.docker.com/install/linux/docker-ce/ubuntu/) to install Docker on Ubuntu)
+  
+  **Don't forget** to log out and log back in after Docker installation so that your group membership is re-evaluated.
 - python-dev (or python3-dev if using Python 3.5)
   ```bash
   sudo apt-get install python-dev # python3-dev
@@ -117,8 +109,7 @@ and creates DAGs for each of them. Each DAG has a unique DAG ID that is formed a
   
 #### macOS 10.13.5 (High Sierra)
 - python 2.7 or 3.6 (tested on the system Python 2.7.10 and brewed Python 2.7.15 / 3.6.5; **3.7.0 is not supported**)
-- docker (follow the [link](https://docs.docker.com/docker-for-mac/install/)
-  to install Docker on Mac)
+- docker (follow the [link](https://docs.docker.com/docker-for-mac/install/) to install Docker on Mac)
 - Apple Command Line Tools
   ```bash
   xcode-select --install
@@ -129,11 +120,10 @@ and creates DAGs for each of them. Each DAG has a unique DAG ID that is formed a
   of installation problems you might still be required to install this dependency.
   
 #### Both Ubuntu and macOS
-- pip (tested on pip 18.0)
-  ```bash
-  wget https://bootstrap.pypa.io/get-pip.py
-  python get-pip.py # --user
-  ```
+- pip (follow the [link](https://pip.pypa.io/en/stable/installing/) to install the latest stable Pip)
+
+  Consider using `--user` if you encounter permission problems 
+  
 - setuptools (tested on setuptools 40.0.0)
   ```bash
   pip install -U setuptools # --user
@@ -152,11 +142,7 @@ $ pip install cwl-airflow --find-links https://michael-kotliar.github.io/cwl-air
 `--find-links` - using pre-compiled wheels from [This](https://michael-kotliar.github.io/cwl-airflow-wheels/) repository
 allows to avoid installing *Xcode* for macOS users and *python[3]-dev* for Ubuntu users
 
-  `--user` - optional parameter to install all the packages into your *HOME* directory instead of the system Python
-  directories. It will be helpful if you don't have enough permissions to install new Python packages.
-  You might also need to update your *PATH* variable in order to have access to the installed packages (an easy
-  way to do it is described in [Troubleshooting](#troubleshooting) section).
-  If installing on macOS brewed Python `--user` **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
+  `--user` - explained [here](#install-cwl-airflow)
 
 ---
 
@@ -220,7 +206,7 @@ To start Airflow Scheduler (**don't** run it if *cwl-airflow submit* is used wit
 ```bash
 airflow scheduler
 ```
-To start Airflow Webserver (by default is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/))
+To start Airflow Webserver (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/))
 ```bash
 airflow webserver
 ```
@@ -293,7 +279,7 @@ To start Airflow Scheduler (**don't** run it if *cwl-airflow submit* is used wit
 ```bash
 airflow scheduler
 ```
-To start Airflow Webserver (by default is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/))
+To start Airflow Webserver (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/))
 ```bash
 airflow webserver
 ```
