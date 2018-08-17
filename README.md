@@ -12,8 +12,9 @@ and **docker** that has access to pull images from the [DockerHub](https://hub.d
 if something is missing or should be updated refer to [Installation](#installation) or [Troubleshooting](#troubleshooting) sections)*
 1. Install *cwl-airflow*
     ```sh
-    $ pip install cwl-airflow --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/
+    $ pip install cwl-airflow --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/ # --user
     ```
+    `--user` - explained [here](#both-ubuntu-and-macos)
 2. Init configuration
     ```sh
     $ cwl-airflow init
@@ -332,6 +333,7 @@ Common errors and ways to fix them
   ```bash
   pip install -U setuptools # --user
   ```
+  `--user` - explained [here](#both-ubuntu-and-macos)
   
 - ***Docker is unable to pull images from the Internet***
 
