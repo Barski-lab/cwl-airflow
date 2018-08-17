@@ -142,7 +142,7 @@ $ pip install cwl-airflow --find-links https://michael-kotliar.github.io/cwl-air
 `--find-links` - using pre-compiled wheels from [This](https://michael-kotliar.github.io/cwl-airflow-wheels/) repository
 allows to avoid installing *Xcode* for macOS users and *python[3]-dev* for Ubuntu users
 
-  `--user` - explained [here](#install-cwl-airflow)
+  `--user` - explained [here](#both-ubuntu-and-macos)
 
 ---
 
