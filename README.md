@@ -97,7 +97,8 @@ and creates DAGs for each of them. Each DAG has a unique DAG ID that is formed a
 - python 2.7 or 3.5 (tested on the system Python 2.7.12 and 3.5.2)
 - docker (follow the [link](https://docs.docker.com/install/linux/docker-ce/ubuntu/) to install Docker on Ubuntu)
   
-  **Don't forget** to log out and log back in after Docker installation so that your group membership is re-evaluated.
+  **Don't forget** to add your user to the *docker* group and then
+  to log out and log back in so that your group membership is re-evaluated.
 - python-dev (or python3-dev if using Python 3.5)
   ```bash
   sudo apt-get install python-dev # python3-dev
