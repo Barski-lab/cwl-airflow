@@ -99,3 +99,4 @@ ENV/
 out
 gen
 .DS_Store
+.vscode
