@@ -28,7 +28,7 @@ if something is missing or should be updated refer to [Installation](#installati
 It may take some time (usually less then half a minute) for Airflow Webserver to load and display all the data
 
 
-![Airflow Webserver example](docs/screen.png)
+![Airflow Webserver example](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/screen.png)
 
 
 ---
@@ -87,7 +87,7 @@ Scheduler loads DAGs from the DAGs folder, the *cwl_dag.py* script parses all th
 and creates DAGs for each of them. Each DAG has a unique DAG ID that is formed accodring to the following scheme:
 `CWL descriptor file basename`-`Job file basename`-`uid field from the Job file`
 
-![Airflow Webserver example](docs/scheme.png)
+![Airflow Webserver example](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/scheme.png)
 
 ---
 
