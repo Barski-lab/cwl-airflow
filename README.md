@@ -19,7 +19,7 @@ if something is missing or should be updated refer to [Installation](#installati
     ```sh
     $ cwl-airflow init
     ```
-3. Run *demo*
+3. Run *demo* (results will be placed in a current folder)
     ```sh
     $ cwl-airflow demo --auto
     ```
