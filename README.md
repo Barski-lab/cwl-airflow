@@ -198,7 +198,10 @@ The *submit* command will resolve all relative paths from Job file adding mandat
 and *uid* (if not provided) and will copy Job file to the Jobs folder. The CWL descriptor file and all input files
 referenced in the Job file should not be moved or deleted while workflow is running. The *submit* command will **not** execute
 submitted workflow unless *-r* argument is provided. Otherwise, make sure that *Airflow Scheduler* (and optionally
-*Airflow Webserver*) is running.
+*Airflow Webserver*) is running. Note, that *-r* argument was added only to comply with the interface through which CWL
+community runs it's conformance tests. So it's more preferable to execute submitted workflow with
+*Airflow Scheduler*, especially if you are planning to use `LocalExecutor` instead of default `SequentialExecutor` (refer to [Airflow
+documentation](http://airflow.apache.org/code.html?highlight=sequentialexecutor#executors) to chose proper executor)
 
 Depending on your Airflow configuration it may require some time for Airflow Scheduler
 and Webserver to pick up new DAGs. Consider using `cwl-airflow init -r 5 -w 4` to make Airflow Webserver react faster on all
