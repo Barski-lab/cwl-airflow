@@ -1,6 +1,3 @@
-[![Build Status](https://travis-ci.org/Barski-lab/cwl-airflow.svg?branch=master)](https://travis-ci.org/Barski-lab/cwl-airflow) -  **Travis CI**  
-[![Build Status](https://ci.commonwl.org/buildStatus/icon?job=airflow-conformance)](https://ci.commonwl.org/job/airflow-conformance) - **CWL conformance tests**  
-
 # Packaging and distributing
 ## Using pyinstaller
 - Use **Python 3.6.5** on Mac (Darwin-18.2.0-x86_64-i386-64bit)
