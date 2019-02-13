@@ -34,7 +34,7 @@ Categories=Utility;Science;
 ' > cwl-airflow.desktop
 
 # copy icon file to working directory
-cp ./cwl-airflow.png .
+cp ../cwl-airflow.png .
 
 # install virtualenv in Python3
 pip3 install virtualenv
