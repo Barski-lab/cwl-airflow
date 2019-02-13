@@ -51,3 +51,6 @@ cd ..
 
 # pack AppDir into AppImage
 ./appimagetool cwl-airflow.AppDir cwl-airflow
+
+# clean all intemediate files and folders
+rm -rf cwl-airflow.AppDir appimagetool
