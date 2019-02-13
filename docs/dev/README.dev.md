@@ -30,3 +30,13 @@ and get the latest devel version of **pyinstaller**
     pre-safe-import-module hook failed, needs fixing.
     ```
 - Find some other tool for packaging
+
+## Build AppImage
+
+On the clean virtual machine with Ubuntu 16.04.4
+```bash
+sudo apt install python3-pip
+./build_app_image.sh
+```
+
+
