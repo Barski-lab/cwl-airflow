@@ -34,12 +34,16 @@ and get the latest devel version of **pyinstaller**
 ## Build AppImage
 
 On the clean virtual machine with Ubuntu 16.04.4
+1. Install pip 
 ```bash
 sudo apt install python3-pip
+```
+2. Create AppImage
+```bash
 ./build_app_image.sh
 ```
 
-
+## Additional info
 Deprecated repositories:
 - https://github.com/Barski-lab/incubator-airflow
 - https://github.com/Barski-lab/BioWardrobe2
