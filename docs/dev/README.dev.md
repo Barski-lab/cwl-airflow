@@ -40,3 +40,7 @@ sudo apt install python3-pip
 ```
 
 
+Deprecated repositories:
+- https://github.com/Barski-lab/incubator-airflow
+- https://github.com/Barski-lab/BioWardrobe2
+- https://github.com/SciDAP/scidap
