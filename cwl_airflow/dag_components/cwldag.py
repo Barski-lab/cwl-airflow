@@ -62,19 +62,15 @@ class CWLDAG(DAG):
             if any(i in current_task_input_sources for i in workflow_input_id) or not current_task.upstream_list:
                 current_task.set_upstream(task)
 
-    def assign_job_cleanup(self, task):
+    def assign_job_cleanup(self, job_cleanup_task):
         for current_task in self.tasks:
-            if isinstance(current_task, JobCleanup):
-                continue
             if isinstance(current_task, JobDispatcher):
-                current_task_outputs_id = [shortname(current_task_output["id"]) for current_task_output in current_task.dag.cwlwf.tool["inputs"]]
-            else:
+                job_cleanup_task.set_upstream(current_task)  # Always connect JobDispatcher -> JobCleanup
+            elif isinstance(current_task, CWLStepOperator):
                 current_task_outputs_id = [shortname(current_task_output["id"]) for current_task_output in current_task.cwl_step.tool["outputs"]]
-            workflow_outputs_outputsource = [shortname(workflow_output["outputSource"]) for workflow_output in self.cwlwf.tool["outputs"]]
-            # print "current_task_outputs_id: \n", yaml.round_trip_dump(current_task_outputs_id)
-            # print "workflow_outputs_outputsource: \n", yaml.round_trip_dump(workflow_outputs_outputsource)
-            if any(i in current_task_outputs_id for i in workflow_outputs_outputsource):
-                task.set_upstream(current_task)
+                workflow_outputs_outputsource = [shortname(workflow_output["outputSource"]) for workflow_output in self.cwlwf.tool["outputs"]]
+                if any(i in current_task_outputs_id for i in workflow_outputs_outputsource):
+                    job_cleanup_task.set_upstream(current_task)
 
     def get_output_list(self):
         # return [shortname(o) for o in self.cwlwf.tool["outputs"] ]

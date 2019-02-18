@@ -71,7 +71,7 @@ setup(
     package_data={'cwl_airflow': ['git_version']},
     include_package_data=True,
     install_requires=[
-        'cwltool==1.0.20180622214234',
+        'cwltool==1.0.20181217162649',
         'jsonmerge',
         "apache-airflow==1.9.0",
         "uuid"

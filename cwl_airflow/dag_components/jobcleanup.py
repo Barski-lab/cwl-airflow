@@ -22,10 +22,15 @@ class JobCleanup(BaseOperator):
         relocated_outputs = relocateOutputs(outputObj={output_id: collected_outputs[output_src]
                                                        for output_src, output_id in self.dag.get_output_list().items()
                                                        if output_src in collected_outputs},
-                                            outdir=output_folder,
-                                            output_dirs=[output_folder],
+                                            destination_path=output_folder,
+                                            source_directories=[output_folder],
                                             action="copy",
                                             fs_access=StdFsAccess(""))
+
+
+
+
+
 
         relocated_outputs = {key.split("/")[-1]: val for key, val in relocated_outputs.items()}
         shutil.rmtree(tmp_folder, ignore_errors=False)

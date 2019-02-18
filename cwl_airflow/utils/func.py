@@ -47,8 +47,12 @@ def get_demo_workflow(target_wf=None, job_ext=".json"):
 
 
 def export_job_file(args):
-    job_entry = load_job(args.job)
-    del job_entry["id"]
+    try:
+        job_entry = load_job(args.job)
+        del job_entry["id"]
+    except Exception:
+        job_entry = {}
+        args.job = "empty.json"
     job_entry['workflow'] = job_entry.get("workflow", args.workflow)
     job_entry['output_folder'] = job_entry.get("output_folder", args.output_folder)
     job_entry["uid"] = job_entry.get("uid", args.uid)
