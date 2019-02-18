@@ -87,7 +87,7 @@ class CWLStepOperator(BaseOperator):
         tmp_folder = collected_outputs["tmp_folder"]
         output_folder = collected_outputs["output_folder"]
         kwargs['outdir'] = tempfile.mkdtemp(dir=tmp_folder, prefix="step_tmp_")
-        kwargs['tmpdir_prefix'] = os.path.join(tmp_folder, "cwl_tmp_")
+        kwargs['tmpdir_prefix'] = tmp_folder
         kwargs['tmp_outdir_prefix'] = os.path.join(tmp_folder, "cwl_outdir_tmp_")
         kwargs['rm_tmpdir'] = False
         kwargs["basedir"] = os.path.abspath(os.path.dirname(self.dag.default_args["job_data"]["path"]))
