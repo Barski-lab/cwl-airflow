@@ -101,7 +101,7 @@ def get_active_jobs(jobs_folder, limit=10):
         dag_id = gen_dag_id(job_path)
         dag_runs = DagRun.find(dag_id)
         all_jobs.append({"path": job_path,
-                         "creation_date": datetime.fromtimestamp(os.path.getctime(job_path)),
+                         "creation_date": datetime.utcfromtimestamp(os.path.getctime(job_path)),
                          "content": load_job(job_path),
                          "dag_id": dag_id,
                          "state": dag_runs[0].state if len(dag_runs) > 0 else State.NONE})
@@ -116,7 +116,7 @@ def make_dag(job):
     """
     :param job: {"content": job_entry,
                  "path": job,
-                 "creation_date": datetime.fromtimestamp(os.path.getctime(job_path)),
+                 "creation_date": datetime.utcfromtimestamp(os.path.getctime(job_path)),
                  "dag_id": gen_dag_id(job_entry["workflow"], job_path)}
     :return:
     """
