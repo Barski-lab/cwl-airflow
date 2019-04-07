@@ -43,6 +43,81 @@ sudo apt install python3-pip
 ./build_app_image.sh
 ```
 
+## Build Vagrant Box
+1. Install Vagrant from [here](https://www.vagrantup.com/downloads.html)
+2. Install VirtualBox from [here](https://www.virtualbox.org/wiki/Downloads)
+3. Download Ubuntu 16.04 Server image from [here](http://releases.ubuntu.com/16.04/)
+4. Create new virtual machine
+    - name: cwl-airflow
+    - type: Linux
+    - version: Ubuntu (64 bit)
+    - memory: 4096 MB
+    - disk: VMDK, dynamically allocated up to 268.00 GB
+5. Install Ubuntu 16.04 Server on the cwl-airflow virtual machine
+    - hostname: cwl-airflow
+    - user: vagrant
+    - password: vagrant
+    - encryption: no
+    - software:
+      - standard system utilities
+      - open-ssh server
+6. Install Guest Additions
+    ```
+    sudo apt-get install linux-headers-$(uname -r) build-essential dkms
+    sudo reboot
+    ```
+    Click Devices / Insert Guest Additions CD image
+    ```
+    sudo mount /dev/cdrom /media/cdrom
+    sudo sh /media/cdrom/VBoxLinuxAdditions.run
+    sudo reboot
+    ```
+7. Add the vagrant user to sudoers file
+   ```
+   sudo visudo
+   ```
+   Add line
+   ```
+   vagrant ALL=(ALL) NOPASSWD:ALL
+   ```
+8. Install Vagrant Public Keys
+   ```
+   cd
+   mkdir .ssh
+   cd .ssh
+   wget https://raw.githubusercontent.com/hashicorp/vagrant/master/keys/vagrant.pub -O authorized_keys
+   chmod 0600 authorized_keys
+   cd ..
+   chmod 0700 .ssh
+   chown -R vagrant .ssh
+   ```
+9. Install OpenSSH Server
+   ```
+   sudo apt-get install -y openssh-server
+   ```
+10. Configure OpenSSH Server
+    ```
+    sudo vi /etc/ssh/sshd_config
+    ```
+    Add/Update the following fields
+    ```
+    Port 22
+    PubKeyAuthentication yes
+    AuthorizedKeysFile %h/.ssh/authorized_keys
+    PermitEmptyPasswords no
+    UseDNS no
+    ```
+    Restart ssh service
+    ```
+    sudo service ssh restart
+    ```
+11. Install cwl-airflow python package following instructions from readme
+12. Make sure to set Network / Adapter 1 to NAT for cwl-airflow virtual machine
+13. Package cwl-airflow virtual machine to file
+    ```
+    vagrant package --base cwl-airflow --output cwl_airflow.box
+    ```
+
 ## Additional info
 Deprecated repositories:
 - https://github.com/Barski-lab/incubator-airflow
