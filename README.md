@@ -55,12 +55,13 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
     ```sh
     $ cwl-airflow demo --auto -o /vagrant
     ```
-    Results will be saved within virtual machine in the `/vagrant` folder that corresponds to the folder where you run `vagrant up` on your host machine
 
-5. When all demo wokrflows are submitted you can access Airflow Webserver from you web browser following the link [localhost:8080](http://127.0.0.1:8080/admin/).
+5. When all demo wokrflows are submitted the program will provide you with the link for Airflow Webserver (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/) thought the port forwarding).
 It may take some time (usually less then half a minute) for Airflow Webserver to load and display all the data
 
 ![Airflow Webserver example](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/screen.png)
+
+6. On completion the workflow results will be saved within virtual machine in the `/vagrant` folder that corresponds to the folder where you run `vagrant up` on your host machine.
 
 ### Locally
 
@@ -83,12 +84,13 @@ if something is missing or should be updated refer to [Installation](#installati
     ```sh
     $ cwl-airflow demo --auto
     ```
-    Results will be saved in the current folder
 
 4. When all demo wokrflows are submitted the program will provide you with the link for Airflow Webserver (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/)).
 It may take some time (usually less then half a minute) for Airflow Webserver to load and display all the data
 
 ![Airflow Webserver example](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/screen.png)
+
+5. On completion the workflow results will be saved in the current folder
 
 ---
 
