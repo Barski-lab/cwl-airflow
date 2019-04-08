@@ -9,7 +9,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 ## Table of Contents
 * **[Run demo](#run-demo)**
   * [VirtualBox](#virtualbox)
-  * [Locally](#Locally)
+  * [Locally](#locally)
 * **[How It Works](#how-it-works)**
   * [Key concepts](#key-concepts)
   * [What's inside](#whats-inside)
