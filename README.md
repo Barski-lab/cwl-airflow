@@ -6,35 +6,10 @@
 Python package to extend **[Apache-Airflow 1.9.0](https://github.com/apache/incubator-airflow)**
 functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
-## Check it out
-*(assuming that you already have installed and properly configured **python**, latest **pip**, latest **setuptools**
-and **docker** that has access to pull images from the [DockerHub](https://hub.docker.com/);
-if something is missing or should be updated refer to [Installation](#installation) or [Troubleshooting](#troubleshooting) sections)*
-1. Install *cwl-airflow*
-    ```sh
-    $ pip install cwl-airflow --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/ # --user
-    ```
-    `--user` - explained [here](#both-ubuntu-and-macos)
-2. Init configuration
-    ```sh
-    $ cwl-airflow init
-    ```
-3. Run *demo* (results will be placed in a current folder)
-    ```sh
-    $ cwl-airflow demo --auto
-    ```
-4. When all demo wokrflows are submitted the program will provide you with the link for Airflow Webserver
-(by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/)).
-It may take some time (usually less then half a minute) for Airflow Webserver to load and display all the data
-
-
-![Airflow Webserver example](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/screen.png)
-
-
----
-
 ## Table of Contents
-
+* **[Run demo](#run-demo)**
+  * [VirtualBox](#virtualbox)
+  * [Locally](#Locally)
 * **[How It Works](#how-it-works)**
   * [Key concepts](#key-concepts)
   * [What's inside](#whats-inside)
@@ -52,6 +27,68 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
 * **[Troubleshooting](#troubleshooting)**
 * **[Citation](#citation)**
 * **[License](#license)**
+
+---
+
+## Run demo
+
+### VirtualBox
+
+*(assuming that you have already installed [Vagrant](https://www.vagrantup.com/downloads.html) and [VirtualBox](https://www.virtualbox.org/wiki/Downloads))*
+
+1. Get the latest Vagrantfile. If using `curl` instead of `wget` set the output filename to `-o Vagrantfile`
+    ```sh
+    $ wget https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/Vagrantfile
+    ```
+
+2. Start virtual machine
+    ```sh
+    $ vagrant up
+    ```
+    Vagrant will pull virtual machine image (about 3.4 GB) from [Vagrant Cloud](https://app.vagrantup.com/michael_kotliar/boxes/cwl-airflow) and create new virtual machine
+
+3. Access virtual machine through ssh
+    ```sh
+    $ vagrant ssh
+    ```
+4. Run *demo*
+    ```sh
+    $ cwl-airflow demo --auto -o /vagrant
+    ```
+    Results will be saved within virtual machine in the `/vagrant` folder that corresponds to the folder where you run `vagrant up` on your host machine
+
+5. When all demo wokrflows are submitted you can access Airflow Webserver from you web browser following the link [localhost:8080](http://127.0.0.1:8080/admin/).
+It may take some time (usually less then half a minute) for Airflow Webserver to load and display all the data
+
+![Airflow Webserver example](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/screen.png)
+
+### Locally
+
+*(assuming that you have already installed and properly configured **python**, latest **pip**, latest **setuptools**
+and **docker** that has access to pull images from the [DockerHub](https://hub.docker.com/);
+if something is missing or should be updated refer to [Installation](#installation) or [Troubleshooting](#troubleshooting) sections)*
+
+1. Install *cwl-airflow*
+    ```sh
+    $ pip install cwl-airflow --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/ # --user
+    ```
+    `--user` - explained [here](#both-ubuntu-and-macos)
+
+2. Init configuration
+    ```sh
+    $ cwl-airflow init
+    ```
+
+3. Run *demo*
+    ```sh
+    $ cwl-airflow demo --auto
+    ```
+    Results will be saved in the current folder
+
+4. When all demo wokrflows are submitted the program will provide you with the link for Airflow Webserver (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/)).
+It may take some time (usually less then half a minute) for Airflow Webserver to load and display all the data
+
+![Airflow Webserver example](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/screen.png)
 
 ---
 
