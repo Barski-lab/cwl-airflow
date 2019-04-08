@@ -288,5 +288,6 @@ def copy_demo_workflows():
     src = norm_path(os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, "../"))), "tests"))
     dst = os.path.join(AIRFLOW_HOME, "demo")
     logging.info("Copy demo workflows\n- from: {}\n- to: {}".format(src, dst))
-    shutil.rmtree(dst, ignore_errors=True)
-    shutil.copytree(src, dst)
+    for item in ["cwl", "data", "job"]:
+        shutil.rmtree(os.path.join(dst, item), ignore_errors=True)
+        shutil.copytree(os.path.join(src, item), os.path.join(dst, item))
