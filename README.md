@@ -225,7 +225,7 @@ Optional parameters:
 | Flag | Description                                                                                            | Default           |
 |------|--------------------------------------------------------------------------------------------------------|-------------------|
 | -o   | path to the folder where all the output files should be moved after successful workflow execution, str | current directory |
-| -t   | path to the temporary folder for storing intermediate results, str                                     | */tmp*            |
+| -t   | path to the temporary folder for storing intermediate results, str                                     | */tmp/cwlairflow* |
 | -u   | ID for DAG's unique identifier generation, str                                                         | random uuid       |
 | -r   | run submitted workflow with Airflow Scheduler, bool                                                    | False             |
 
@@ -290,7 +290,7 @@ Optional parameters:
 | Flag | Description                                                                                            | Default           |
 |------|--------------------------------------------------------------------------------------------------------|-------------------|
 | -o   | path to the folder where all the output files should be moved after successful workflow execution, str | current directory |
-| -t   | path to the temporary folder for storing intermediate results, str                                     | */tmp*            |
+| -t   | path to the temporary folder for storing intermediate results, str                                     | */tmp/cwlairflow* |
 | -u   | ID for DAG's unique identifier generation, str. Ignored when *--list* or *--auto* is used              | random uuid       |
 
 ### Running sample ChIP-Seq-SE workflow

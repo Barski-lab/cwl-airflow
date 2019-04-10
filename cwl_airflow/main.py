@@ -58,7 +58,7 @@ def arg_parser():
     submit_parser = subparsers.add_parser('submit', help="Submit custom workflow", parents=[parent_parser])
     submit_parser.set_defaults(func=submit_job)
     submit_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory. Default: ./", default=".")
-    submit_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data. Default: /tmp")
+    submit_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data. Default: /tmp/cwlairflow")
     submit_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Experiment unique ID. Default: random uuid", default=str(uuid.uuid4()))
     submit_parser.add_argument("-r", "--run", dest='run', action="store_true", help="Run workflow with Airflow Scheduler")
     submit_parser.add_argument("workflow", type=str, help="Workflow file path")
@@ -68,7 +68,7 @@ def arg_parser():
     demo_parser = subparsers.add_parser('demo', help="Run demo workflows", parents=[parent_parser])
     demo_parser.set_defaults(func=run_demo)
     demo_parser.add_argument("-o", "--outdir", dest='output_folder', type=str, help="Output directory. Default: ./", default=".")
-    demo_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data. Default: /tmp")
+    demo_parser.add_argument("-t", "--tmp", dest='tmp_folder', type=str, help="Folder to store temporary data. Default: /tmp/cwlairflow")
     demo_parser.add_argument("-u", "--uid", dest='uid', type=str, help="Experiment's unique ID; ignored with -a/-l arguments. Default: random uuid", default=str(uuid.uuid4()))
     demo_parser.add_argument("workflow", type=str, help="Demo workflow name from the list")
 

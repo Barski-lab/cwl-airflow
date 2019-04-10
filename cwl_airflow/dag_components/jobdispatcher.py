@@ -8,7 +8,7 @@ from cwltool.main import init_job_order
 from cwltool.load_tool import jobloaderctx
 from schema_salad.ref_resolver import Loader
 from cwl_airflow.utils.utils import shortname, get_folder
-DEFAULT_TMP_FOLDER = "/tmp"
+DEFAULT_TMP_FOLDER = "/tmp/cwlairflow"
 
 
 class JobDispatcher(BaseOperator):
