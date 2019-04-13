@@ -8,7 +8,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
 ## Table of Contents
 * **[Run demo](#run-demo)**
-  * [VirtualBox](#virtualbox-single-machine)
+  * [VirtualBox single machine](#virtualbox-single-machine)
   * [Locally](#locally)
 * **[How It Works](#how-it-works)**
   * [Key concepts](#key-concepts)
