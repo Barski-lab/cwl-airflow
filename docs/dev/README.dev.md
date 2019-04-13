@@ -111,9 +111,160 @@ sudo apt install python3-pip
     ```
     sudo service ssh restart
     ```
-11. Install cwl-airflow python package following instructions from readme
-12. Make sure to set Network / Adapter 1 to NAT for cwl-airflow virtual machine
-13. Package cwl-airflow virtual machine to file
+11. Install Redis, then stop it and disable (some useful links are [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-redis-on-ubuntu-18-04) and [here](https://tecadmin.net/install-redis-ubuntu/))
+    ```
+    sudo apt-get install redis-server
+    sudo systemctl stop redis-server.service
+    sudo systemctl disable redis-server.service
+    ```
+    Update `/etc/redis/redis.conf` to include
+    ```
+    bind 0.0.0.0
+    ```
+12. Install mysql-server, then stop it and disable (follow the link [here](https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-16-04))
+    ```
+    sudo apt-get install mysql-server
+    ```
+    Set root password to `vagrant`
+    ```
+    mysql_secure_installation
+    ```
+    - remove test database and access to it - Yes
+    - remove anonymous users - Yes
+    - disallow root login remotely - Yes
+    - reload privilege table now - Yes
+    ```
+    mysql -u root -p
+    ```
+    We need to allow airflow user to login from other hosts (see [here](https://stackoverflow.com/questions/10236000/allow-all-remote-connections-mysql))
+    ```sql
+    CREATE DATABASE airflow;
+    CREATE USER 'airflow'@'localhost' IDENTIFIED BY 'airflow';
+    CREATE USER 'airflow'@'%' IDENTIFIED BY 'airflow';
+    GRANT ALL PRIVILEGES ON airflow.* TO 'airflow'@'localhost';
+    GRANT ALL PRIVILEGES ON airflow.* TO 'airflow'@'%';
+    ```
+    Also, update `/etc/mysql/mysql.conf.d/mysqld.cnf` to include
+    ```
+    bind-address          = 0.0.0.0
+    # skip-external-locking
+    ```
+    We also need to install mysqlclient (cannot find mysql_config without it)
+    ```
+    sudo apt-get install libmysqlclient-dev
+    ```
+    ```
+    systemctl stop mysql.service
+    systemctl disable mysql.service
+    ```
+13. Update Airflow to include mysql and celery with all their dependencies
+    ```
+    pip3 install -U apache-airflow[mysql,celery,redis]==1.9.0 --user
+    ```
+14. Run Airflow to generate default configuration file
+    ```
+    airflow
+    ```
+15. Install cwl-airflow python package following instructions from readme
+16. Create the following files as root
+    
+    /etc/systemd/system/airflow-webserver.service
+    ```
+    [Unit]
+    Description=Airflow webserver daemon
+    After=network.target mysql.service redis-server.service
+    Wants=mysql.service redis-server.service
+
+    [Service]
+    User=vagrant
+    EnvironmentFile=/etc/default/airflow
+    WorkingDirectory=/home/vagrant/airflow
+    KillMode=control-group
+    ExecStart=/home/vagrant/.local/bin/airflow webserver
+    ExecStop=/bin/kill -s QUIT $MAINPID
+    Restart=on-failure
+    RestartSec=10s
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+    
+    /etc/systemd/system/airflow-scheduler.service
+    ```
+    [Unit]
+    Description=Airflow scheduler daemon
+    After=network.target mysql.service redis-server.service
+    Wants=mysql.service redis-server.service
+
+    [Service]
+    User=vagrant
+    EnvironmentFile=/etc/default/airflow
+    WorkingDirectory=/home/vagrant/airflow
+    KillMode=control-group
+    ExecStart=/home/vagrant/.local/bin/airflow scheduler
+    ExecStop=/bin/kill -s QUIT $MAINPID
+    Restart=on-failure
+    RestartSec=10s
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+    /etc/systemd/system/airflow-worker.service
+    ```
+    [Unit]
+    Description=Airflow celery worker daemon
+    After=network.target mysql.service redis-server.service
+    Wants=mysql.service redis-server.service
+
+    [Service]
+    User=vagrant
+    EnvironmentFile=/etc/default/airflow
+    WorkingDirectory=/home/vagrant/airflow
+    KillMode=control-group
+    ExecStart=/home/vagrant/.local/bin/airflow worker
+    ExecStop=/bin/kill -s QUIT $MAINPID
+    Restart=on-failure
+    RestartSec=10s
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+    /etc/systemd/system/airflow-flower.service
+    ```
+    [Unit]
+    Description=Airflow flower daemon
+    After=network.target mysql.service redis-server.service
+    Wants=mysql.service redis-server.service
+
+    [Service]
+    User=vagrant
+    EnvironmentFile=/etc/default/airflow
+    WorkingDirectory=/home/vagrant/airflow
+    KillMode=control-group
+    ExecStart=/home/vagrant/.local/bin/airflow flower
+    ExecStop=/bin/kill -s QUIT $MAINPID
+    Restart=on-failure
+    RestartSec=10s
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+    /etc/default/airflow
+    ```
+    PATH=/home/vagrant/bin:/home/vagrant/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:$PATH
+    ```
+    Reload systemd
+    ```
+    sudo systemctl daemon-reload
+    ```
+17. Install nodejs
+    ```
+    sudo apt install nodejs-legacy
+    ```
+18. Make sure to set Network / Adapter 1 to NAT for cwl-airflow virtual machine
+19. Package cwl-airflow virtual machine to file
     ```
     vagrant package --base cwl-airflow --output cwl_airflow.box
     ```

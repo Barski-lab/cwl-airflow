@@ -100,3 +100,6 @@ out
 gen
 .DS_Store
 .vscode
+
+#vagrant
+.vagrant

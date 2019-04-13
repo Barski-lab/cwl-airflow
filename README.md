@@ -32,36 +32,43 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
 ## Run demo
 
-### VirtualBox
+### VirtualBox: single machine
 
 *(assuming that you have already installed [Vagrant](https://www.vagrantup.com/downloads.html) and [VirtualBox](https://www.virtualbox.org/wiki/Downloads))*
 
 1. Get the latest Vagrantfile. If using `curl` instead of `wget` set the output filename to `-o Vagrantfile`
     ```sh
-    $ wget https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/Vagrantfile
+    $ wget https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/vagrant/single_machine/Vagrantfile
     ```
 
 2. Start virtual machine
     ```sh
     $ vagrant up
     ```
-    Vagrant will pull virtual machine image (about 3.4 GB) from [Vagrant Cloud](https://app.vagrantup.com/michael_kotliar/boxes/cwl-airflow) and create new virtual machine
-
+    Vagrant will pull and run virtual machine (about 3.5 GB) from [Vagrant Cloud](https://app.vagrantup.com/michael_kotliar/boxes/cwl-airflow). When started the following folders will be created on the host machine in the current directory.
+    ```
+    └── airflow
+        ├── dags
+        ├── demo
+        ├── jobs
+        ├── results
+        └── temp
+    ```
 3. Access virtual machine through ssh
     ```sh
-    $ vagrant ssh
+    $ vagrant ssh master
     ```
 4. Run *demo*
     ```sh
-    $ cwl-airflow demo --auto -o /vagrant
+    $ cd airflow/results
+    $ cwl-airflow demo --manual
     ```
-
 5. When all demo wokrflows are submitted the program will provide you with the link for Airflow Webserver (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/) thought the port forwarding).
 It may take some time (usually less then half a minute) for Airflow Webserver to load and display all the data
 
 ![Airflow Webserver example](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/screen.png)
 
-6. On completion the workflow results will be saved within virtual machine in the `/vagrant` folder that corresponds to the folder where you run `vagrant up` on your host machine.
+6. On completion the workflow results will be saved on the host machine in the `./airflow/results` folder.
 
 ### Locally
 
