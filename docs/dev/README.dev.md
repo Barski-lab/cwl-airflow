@@ -166,7 +166,8 @@ sudo apt install python3-pip
     airflow
     ```
 15. Install cwl-airflow python package following instructions from readme
-16. Create the following files as root
+16. Pull all docker images for cwl-airflow examples, including hello-world docker image
+17. Create the following files as root
     
     /etc/systemd/system/airflow-webserver.service
     ```
@@ -259,15 +260,17 @@ sudo apt install python3-pip
     ```
     sudo systemctl daemon-reload
     ```
-17. Install nodejs
+17. Install nodejs and npm
     ```
     sudo apt install nodejs-legacy
+    sudo apt install npm                    -   we can skip it
     ```
-18. Make sure to set Network / Adapter 1 to NAT for cwl-airflow virtual machine
-19. Package cwl-airflow virtual machine to file
+19. Make sure to set Network / Adapter 1 to NAT for cwl-airflow virtual machine
+20. Package cwl-airflow virtual machine to file
     ```
     vagrant package --base cwl-airflow --output cwl_airflow.box
     ```
+21. Test this vm without internet connection
 
 ## Additional info
 Deprecated repositories:
