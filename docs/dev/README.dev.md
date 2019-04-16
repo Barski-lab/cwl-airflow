@@ -260,10 +260,11 @@ sudo apt install python3-pip
     ```
     sudo systemctl daemon-reload
     ```
-17. Install nodejs and npm
+18. Install latest LTS nodejs and npm (link [here](https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-16-04))
     ```
-    sudo apt install nodejs-legacy
-    sudo apt install npm                    -   we can skip it
+    curl -sL https://deb.nodesource.com/setup_8.x -o nodesource_setup.sh
+    sudo bash nodesource_setup.sh
+    sudo apt-get install nodejs
     ```
 19. Make sure to set Network / Adapter 1 to NAT for cwl-airflow virtual machine
 20. Package cwl-airflow virtual machine to file
