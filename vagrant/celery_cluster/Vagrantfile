@@ -29,7 +29,7 @@ end
 
 $init_database = <<-EOS
   echo Running database init
-  systemctl start redis-server.service
+  systemctl start rabbitmq-server.service
   systemctl start mysql.service
 EOS
 
@@ -37,7 +37,7 @@ $configure_airflow = <<-EOS
   echo Configuring Airflow
   sed -i 's/^executor.*/executor = CeleryExecutor/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/.*sql_alchemy_conn.*/sql_alchemy_conn = mysql:\\/\\/airflow:airflow@database:3306\\/airflow/g' /home/vagrant/airflow/airflow.cfg
-  sed -i 's/.*broker_url.*/broker_url = redis:\\/\\/database:6379\\/0/g' /home/vagrant/airflow/airflow.cfg
+  sed -i 's/.*broker_url.*/broker_url = pyamqp:\\/\\/guest:guest@database:5672/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/.*celery_result_backend.*/celery_result_backend = db+mysql:\\/\\/airflow:airflow@database:3306\\/airflow/g' /home/vagrant/airflow/airflow.cfg
   cwl-airflow init
 EOS
@@ -60,7 +60,7 @@ Vagrant.configure("2") do |config|
     machine.vm.box = "michael_kotliar/cwl-airflow"
     machine.vm.box_version = "0.0.4"
     machine.vm.network "private_network", ip: "192.168.33.10"
-    machine.vm.network "forwarded_port", guest: 6379, host: 6379, host_ip: "127.0.0.1"
+    machine.vm.network "forwarded_port", guest: 15672, host: 15672, host_ip: "127.0.0.1"
     machine.vm.hostname = "database"
     machine.vm.provision "shell", inline: update_hosts,   privileged: true, run: 'always'
     machine.vm.provision "shell", inline: $init_database, privileged: true, run: 'always'

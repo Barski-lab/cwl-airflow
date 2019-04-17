@@ -111,7 +111,9 @@ sudo apt install python3-pip
     ```
     sudo service ssh restart
     ```
-11. Install Redis, then stop it and disable (some useful links are [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-redis-on-ubuntu-18-04) and [here](https://tecadmin.net/install-redis-ubuntu/))
+11. DEPRECATED. USE RABBITMQ INSTEAD
+
+    Install Redis, then stop it and disable (some useful links are [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-redis-on-ubuntu-18-04) and [here](https://tecadmin.net/install-redis-ubuntu/))
     ```
     sudo apt-get install redis-server
     sudo systemctl stop redis-server.service
@@ -120,6 +122,25 @@ sudo apt install python3-pip
     Update `/etc/redis/redis.conf` to include
     ```
     bind 0.0.0.0
+    ```
+12. Install RabbitMQ, then stop it and disable (some useful info is [here](http://site.clairvoyantsoft.com/installing-rabbitmq/))
+    ```
+    sudo apt-get install rabbitmq-server
+    sudo systemctl stop rabbitmq-server.service
+    sudo systemctl disable rabbitmq-server.service
+    ```
+    Enable Web Interface
+    ```
+    sudo rabbitmq-plugins enable rabbitmq_management
+    ```
+    Create configuration file `/etc/rabbitmq/rabbitmq.config` as root
+    ```
+    [
+    {rabbit,
+      [
+      {loopback_users, []}
+      ]}
+    ].
     ```
 12. Install mysql-server, then stop it and disable (follow the link [here](https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-16-04))
     ```
@@ -159,11 +180,15 @@ sudo apt install python3-pip
     ```
 13. Update Airflow to include mysql and celery with all their dependencies
     ```
-    pip3 install -U apache-airflow[mysql,celery,redis]==1.9.0 --user
+    pip3 install -U apache-airflow[mysql,celery,rabbitmq]==1.9.0 --user
     ```
 14. Run Airflow to generate default configuration file
     ```
     airflow
+    ```
+15. Make sure you have py-amqp (read [here](https://stackoverflow.com/questions/51824929/airflow-scheduler-failure))
+    ```
+    pip3 install amqp
     ```
 15. Install cwl-airflow python package following instructions from readme
 16. Pull all docker images for cwl-airflow examples, including hello-world docker image
@@ -173,8 +198,8 @@ sudo apt install python3-pip
     ```
     [Unit]
     Description=Airflow webserver daemon
-    After=network.target mysql.service redis-server.service
-    Wants=mysql.service redis-server.service
+    After=network.target mysql.service rabbitmq-server.service
+    Wants=mysql.service rabbitmq-server.service
 
     [Service]
     User=vagrant
@@ -194,8 +219,8 @@ sudo apt install python3-pip
     ```
     [Unit]
     Description=Airflow scheduler daemon
-    After=network.target mysql.service redis-server.service
-    Wants=mysql.service redis-server.service
+    After=network.target mysql.service rabbitmq-server.service
+    Wants=mysql.service rabbitmq-server.service
 
     [Service]
     User=vagrant
@@ -215,8 +240,8 @@ sudo apt install python3-pip
     ```
     [Unit]
     Description=Airflow celery worker daemon
-    After=network.target mysql.service redis-server.service
-    Wants=mysql.service redis-server.service
+    After=network.target mysql.service rabbitmq-server.service
+    Wants=mysql.service rabbitmq-server.service
 
     [Service]
     User=vagrant
@@ -236,8 +261,8 @@ sudo apt install python3-pip
     ```
     [Unit]
     Description=Airflow flower daemon
-    After=network.target mysql.service redis-server.service
-    Wants=mysql.service redis-server.service
+    After=network.target mysql.service rabbitmq-server.service
+    Wants=mysql.service rabbitmq-server.service
 
     [Service]
     User=vagrant
