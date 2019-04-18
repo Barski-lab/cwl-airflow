@@ -15,12 +15,27 @@ from schema_salad.ref_resolver import Loader
 from airflow import configuration
 from airflow.exceptions import AirflowConfigException
 from airflow.models import DagRun
+from airflow.utils.module_loading import import_string
 
 
 def norm_path(path):
     return os.path.abspath(os.path.normpath(os.path.normcase(path)))
 
 
+def set_queue(kwargs, step_tool):
+    if hasattr(kwargs, "queue") or configuration.get("core", "executor") != "CeleryExecutor" or not configuration.has_option('cwl', 'queues'):
+        return
+    DEFAULT_QUEUE_CPUS, DEFAULT_QUEUE_RAM = 1024, 1073741824
+    queues = import_string(configuration.get('cwl', 'queues'))
+    queues.sort(key = lambda i: (i.get("cpus", DEFAULT_QUEUE_CPUS), i.get("ram", DEFAULT_QUEUE_RAM)))
+    try:
+        resources = [h for h in step_tool["hints"] if h.get("class") == "ResourceRequirement"][0]
+        cpus, ram = resources["coresMin"], resources["ramMin"]
+    except Exception:
+        cpus, ram = DEFAULT_QUEUE_CPUS, DEFAULT_QUEUE_RAM
+    kwargs["queue"] = [q for q in queues if cpus <= q["cpus"] and ram <= q["ram"]][0]["id"]
+    
+    
 def get_files(current_dir, filename_pattern=".*"):
     """Files with the identical basenames are overwritten"""
     files_dict = {}

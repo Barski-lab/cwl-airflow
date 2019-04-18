@@ -11,7 +11,7 @@ import cwltool.workflow
 import cwltool.errors
 import cwltool.stdfsaccess
 from cwltool.context import RuntimeContext, getdefault
-from cwl_airflow.utils.utils import (shortname, flatten)
+from cwl_airflow.utils.utils import (shortname, flatten, set_queue)
 from airflow.utils.log.logging_mixin import StreamLogWriter
 
 
@@ -25,6 +25,7 @@ class CWLStepOperator(BaseOperator):
 
     def __init__(self, cwl_step, *args, **kwargs):
         self.cwl_step = cwl_step
+        set_queue(kwargs, self.cwl_step.tool)
         super(self.__class__, self).__init__(task_id=shortname(cwl_step.tool["id"]).split("/")[-1], *args, **kwargs)
 
     def execute(self, context):
