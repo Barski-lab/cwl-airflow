@@ -9,6 +9,7 @@ EOS
 $configure_airflow = <<-EOS
   echo Configuring Airflow
   sed -i 's/^executor.*/executor = LocalExecutor/g' /home/vagrant/airflow/airflow.cfg
+  sed -i 's/^logging_level.*/logging_level = WARNING/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/.*sql_alchemy_conn.*/sql_alchemy_conn = mysql:\\/\\/airflow:airflow@127.0.0.1:3306\\/airflow/g' /home/vagrant/airflow/airflow.cfg
   cwl-airflow init
 EOS
@@ -28,8 +29,9 @@ def mount_folders(machine)
 end
 
 Vagrant.configure("2") do |machine|
-  machine.vm.box = "michael_kotliar/cwl-airflow"
-  machine.vm.box_version = "0.0.4"
+  # machine.vm.box = "michael_kotliar/cwl-airflow"
+  # machine.vm.box_version = "0.0.4"
+  machine.vm.box = "cwl_airflow"
   machine.vm.network "forwarded_port", guest: 8080, host: 8080, host_ip: "127.0.0.1"
   machine.vm.define "master"
   machine.vm.hostname = "master"
