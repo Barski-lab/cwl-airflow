@@ -1,9 +1,6 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# Number of workers
-WORKERS = 1
-
 def mount_folders(machine)
   machine.vm.synced_folder "airflow/temp", "/tmp/cwlairflow", create: true
   machine.vm.synced_folder "airflow/dags", "/home/vagrant/airflow/dags", create: true
