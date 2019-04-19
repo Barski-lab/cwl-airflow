@@ -7,13 +7,14 @@ from airflow.models import BaseOperator
 from cwltool.main import init_job_order
 from cwltool.load_tool import jobloaderctx
 from schema_salad.ref_resolver import Loader
-from cwl_airflow.utils.utils import shortname, get_folder
+from cwl_airflow.utils.utils import shortname, get_folder, set_queue
 DEFAULT_TMP_FOLDER = "/tmp/cwlairflow"
 
 
 class JobDispatcher(BaseOperator):
 
     def __init__(self, *args, **kwargs):
+        set_queue(kwargs, {})
         super(JobDispatcher, self).__init__(task_id=self.__class__.__name__, *args, **kwargs)
 
     def execute(self, context):

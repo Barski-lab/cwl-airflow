@@ -31,7 +31,7 @@ def set_queue(kwargs, step_tool):
         raw_data = yaml.round_trip_load(input_stream, preserve_quotes=True)
         queues = sorted([{"id": k, "cpus": v["cpus"], "ram": v["ram"]} for k, v in raw_data.items()], key = lambda i: (i["cpus"], i["ram"]))
 
-    target_queue = queues[-1]["id"]
+    target_queue = queues[0]["id"]
     try:
         resources = [h for h in step_tool["hints"] if h.get("class") == "ResourceRequirement"][0]
         cpus, ram = resources["coresMin"], resources["ramMin"]
