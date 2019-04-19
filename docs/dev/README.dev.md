@@ -307,6 +307,12 @@ Deprecated repositories:
 
 # Queues
 
+To define the queues for Celery Executor update `airflow.cfg` with the path to the YAML file describing the queues.
+```
+[cwl]
+queues = path/to/the/queues.yaml
+```
+queues.yaml
 ```yaml
 advanced:
   cpus: 2
