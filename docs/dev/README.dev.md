@@ -303,3 +303,18 @@ Deprecated repositories:
 - https://github.com/Barski-lab/incubator-airflow
 - https://github.com/Barski-lab/BioWardrobe2
 - https://github.com/SciDAP/scidap
+
+
+# Queues
+
+```yaml
+advanced:
+  cpus: 8
+  ram: 16384
+default:
+  cpus: 2
+  ram: 2048
+medium:
+  cpus: 4
+  ram: 4096
+```

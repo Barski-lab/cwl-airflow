@@ -4,6 +4,7 @@ import logging
 import argparse
 import re
 from json import dumps
+from ruamel import yaml
 from six.moves import urllib
 import cwltool.context
 from cwltool.workflow import default_make_tool
@@ -25,17 +26,21 @@ def norm_path(path):
 def set_queue(kwargs, step_tool):
     if hasattr(kwargs, "queue") or configuration.get("core", "executor") != "CeleryExecutor" or not configuration.has_option('cwl', 'queues'):
         return
-    DEFAULT_QUEUE_CPUS, DEFAULT_QUEUE_RAM = 1024, 1073741824
-    queues = import_string(configuration.get('cwl', 'queues'))
-    queues.sort(key = lambda i: (i.get("cpus", DEFAULT_QUEUE_CPUS), i.get("ram", DEFAULT_QUEUE_RAM)))
+    
+    with open(configuration.get('cwl', 'queues'), "r") as input_stream:
+        raw_data = yaml.round_trip_load(input_stream, preserve_quotes=True)
+        queues = sorted([{"id": k, "cpus": v["cpus"], "ram": v["ram"]} for k, v in raw_data.items()], key = lambda i: (i["cpus"], i["ram"]))
+
+    target_queue = queues[-1]["id"]
     try:
         resources = [h for h in step_tool["hints"] if h.get("class") == "ResourceRequirement"][0]
         cpus, ram = resources["coresMin"], resources["ramMin"]
+        target_queue = [q for q in queues if cpus <= q["cpus"] and ram <= q["ram"]][0]["id"]
     except Exception:
-        cpus, ram = DEFAULT_QUEUE_CPUS, DEFAULT_QUEUE_RAM
-    kwargs["queue"] = [q for q in queues if cpus <= q["cpus"] and ram <= q["ram"]][0]["id"]
+        pass
+    kwargs["queue"] = target_queue
     
-    
+
 def get_files(current_dir, filename_pattern=".*"):
     """Files with the identical basenames are overwritten"""
     files_dict = {}

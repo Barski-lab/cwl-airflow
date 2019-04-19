@@ -1,0 +1,134 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Number of workers
+WORKERS = 1
+
+def mount_folders(machine)
+  machine.vm.synced_folder "airflow/temp", "/tmp/cwlairflow", create: true
+  machine.vm.synced_folder "airflow/dags", "/home/vagrant/airflow/dags", create: true
+  machine.vm.synced_folder "airflow/jobs", "/home/vagrant/airflow/jobs", create: true
+  machine.vm.synced_folder "airflow/demo", "/home/vagrant/airflow/demo", create: true
+  machine.vm.synced_folder "airflow/results", "/home/vagrant/airflow/results", create: true
+end
+
+$update_hosts = <<-EOS
+    echo Updating /etc/hosts
+    grep "127.0.0.1\\|127.0.1.1\\|ip6-allnodes\\|ip6-allrouters" /etc/hosts > hosts.backup
+    cat hosts.backup > /etc/hosts
+    echo 192.168.33.10 database >> /etc/hosts
+    echo 192.168.33.11 master >> /etc/hosts
+    echo 192.168.33.12 default-worker >> /etc/hosts
+    echo 192.168.33.13 advanced-worker >> /etc/hosts
+    rm hosts.backup
+EOS
+
+$init_database = <<-EOS
+  echo Running database init
+  systemctl start rabbitmq-server.service
+  systemctl start mysql.service
+EOS
+
+$configure_airflow = <<-EOS
+  echo Configuring Airflow
+  echo "QUEUES = [ {\\"id\\": \\"default\\"}, {\\"id\\": \\"advanced\\", \\"cpus\\": 2, \\"ram\\": 1024} ]" > /home/vagrant/.local/lib/python3.5/site-packages/cwl_airflow/config_templates/celery.py
+  sed -i '/^queues.*/d' /home/vagrant/airflow/airflow.cfg
+  echo "queues = cwl_airflow.config_templates.celery.QUEUES" >> /home/vagrant/airflow/airflow.cfg
+  sed -i 's/^executor.*/executor = CeleryExecutor/g' /home/vagrant/airflow/airflow.cfg
+  sed -i 's/.*sql_alchemy_conn.*/sql_alchemy_conn = mysql:\\/\\/airflow:airflow@database:3306\\/airflow/g' /home/vagrant/airflow/airflow.cfg
+  sed -i 's/.*broker_url.*/broker_url = pyamqp:\\/\\/guest:guest@database:5672/g' /home/vagrant/airflow/airflow.cfg
+  sed -i 's/.*celery_result_backend.*/celery_result_backend = db+mysql:\\/\\/airflow:airflow@database:3306\\/airflow/g' /home/vagrant/airflow/airflow.cfg
+  cwl-airflow init
+EOS
+
+$init_master = <<-EOS
+  echo Running master init
+  systemctl start airflow-scheduler.service
+  systemctl start airflow-webserver.service
+  systemctl start airflow-flower.service
+EOS
+
+$init_default_worker = <<-EOS
+  echo Running default worker init
+  rm -f /home/vagrant/airflow/airflow_worker.pid
+  airflow worker -q default -c 5 -D
+EOS
+
+$init_advanced_worker = <<-EOS
+  echo Running advanced worker init
+  rm -f /home/vagrant/airflow/airflow_worker.pid
+  airflow worker -q advanced -c 3 -D
+EOS
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "database" do |machine|
+    # machine.vm.box = "michael_kotliar/cwl-airflow"
+    # machine.vm.box_version = "0.0.4"
+    machine.vm.box = "cwl_airflow"
+    machine.vm.network "private_network", ip: "192.168.33.10"
+    machine.vm.network "forwarded_port", guest: 15672, host: 15672, host_ip: "127.0.0.1"
+    machine.vm.hostname = "database"
+    machine.vm.provision "shell", inline: $update_hosts,   privileged: true, run: 'always'
+    machine.vm.provision "shell", inline: $init_database, privileged: true, run: 'always'
+    machine.vm.provider "virtualbox" do |vbox|
+      vbox.memory = 1024
+      vbox.cpus = 1
+      vbox.name = "database"
+    end
+  end
+
+  config.vm.define "master" do |machine|
+    # machine.vm.box = "michael_kotliar/cwl-airflow"
+    # machine.vm.box_version = "0.0.4"
+    machine.vm.box = "cwl_airflow"
+    machine.vm.network "private_network", ip: "192.168.33.11"
+    machine.vm.network "forwarded_port", guest: 8080, host: 8080, host_ip: "127.0.0.1"
+    machine.vm.network "forwarded_port", guest: 5555, host: 5555, host_ip: "127.0.0.1"
+    machine.vm.hostname = "master"
+    mount_folders(machine)
+    machine.vm.provision "shell", inline: $update_hosts,       privileged: true,  run: 'always'
+    machine.vm.provision "shell", inline: $configure_airflow, privileged: false, run: 'always'
+    machine.vm.provision "shell", inline: $init_master,       privileged: true,  run: 'always'
+    machine.vm.provider "virtualbox" do |vbox|
+      vbox.memory = 1024
+      vbox.cpus = 1
+      vbox.name = "master"
+    end
+  end
+
+  config.vm.define "default-worker" do |machine|
+    # machine.vm.box = "michael_kotliar/cwl-airflow"
+    # machine.vm.box_version = "0.0.4"
+    machine.vm.box = "cwl_airflow"
+    machine.vm.network "private_network", ip: "192.168.33.12"
+    machine.vm.hostname = "default-worker"
+    mount_folders(machine)
+    machine.vm.provision "shell", inline: $update_hosts,        privileged: true,  run: 'always'
+    machine.vm.provision "shell", inline: $configure_airflow,   privileged: false, run: 'always'
+    machine.vm.provision "shell", inline: $init_default_worker, privileged: false,  run: 'always'
+    machine.vm.provider "virtualbox" do |vbox|
+      vbox.memory = 2048
+      vbox.cpus = 2
+      vbox.name = "default-worker"
+    end
+  end
+
+  config.vm.define "advanced-worker" do |machine|
+    # machine.vm.box = "michael_kotliar/cwl-airflow"
+    # machine.vm.box_version = "0.0.4"
+    machine.vm.box = "cwl_airflow"
+    machine.vm.network "private_network", ip: "192.168.33.13"
+    machine.vm.hostname = "advanced-worker"
+    mount_folders(machine)
+    machine.vm.provision "shell", inline: $update_hosts,         privileged: true,  run: 'always'
+    machine.vm.provision "shell", inline: $configure_airflow,    privileged: false, run: 'always'
+    machine.vm.provision "shell", inline: $init_advanced_worker, privileged: false,  run: 'always'
+    machine.vm.provider "virtualbox" do |vbox|
+      vbox.memory = 2048
+      vbox.cpus = 2
+      vbox.name = "advanced-worker"
+    end
+  end
+
+end
