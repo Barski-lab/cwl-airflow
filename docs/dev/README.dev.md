@@ -309,12 +309,9 @@ Deprecated repositories:
 
 ```yaml
 advanced:
-  cpus: 8
-  ram: 16384
-default:
   cpus: 2
   ram: 2048
-medium:
-  cpus: 4
-  ram: 4096
+default:
+  cpus: 1
+  ram: 1024
 ```
