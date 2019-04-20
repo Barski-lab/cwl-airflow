@@ -29,9 +29,8 @@ def mount_folders(machine)
 end
 
 Vagrant.configure("2") do |machine|
-  # machine.vm.box = "michael_kotliar/cwl-airflow"
-  # machine.vm.box_version = "0.0.4"
-  machine.vm.box = "cwl_airflow"
+  machine.vm.box = "michael_kotliar/cwl-airflow"
+  machine.vm.box_version = "0.0.4"
   machine.vm.network "forwarded_port", guest: 8080, host: 8080, host_ip: "127.0.0.1"
   machine.vm.define "master"
   machine.vm.hostname = "master"
