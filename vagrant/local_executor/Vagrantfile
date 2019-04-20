@@ -9,6 +9,7 @@ EOS
 $configure_airflow = <<-EOS
   echo Configuring Airflow
   sed -i 's/^executor.*/executor = LocalExecutor/g' /home/vagrant/airflow/airflow.cfg
+  sed -i 's/^logging_level.*/logging_level = WARNING/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/.*sql_alchemy_conn.*/sql_alchemy_conn = mysql:\\/\\/airflow:airflow@127.0.0.1:3306\\/airflow/g' /home/vagrant/airflow/airflow.cfg
   cwl-airflow init
 EOS

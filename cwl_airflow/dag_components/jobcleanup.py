@@ -5,11 +5,13 @@ from jsonmerge import merge
 from airflow.models import BaseOperator
 from cwltool.process import relocateOutputs
 from cwltool.stdfsaccess import StdFsAccess
+from cwl_airflow.utils.utils import set_queue
 
 
 class JobCleanup(BaseOperator):
 
     def __init__(self, *args, **kwargs):
+        set_queue(kwargs, {})
         super(JobCleanup, self).__init__(task_id=self.__class__.__name__, *args, **kwargs)
 
     def execute(self, context):

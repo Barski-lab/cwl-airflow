@@ -303,3 +303,21 @@ Deprecated repositories:
 - https://github.com/Barski-lab/incubator-airflow
 - https://github.com/Barski-lab/BioWardrobe2
 - https://github.com/SciDAP/scidap
+
+
+# Queues
+
+To define the queues for Celery Executor update `airflow.cfg` with the path to the YAML file describing the queues.
+```
+[cwl]
+queues = path/to/the/queues.yaml
+```
+queues.yaml
+```yaml
+advanced:
+  cpus: 2
+  ram: 2048
+default:
+  cpus: 1
+  ram: 1024
+```
