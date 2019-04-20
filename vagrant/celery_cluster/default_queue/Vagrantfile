@@ -101,8 +101,8 @@ Vagrant.configure("2") do |config|
       machine.vm.provision "shell", inline: $configure_airflow, privileged: false, run: 'always'
       machine.vm.provision "shell", inline: $init_worker,       privileged: true,  run: 'always'
       machine.vm.provider "virtualbox" do |vbox|
-        vbox.memory = 3072
-        vbox.cpus = 3
+        vbox.memory = 2048
+        vbox.cpus = 2
         vbox.name = "worker-#{i}"
       end
     end

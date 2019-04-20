@@ -16,7 +16,6 @@ from schema_salad.ref_resolver import Loader
 from airflow import configuration
 from airflow.exceptions import AirflowConfigException
 from airflow.models import DagRun
-from airflow.utils.module_loading import import_string
 
 
 def norm_path(path):
