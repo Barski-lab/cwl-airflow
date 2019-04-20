@@ -38,7 +38,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
 1. Get the latest Vagrantfile. If using `curl` instead of `wget` set the output filename to `-o Vagrantfile`
     ```sh
-    $ wget https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/vagrant/single_machine/Vagrantfile
+    $ wget https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/vagrant/local_executor/Vagrantfile
     ```
 
 2. Start virtual machine
