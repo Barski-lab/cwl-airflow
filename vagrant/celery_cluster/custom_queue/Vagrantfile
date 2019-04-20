@@ -35,7 +35,7 @@ $configure_airflow = <<-EOS
   sed -i 's/.*celery_result_backend.*/celery_result_backend = db+mysql:\\/\\/airflow:airflow@database:3306\\/airflow/g' /home/vagrant/airflow/airflow.cfg
   cwl-airflow init
   echo Setting queues
-  echo "advanced:\n  cpus: 2\n  ram: 2048\ndefault:\n  cpus: 1\n  ram: 1024" > /home/vagrant/airflow/queues.yaml
+  echo "advanced:\n  cpus: 2\n  ram: 2048\nstandard:\n  cpus: 1\n  ram: 1024" > /home/vagrant/airflow/queues.yaml
   sed -i '/^queues.*/d' /home/vagrant/airflow/airflow.cfg
   sed -i '/^\\[cwl\\]/a queues = /home/vagrant/airflow/queues.yaml' /home/vagrant/airflow/airflow.cfg
 EOS
@@ -50,7 +50,7 @@ EOS
 $init_default_worker = <<-EOS
   echo Running default worker init
   rm -f /home/vagrant/airflow/airflow_worker.pid
-  airflow worker -q default -c 3 -D
+  airflow worker -q standard -c 3 -D
 EOS
 
 $init_advanced_worker = <<-EOS
