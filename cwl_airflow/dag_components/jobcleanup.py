@@ -38,3 +38,4 @@ class JobCleanup(BaseOperator):
         shutil.rmtree(tmp_folder, ignore_errors=False)
         logging.debug('Delete temporary output directory: \n{}'.format(tmp_folder))
         logging.info("WORKFLOW RESULTS\n" + json.dumps(relocated_outputs, indent=4))
+        return relocated_outputs
