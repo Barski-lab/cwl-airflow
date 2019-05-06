@@ -90,7 +90,7 @@ def run_demo_auto(args):
 
 
 def run_demo_manual(args):
-    clean_jobs()
+    # clean_jobs()
     workflows = get_demo_workflow()
     for idx, wf in enumerate(workflows):
         logging.info("Process demo workflow {}/{}".format(idx+1, len(workflows)))
