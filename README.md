@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/103197335.svg)](https://zenodo.org/badge/latestdoi/103197335)
 [![Build Status](https://travis-ci.org/Barski-lab/cwl-airflow.svg?branch=master)](https://travis-ci.org/Barski-lab/cwl-airflow) -  **Travis CI**  
 [![Build Status](https://ci.commonwl.org/buildStatus/icon?job=airflow-conformance)](https://ci.commonwl.org/job/airflow-conformance) - **CWL conformance tests**  
 
