@@ -63,7 +63,6 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "database" do |machine|
     machine.vm.box = "michael_kotliar/cwl-airflow"
-    machine.vm.box_version = "0.0.4"
     machine.vm.network "private_network", ip: "192.168.33.10"
     machine.vm.network "forwarded_port", guest: 15672, host: 15672, host_ip: "127.0.0.1"
     machine.vm.network "forwarded_port", guest: 3306,  host: 6603,  host_ip: "127.0.0.1"
@@ -79,7 +78,6 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "master" do |machine|
     machine.vm.box = "michael_kotliar/cwl-airflow"
-    machine.vm.box_version = "0.0.4"
     machine.vm.network "private_network", ip: "192.168.33.11"
     machine.vm.network "forwarded_port", guest: 8080, host: 8080, host_ip: "127.0.0.1"
     machine.vm.network "forwarded_port", guest: 5555, host: 5555, host_ip: "127.0.0.1"
@@ -97,7 +95,6 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "default-worker" do |machine|
     machine.vm.box = "michael_kotliar/cwl-airflow"
-    machine.vm.box_version = "0.0.4"
     machine.vm.network "private_network", ip: "192.168.33.12"
     machine.vm.hostname = "default-worker"
     mount_folders(machine)
@@ -113,7 +110,6 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "advanced-worker" do |machine|
     machine.vm.box = "michael_kotliar/cwl-airflow"
-    machine.vm.box_version = "0.0.4"
     machine.vm.network "private_network", ip: "192.168.33.13"
     machine.vm.hostname = "advanced-worker"
     mount_folders(machine)

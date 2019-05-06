@@ -8,7 +8,7 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
 ## Table of Contents
 * **[Run demo](#run-demo)**
-  * [VirtualBox single machine](#virtualbox-single-machine)
+  * [VirtualBox](#virtualbox)
   * [Locally](#locally)
 * **[How It Works](#how-it-works)**
   * [Key concepts](#key-concepts)
@@ -32,49 +32,81 @@ functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
 
 ## Run demo
 
-### VirtualBox single machine
+### VirtualBox
+In order to run CWL-Airflow in virtual machine you have to install [Vagrant](https://www.vagrantup.com/downloads.html) and [VirtualBox](https://www.virtualbox.org/wiki/Downloads).
 
-*(assuming that you have already installed [Vagrant](https://www.vagrantup.com/downloads.html) and [VirtualBox](https://www.virtualbox.org/wiki/Downloads))*
-
-1. Get the latest Vagrantfile. If using `curl` instead of `wget` set the output filename to `-o Vagrantfile`
+1. Clone the CWL-Airflow repository
     ```sh
-    $ wget https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/vagrant/local_executor/Vagrantfile
+    $ git clone https://github.com/Barski-lab/cwl-airflow
     ```
+2. Chose one of three possible configuration to run
 
-2. Start virtual machine
+   Single node with Local Executor
+   ```
+   $ cd ./cwl-airflow/vagrant/local_executor
+   ```
+   Multi-node with Celery Executor and default queue
+   ```
+   $ cd ./cwl-airflow/vagrant/celery_executor/default_queue
+   ```
+   Multi-node with Celery Executor and custom queues
+   ```
+   $ cd ./cwl-airflow/vagrant/celery_executor/custom_queue
+   ```
+3. Start virtual machine
     ```sh
     $ vagrant up
     ```
-    Vagrant will pull and run virtual machine (about 3.5 GB) from [Vagrant Cloud](https://app.vagrantup.com/michael_kotliar/boxes/cwl-airflow). When started the following folders will be created on the host machine in the current directory.
-    ```
+    Vagrant will pull the latest image of virtual machine (about 3.57 GB) from [Vagrant Cloud](https://app.vagrantup.com/michael_kotliar/boxes/cwl-airflow). When started the following folders will be created on the host machine in the current directory.
+    ```bash
+    ├── .vagrant
     └── airflow
         ├── dags
+        │   └── cwl_dag.py      # script to create DAG based on CWL
         ├── demo
-        ├── jobs
-        ├── results
-        └── temp
+        │   ├── cwl
+        │   │   ├── subworkflows
+        │   │   ├── tools
+        │   │   └── workflows   # available demo workflows
+        │   │       ├── chipseq-se.cwl
+        │   │       ├── super-enhancer.cwl
+        │   │       └── xenbase-rnaseq-se.cwl
+        │   ├── data            # input data for demo workflows
+        │   └── job             # sample job files for demo workflows
+        │       ├── chipseq-se.json
+        │       ├── super-enhancer.json
+        │       └── xenbase-rnaseq-se.json
+        ├── jobs                # folder to put job files submitted for execution
+        ├── results             # folder to save workflow outputs
+        └── temp                # folder to keep temporary data
+
     ```
-3. Access virtual machine through ssh
+4. Access virtual machine through ssh
     ```sh
     $ vagrant ssh master
     ```
-4. Run *demo*
+5. Run *demo*
     ```sh
     $ cd airflow/results
     $ cwl-airflow demo --manual
     ```
-5. When all demo wokrflows are submitted the program will provide you with the link for Airflow Webserver (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/) thought the port forwarding).
-It may take some time (usually less then half a minute) for Airflow Webserver to load and display all the data
+    Job files from the `./airflow/demo/job` folder will be updated and moved to the `./airflow/jobs`. All demo workflows will be submitted for execution. 
+6. After all demo wokrflows are submitted for execution the program will provide you with the link for Airflow Webserver (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/) thought the port forwarding).
+It may take some time (usually less then half a minute) for Airflow Webserver to load and display all the data. Additionally, Celery Flower Monitoring Tool is available on [localhost:5555](http://127.0.0.1:5555), if multi-node configuration is run.
 
 ![Airflow Webserver example](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/screen.png)
 
-6. On completion the workflow results will be saved on the host machine in the `./airflow/results` folder.
+7. On completion the workflow results will be saved on the host machine in the `./airflow/results` folder.
+8. To finish *demo*, stop ssh connection with the virtual machine by pressing  *ctlr+D* and then run one of the following commands
+   ```sh
+   vagrant halt    # to stop virtial machines
+   vagrant destroy # to destroy virtual machines
+   ``` 
 
 ### Locally
 
-*(assuming that you have already installed and properly configured **python**, latest **pip**, latest **setuptools**
-and **docker** that has access to pull images from the [DockerHub](https://hub.docker.com/);
-if something is missing or should be updated refer to [Installation](#installation) or [Troubleshooting](#troubleshooting) sections)*
+We assume that you have already installed and properly configured **python**, latest **pip**, latest **setuptools**
+and **docker** that has access to pull images from the [DockerHub](https://hub.docker.com/). If something is missing or should be updated refer to the [Installation](#installation) or [Troubleshooting](#troubleshooting) sections
 
 1. Install *cwl-airflow*
     ```sh
