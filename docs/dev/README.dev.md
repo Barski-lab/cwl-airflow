@@ -48,19 +48,23 @@ sudo apt install python3-pip
 2. Install VirtualBox from [here](https://www.virtualbox.org/wiki/Downloads)
 3. Download Ubuntu 16.04 Server image from [here](http://releases.ubuntu.com/16.04/)
 4. Create new virtual machine
-    - name: cwl-airflow
+    - name: cwl-airflow-production
     - type: Linux
     - version: Ubuntu (64 bit)
     - memory: 4096 MB
-    - disk: VMDK, dynamically allocated up to 268.00 GB
+    - disk: VMDK, dynamically allocated up to 256.00 GB
 5. Install Ubuntu 16.04 Server on the cwl-airflow virtual machine
-    - hostname: cwl-airflow
+    - hostname: cwl-airflow-production
     - user: vagrant
     - password: vagrant
     - encryption: no
     - software:
       - standard system utilities
-      - open-ssh server
+9. Install OpenSSH Server
+   ```
+   sudo apt-get install -y openssh-server
+   ```
+6. Login  throught ssh (set up port forwarding in VM)
 6. Install Guest Additions
     ```
     sudo apt-get install linux-headers-$(uname -r) build-essential dkms
@@ -91,10 +95,6 @@ sudo apt install python3-pip
    chmod 0700 .ssh
    chown -R vagrant .ssh
    ```
-9. Install OpenSSH Server
-   ```
-   sudo apt-get install -y openssh-server
-   ```
 10. Configure OpenSSH Server
     ```
     sudo vi /etc/ssh/sshd_config
@@ -102,7 +102,7 @@ sudo apt install python3-pip
     Add/Update the following fields
     ```
     Port 22
-    PubKeyAuthentication yes
+    PubkeyAuthentication yes
     AuthorizedKeysFile %h/.ssh/authorized_keys
     PermitEmptyPasswords no
     UseDNS no
@@ -111,23 +111,9 @@ sudo apt install python3-pip
     ```
     sudo service ssh restart
     ```
-11. DEPRECATED. USE RABBITMQ INSTEAD
-
-    Install Redis, then stop it and disable (some useful links are [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-redis-on-ubuntu-18-04) and [here](https://tecadmin.net/install-redis-ubuntu/))
-    ```
-    sudo apt-get install redis-server
-    sudo systemctl stop redis-server.service
-    sudo systemctl disable redis-server.service
-    ```
-    Update `/etc/redis/redis.conf` to include
-    ```
-    bind 0.0.0.0
-    ```
-12. Install RabbitMQ, then stop it and disable (some useful info is [here](http://site.clairvoyantsoft.com/installing-rabbitmq/))
+12. Install RabbitMQ (some useful info is [here](http://site.clairvoyantsoft.com/installing-rabbitmq/))
     ```
     sudo apt-get install rabbitmq-server
-    sudo systemctl stop rabbitmq-server.service
-    sudo systemctl disable rabbitmq-server.service
     ```
     Enable Web Interface
     ```
@@ -174,10 +160,12 @@ sudo apt install python3-pip
     ```
     sudo apt-get install libmysqlclient-dev
     ```
-    ```
-    systemctl stop mysql.service
-    systemctl disable mysql.service
-    ```
+1. Install pip 
+   ```bash
+   sudo apt install python3-pip
+   pip3 install --upgrade pip
+   ```
+   Maybe you will need to log out / login to fix pip problem
 13. Update Airflow to include mysql and celery with all their dependencies
     ```
     pip3 install -U apache-airflow[mysql,celery,rabbitmq]==1.9.0 --user
@@ -191,7 +179,16 @@ sudo apt install python3-pip
     pip3 install amqp
     ```
 15. Install cwl-airflow python package following instructions from readme
+    ```
+    pip3 install cwl-airflow --user
+    ```
+16. Install docker [link](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 16. Pull all docker images for cwl-airflow examples, including hello-world docker image
+    ```
+    docker run hello-world
+    cd /home/vagrant/.local/lib/python3.5/site-packages/cwl_airflow/tests/cwl
+    grep -r dockerPull . | cut -d" " -f 4 | sort -u | xargs -L 1 docker pull
+    ```
 17. Create the following files as root
     
     /etc/systemd/system/airflow-webserver.service
@@ -219,8 +216,8 @@ sudo apt install python3-pip
     ```
     [Unit]
     Description=Airflow scheduler daemon
-    After=network.target mysql.service rabbitmq-server.service
-    Wants=mysql.service rabbitmq-server.service
+    After=network.target mysql.service rabbitmq-server.service docker.service
+    Wants=mysql.service rabbitmq-server.service docker.service
 
     [Service]
     User=vagrant
@@ -240,8 +237,8 @@ sudo apt install python3-pip
     ```
     [Unit]
     Description=Airflow celery worker daemon
-    After=network.target mysql.service rabbitmq-server.service
-    Wants=mysql.service rabbitmq-server.service
+    After=network.target mysql.service rabbitmq-server.service docker.service
+    Wants=mysql.service rabbitmq-server.service docker.service
 
     [Service]
     User=vagrant
@@ -291,10 +288,14 @@ sudo apt install python3-pip
     sudo bash nodesource_setup.sh
     sudo apt-get install nodejs
     ```
+19. Reboot machine
+    ```
+    sudo reboot
+    ```
 19. Make sure to set Network / Adapter 1 to NAT for cwl-airflow virtual machine
 20. Package cwl-airflow virtual machine to file
     ```
-    vagrant package --base cwl-airflow --output cwl_airflow.box
+    vagrant package --base cwl-airflow-production --output cwl_airflow_production.box
     ```
 21. Test this vm without internet connection
 

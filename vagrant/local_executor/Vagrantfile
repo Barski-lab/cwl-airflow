@@ -1,16 +1,19 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-$init_database = <<-EOS
-  echo Running database init
-  systemctl start mysql.service
-EOS
-
 $configure_airflow = <<-EOS
   echo Configuring Airflow
   sed -i 's/^executor.*/executor = LocalExecutor/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/^logging_level.*/logging_level = WARNING/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/.*sql_alchemy_conn.*/sql_alchemy_conn = mysql:\\/\\/airflow:airflow@127.0.0.1:3306\\/airflow/g' /home/vagrant/airflow/airflow.cfg
+  while ! mysqladmin ping -h 127.0.0.1 --silent; do
+    echo Waiting for MySQL to start
+    sleep 1
+  done
+  while ! systemctl is-active docker.service --quiet; do
+    echo Waiting for Docker to start
+    sleep 1
+  done
   cwl-airflow init
 EOS
 
@@ -35,7 +38,6 @@ Vagrant.configure("2") do |machine|
   machine.vm.define "master"
   machine.vm.hostname = "master"
   mount_folders(machine)
-  machine.vm.provision "shell", inline: $init_database,     privileged: true,  run: 'always'
   machine.vm.provision "shell", inline: $configure_airflow, privileged: false, run: 'always'
   machine.vm.provision "shell", inline: $init_master,       privileged: true,  run: 'always'
   machine.vm.provider "virtualbox" do |vbox|
