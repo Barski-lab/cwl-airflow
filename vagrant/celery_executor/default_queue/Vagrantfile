@@ -33,6 +33,7 @@ $configure_airflow = <<-EOS
   sed -i 's/^logging_level.*/logging_level = WARNING/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/^workers =.*/workers = 1/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/^worker_refresh_interval =.*/worker_refresh_interval = 10/g' /home/vagrant/airflow/airflow.cfg
+  sed -i 's/^dagbag_import_timeout =.*/dagbag_import_timeout = 120/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/.*sql_alchemy_conn.*/sql_alchemy_conn = mysql:\\/\\/airflow:airflow@database:3306\\/airflow/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/.*broker_url.*/broker_url = pyamqp:\\/\\/guest:guest@database:5672/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/.*celery_result_backend.*/celery_result_backend = db+mysql:\\/\\/airflow:airflow@database:3306\\/airflow/g' /home/vagrant/airflow/airflow.cfg

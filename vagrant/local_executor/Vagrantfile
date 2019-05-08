@@ -7,6 +7,7 @@ $configure_airflow = <<-EOS
   sed -i 's/^logging_level.*/logging_level = WARNING/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/^workers =.*/workers = 1/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/^worker_refresh_interval =.*/worker_refresh_interval = 10/g' /home/vagrant/airflow/airflow.cfg
+  sed -i 's/^dagbag_import_timeout =.*/dagbag_import_timeout = 120/g' /home/vagrant/airflow/airflow.cfg
   sed -i 's/.*sql_alchemy_conn.*/sql_alchemy_conn = mysql:\\/\\/airflow:airflow@127.0.0.1:3306\\/airflow/g' /home/vagrant/airflow/airflow.cfg
   while ! mysqladmin ping -h 127.0.0.1 --silent; do
     echo Waiting for MySQL to start
