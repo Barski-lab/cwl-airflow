@@ -130,7 +130,7 @@ In order to run CWL-Airflow virtual machine you have to install [Vagrant](https:
     $ cwl-airflow demo --manual
     ```
 
-6. Open Airflow Webserver ([localhost:8080](http://127.0.0.1:8080/admin/)) and, if multi-node configuration is run, Celery Flower Monitoring Tool ([localhost:5555](http://127.0.0.1:5555)).
+6. Open Airflow Webserver ([localhost:8080](http://127.0.0.1:8080/admin/)) and, if multi-node configuration is run, Celery Flower Monitoring Tool ([localhost:5555](http://127.0.0.1:5555)). It might take up to 20 seconds for Airflow Webserver to display all newly added workflows.
 
 7. On completion, view workflow execution results in the `./airflow/results` folder on your host machine.
 
