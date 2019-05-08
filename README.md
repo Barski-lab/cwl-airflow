@@ -1,6 +1,12 @@
 [![DOI](https://zenodo.org/badge/103197335.svg)](https://zenodo.org/badge/latestdoi/103197335)
+[![Python 2.7](https://img.shields.io/badge/python-2.7-green.svg)](https://www.python.org/downloads/release/python-2712/)
+[![Python 3.5](https://img.shields.io/badge/python-3.5-green.svg)](https://www.python.org/downloads/release/python-352/)
+[![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)](https://www.python.org/downloads/release/python-365/)
+
 [![Build Status](https://travis-ci.org/Barski-lab/cwl-airflow.svg?branch=master)](https://travis-ci.org/Barski-lab/cwl-airflow) -  **Travis CI**  
-[![Build Status](https://ci.commonwl.org/buildStatus/icon?job=airflow-conformance)](https://ci.commonwl.org/job/airflow-conformance) - **CWL conformance tests**  
+[![Build Status](https://ci.commonwl.org/buildStatus/icon?job=airflow-conformance)](https://ci.commonwl.org/job/airflow-conformance) - **CWL conformance tests**
+
+
 
 # cwl-airflow
 
@@ -62,7 +68,7 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
 5. On completion the workflow results will be saved in the current folder
 
 ### VirtualBox
-In order to run CWL-Airflow virtual machine you have to install [Vagrant](https://www.vagrantup.com/downloads.html) and [VirtualBox](https://www.virtualbox.org/wiki/Downloads).
+In order to run CWL-Airflow virtual machine you have to install [Vagrant](https://www.vagrantup.com/downloads.html) and [VirtualBox](https://www.virtualbox.org/wiki/Downloads). The host machine should have access to the Internet.
 
 1. Clone CWL-Airflow repository
     ```bash

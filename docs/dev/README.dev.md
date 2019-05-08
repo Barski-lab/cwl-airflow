@@ -297,7 +297,7 @@ sudo apt install python3-pip
     ```
     vagrant package --base cwl-airflow-production --output cwl_airflow_production.box
     ```
-21. Test this vm without internet connection
+21. The system doesn't work witohout access to the internet (docker pull return 1)
 
 ## Additional info
 Deprecated repositories:
