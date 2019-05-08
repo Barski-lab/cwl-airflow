@@ -68,7 +68,7 @@ It may take some time (usually less then half a minute) for Airflow Webserver to
 5. On completion the workflow results will be saved in the current folder
 
 ### VirtualBox
-In order to run CWL-Airflow virtual machine you have to install [Vagrant](https://www.vagrantup.com/downloads.html) and [VirtualBox](https://www.virtualbox.org/wiki/Downloads). The host machine should have access to the Internet.
+In order to run CWL-Airflow virtual machine you have to install [Vagrant](https://www.vagrantup.com/downloads.html) and [VirtualBox](https://www.virtualbox.org/wiki/Downloads). The host machine should have access to the Internet, at least 8 CPUs and 16 GB of RAM.
 
 1. Clone CWL-Airflow repository
     ```bash
