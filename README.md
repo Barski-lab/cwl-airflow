@@ -59,11 +59,23 @@ and **docker** that has access to pull images from the [DockerHub](https://hub.d
     ```sh
     $ cwl-airflow demo --auto
     ```
+    For every submitted workflow you will get the following information
+    ```
+    CWL-Airflow demo mode
+    Process demo workflow 1/3
+    Load workflow
+    - workflow:    # path from where we load the workflow file
+    - job:         # path from where we load the input parameters file
+    - uid:         # unique identifier for the submitted job
+    Save job file as
+    -              # path where we save submitted job for CWL-Airflow to run
+    ```
+    `uid` - the unique identifier used for DAG ID and output folder name generation.
 
 4. When all demo wokrflows are submitted the program will provide you with the link for Airflow Webserver (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/)).
 It may take some time (usually less then half a minute) for Airflow Webserver to load and display all the data
 
-![Airflow Webserver example](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/screen.png)
+![Airflow Webserver](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/screen.png)
 
 5. On completion the workflow results will be saved in the current folder
 
@@ -126,17 +138,33 @@ In order to run CWL-Airflow virtual machine you have to install [Vagrant](https:
 
 5. Submit all demo workflows for execution
     ```sh
-    $ cd airflow/results
+    $ cd /home/vagrant/airflow/results
     $ cwl-airflow demo --manual
     ```
-
+    For every submitted workflow you will get the following information
+    ```
+    CWL-Airflow demo mode
+    Process demo workflow 1/3
+    Load workflow
+    - workflow:    # path from where we load the workflow file
+    - job:         # path from where we load the input parameters file
+    - uid:         # unique identifier for the submitted job
+    Save job file as
+    -              # path where we save submitted job for CWL-Airflow to run
+    ```
+    `uid` - the unique identifier used for DAG ID and output folder name generation.
+    
 6. Open Airflow Webserver ([localhost:8080](http://127.0.0.1:8080/admin/)) and, if multi-node configuration is run, Celery Flower Monitoring Tool ([localhost:5555](http://127.0.0.1:5555)). It might take up to 20 seconds for Airflow Webserver to display all newly added workflows.
 
-7. On completion, view workflow execution results in the `./airflow/results` folder on your host machine.
+![Airflow Webserver](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/screen.png)
+
+![Celery Flower Monitoring Tool](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/flower.png)
+
+7. On completion, you can view workflow execution results in the `/home/vagrant/airflow/results` folder of the Virtual Machine or in `./airflow/results` folder on your host machine.
 
 8. Stop `ssh` connection to the virtual machine by pressing  `ctlr+D` and then run one of the following commands
    ```sh
-   $ vagrant halt    # stop virtial machines
+   $ vagrant halt    # stop virtual machines
    ```
    or
    ```bash
