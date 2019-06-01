@@ -59,8 +59,10 @@ and **docker** that has access to pull images from the [DockerHub](https://hub.d
     ```sh
     $ cwl-airflow demo --auto
     ```
+    
     For every submitted workflow you will get the following information
-    ```
+    
+    ```bash
     CWL-Airflow demo mode
     Process demo workflow 1/3
     Load workflow
@@ -70,6 +72,7 @@ and **docker** that has access to pull images from the [DockerHub](https://hub.d
     Save job file as
     -              # path where we save submitted job for CWL-Airflow to run
     ```
+    
     `uid` - the unique identifier used for DAG ID and output folder name generation.
 
 4. When all demo wokrflows are submitted the program will provide you with the link for Airflow Webserver (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/)).
@@ -141,8 +144,10 @@ In order to run CWL-Airflow virtual machine you have to install [Vagrant](https:
     $ cd /home/vagrant/airflow/results
     $ cwl-airflow demo --manual
     ```
+
     For every submitted workflow you will get the following information
-    ```
+
+    ```bash
     CWL-Airflow demo mode
     Process demo workflow 1/3
     Load workflow
@@ -152,8 +157,9 @@ In order to run CWL-Airflow virtual machine you have to install [Vagrant](https:
     Save job file as
     -              # path where we save submitted job for CWL-Airflow to run
     ```
+
     `uid` - the unique identifier used for DAG ID and output folder name generation.
-    
+
 6. Open Airflow Webserver ([localhost:8080](http://127.0.0.1:8080/admin/)) and, if multi-node configuration is run, Celery Flower Monitoring Tool ([localhost:5555](http://127.0.0.1:5555)). It might take up to 20 seconds for Airflow Webserver to display all newly added workflows.
 
 ![Airflow Webserver](https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/docs/screen.png)
