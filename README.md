@@ -170,7 +170,7 @@ In order to run CWL-Airflow virtual machine you have to install [Vagrant](https:
 
 8. Stop `ssh` connection to the virtual machine by pressing  `ctlr+D` and then run one of the following commands
    ```sh
-   $ vagrant halt    # stop virtual machines
+   $ vagrant halt               # stop virtual machines
    ```
    or
    ```bash
@@ -240,7 +240,7 @@ and creates DAGs for each of them. Each DAG has a unique DAG ID that is formed a
   ```bash
   xcode-select --install
   ```
-  Click *Install* on the pop up when it appears, follow the instructions. *Apple Command Line Tools* are required in
+  Click *Install* on the pop up window when it appears, follow the instructions. *Apple Command Line Tools* are required in
   case your system needs to compile some python packages during the installation. We have built python wheels for most
   of such packages and provided them through *--find-links* argument while installing *cwl-airflow*. Nevertheless in case
   of installation problems you might still be required to install this dependency.
@@ -329,7 +329,7 @@ documentation](http://airflow.apache.org/code.html?highlight=sequentialexecutor#
 
 Depending on your Airflow configuration it may require some time for Airflow Scheduler
 and Webserver to pick up new DAGs. Consider using `cwl-airflow init -r 5 -w 4` to make Airflow Webserver react faster on all
-newly created DAGs.  
+newly created DAGs.
 
 To start Airflow Scheduler (**don't** run it if *cwl-airflow submit* is used with *-r* argument)
 ```bash
@@ -355,7 +355,7 @@ Please note that both Airflow Scheduler and Webserver can be adjusted through th
     ```
     Depending on your Airflow configuration it may require some time for Airflow Scheduler
     and Webserver to pick up new DAGs. Consider using `cwl-airflow init -r 5 -w 4` to make Airflow Webserver react faster on all
-    newly created DAGs.  
+    newly created DAGs.
 
 - To submit all demo workflows from the list
 (workflows will not be run until Airflow Scheduler is started separately)
@@ -368,7 +368,6 @@ Please note that both Airflow Scheduler and Webserver can be adjusted through th
     ```bash
     $ cwl-airflow demo --auto
     ```
-    Before submitting and running demo workflows the Jobs folder will be automatically cleaned.
     
 Optional parameters:
 
@@ -394,7 +393,7 @@ and base frequency, as long as other troubleshooting information using tools suc
 
 To get sample workflow with input data
 ```bash
-$ git clone --recursive https://github.com/Barski-lab/ga4gh_challenge.git --branch v0.0.3
+$ git clone --recursive https://github.com/Barski-lab/ga4gh_challenge.git --branch v0.0.5
 $ ./ga4gh_challenge/data/prepare_inputs.sh
 ```
 Please, be patient it may take some time to clone submodule with input data.
