@@ -11,8 +11,7 @@ python:
 - 3.6
 
 env:
-- SLUGIFY_USES_TEXT_UNIDECODE=yes AIRFLOW_CONN_PROCESS_REPORT=http://localhost:1025?endpoint=satellite%2Fv1%2F NTEST=1-2
-- SLUGIFY_USES_TEXT_UNIDECODE=yes AIRFLOW_CONN_PROCESS_REPORT=http://localhost:1025?endpoint=satellite%2Fv1%2F NTEST=4-5
+- SLUGIFY_USES_TEXT_UNIDECODE=yes AIRFLOW_CONN_PROCESS_REPORT=http://localhost:1025?endpoint=satellite%2Fv1%2F NTEST=4
 
 before_install:
 - git clone https://github.com/Barski-lab/workflows --recursive
