@@ -26,7 +26,7 @@ Latest version [documentation](https://cwl-airflow.readthedocs.io/en/latest/)
 ```
 pip install cwl-airflow==1.0.16
 ```
-Published version [documentation](https://cwl-airflow.readthedocs.io/en/1.0.18/)
+Published version [documentation](https://cwl-airflow.readthedocs.io/en/1.0.17docs/)
 
 
 
