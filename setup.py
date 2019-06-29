@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 import os
 import subprocess
 import time
@@ -33,9 +34,9 @@ def get_version():
     2. from tag
     3. from commit timestamp
     Updates/creates git_version file with the package version
-    :return: package version 
+    :return: package version
     '''
-    version = '1.0.0'                                      # set default version
+    version = '1.1.0'                                      # set default version
     try:
         with open(GIT_VERSION_FILE, 'r') as input_stream:  # try to get version info from file
             version = input_stream.read()
@@ -45,7 +46,7 @@ def get_version():
         version = get_git_tag()                            # try to get version info from the closest tag
     except Exception:
         try:
-            version = '1.0.' + get_git_timestamp()         # try to get version info from commit date
+            version = '1.1.' + get_git_timestamp()         # try to get version info from commit date
         except Exception:
             pass
     try:
@@ -66,21 +67,84 @@ setup(
     download_url='https://github.com/Barski-lab/cwl-airflow',
     author='Michael Kotliar',
     author_email='misha.kotliar@gmail.com',
-    license = 'Apache-2.0',
-    packages=find_packages(),
-    package_data={'cwl_airflow': ['git_version']},
+    license='Apache-2.0',
     include_package_data=True,
-    install_requires=[
-        'cwltool==1.0.20181217162649',
-        'jsonmerge',
-        "apache-airflow==1.9.0",
-        "uuid"
-    ],
-    zip_safe=False,
-    entry_points={
-        'console_scripts': [
-            "cwl-airflow=cwl_airflow.main:main",
-            "cwl-runner=cwl_airflow.main:main"
+    packages=find_packages(
+        exclude=[
+            'docs', 'tests',
+            'windows', 'macOS', 'linux',
+            'iOS', 'android',
+            'django'
         ]
-    }
+    ),
+    install_requires=[
+        'cryptography',
+        'cwltool == 1.0.20181201184214',
+        'jsonmerge',
+        'ruamel.yaml <= 0.15.77',
+        'apache-airflow >= 1.10.1, < 1.11',
+        'mysqlclient >= 1.3.6, < 1.4',
+        'pyjwt',
+        'urllib3<1.24'
+    ],
+    options={
+        'app': {
+            'formal_name': 'cwl-airflow',
+            'bundle': 'python.org'
+        },
+        'macos': {
+            'app_requires': [
+                'toga-cocoa==0.3.0.dev11',
+            ]
+        },
+        'linux': {
+            'app_requires': [
+                'toga-gtk==0.3.0.dev11',
+            ]
+        },
+        'windows': {
+            'app_requires': [
+                'toga-winforms==0.3.0.dev11',
+            ]
+        },
+        'ios': {
+            'app_requires': [
+                'toga-ios==0.3.0.dev11',
+            ]
+        },
+        'android': {
+            'app_requires': [
+                'toga-android==0.3.0.dev11',
+            ]
+        },
+        'django': {
+            'app_requires': [
+                'toga-django==0.3.0.dev11',
+            ]
+        },
+    },
+    zip_safe=False,
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Console',
+        'Environment :: Other Environment',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: Healthcare Industry',
+        'License :: OSI Approved :: Apache Software License',
+        'Natural Language :: English',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: POSIX',
+        'Operating System :: POSIX :: Linux',
+        'Operating System :: OS Independent',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: Microsoft :: Windows :: Windows 10',
+        'Operating System :: Microsoft :: Windows :: Windows 8.1',
+        'Programming Language :: Python :: 3.6',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'Topic :: Scientific/Engineering :: Chemistry',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'Topic :: Scientific/Engineering :: Medical Science Apps.'
+    ]
 )

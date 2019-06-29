@@ -1,16 +1,51 @@
 sudo: false
 language: python
-python:
-- 2.7
+
 os:
 - linux
+
+services:
+  - docker
+
+python:
+- 3.6
+
+env:
+- SLUGIFY_USES_TEXT_UNIDECODE=yes AIRFLOW_CONN_PROCESS_REPORT=http://localhost:1025?endpoint=satellite%2Fv1%2F NTEST=1-2
+- SLUGIFY_USES_TEXT_UNIDECODE=yes AIRFLOW_CONN_PROCESS_REPORT=http://localhost:1025?endpoint=satellite%2Fv1%2F NTEST=4-5
+
+before_install:
+- git clone https://github.com/Barski-lab/workflows --recursive
+- docker pull mysql/mysql-server:5.7
+- docker run -v ~/database:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=airflow -e MYSQL_DATABASE=airflow -e MYSQL_USER=airflow -e MYSQL_PASSWORD=airflow -p 6603:3306 -d mysql/mysql-server:5.7 --explicit-defaults-for-timestamp=1
+
 install:
+- pip install mysqlclient
 - pip install .
-script: cwl-airflow --help
+- pip install cwl-airflow-tester
+
+before_script:
+- airflow initdb
+- sed -i'.backup' -e 's/^dags_are_paused_at_creation.*/dags_are_paused_at_creation = False/g' ~/airflow/airflow.cfg
+- sed -i'.backup' -e 's/^load_examples.*/load_examples = False/g' ~/airflow/airflow.cfg
+- sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
+- sed -i'.backup' -e 's/^workers =.*/workers = 1/g' ~/airflow/airflow.cfg
+- sed -i'.backup' -e 's/^worker_refresh_interval =.*/worker_refresh_interval = 10/g' ~/airflow/airflow.cfg
+- sed -i'.backup' -e 's/^dagbag_import_timeout =.*/dagbag_import_timeout = 300/g' ~/airflow/airflow.cfg
+- sed -i'.backup' -e 's/^dag_dir_list_interval =.*/dag_dir_list_interval = 60/g' ~/airflow/airflow.cfg
+- sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
+- sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
+- airflow resetdb -y
+- airflow scheduler > /dev/null 2>&1 &
+- airflow webserver > /dev/null 2>&1 &
+
+script: cwl-airflow-tester -q -p 1025 -t ./workflows/tests/conformance_tests.yaml -r "$NTEST"
+
 branches:
   only:
   - master
   - /^([1-9]\d*!)?(0|[1-9]\d*)(\.(0|[1-9]\d*))*((a|b|rc)(0|[1-9]\d*))?(\.post(0|[1-9]\d*))?(\.dev(0|[1-9]\d*))?$/
+
 deploy:
   provider: pypi
   user: michael_kotliar
@@ -18,6 +53,6 @@ deploy:
     secure: Mji1koR4nyt/KgoycpuvgIp9toFVNYaSxUmNY6EVt0pmIpRb/GKbw6TdyfAdtnSAwH3BcSUC/R1hCwyaXfv1GDPFYqv9Yg1MaNHR1clvo8E8KIIPt1JDqPM47lgPQQFFbwB+Cc6uSV0Nn9oDBkhWEPQqV3kI/GJkSUzSs/yjZqR4C+aZxsJzE+VX2ZzeGCD3x4mzhAAWan4MLrdgANaXQVTHhyHIhTp3l109FblYimMvx8HqKotMiM+32mVFxgwf/pMw/N8gDOFXd4VrtlaOqqHpn4VJko+jSNYuAdKn62N2KFKqExyU39ycvU9ngYaU38nmCjJdibRgNyxfdH6LfndS9xzu3KPY64ACLG1i8Ym+57Q7wSJZAb2WF/b8av1RnkKMUGHHYXBzVIGk7Abvuhde0DsV0lr9XsapQn7XySmhdBWYazZTr+AtgIdsx7AmHV1ug6nPp3tIQzW1+YAOf295Puwqbrn+SF3jYw6167jAl5M1a81kxqli1UTsLgpcaTbTD1ofwLn4gP3VuU1f4fKGzhrxl6ybHW+LpO/wkcN2wJDdBbqz5OQIYfshMQEooIODOw1OonmwbY3vcMATuvi7Hz3mIElqpu3TVxH9aoBzcvL1148wPhZF8u87T8nDgsHeUT66I56ILGcZszASolt2Cb6oPZmxg2jgajTREwk=
   on:
     tags: true
+
 notifications:
   email: false
-

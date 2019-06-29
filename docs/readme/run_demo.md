@@ -7,7 +7,7 @@ and **docker** that has access to pull images from the [DockerHub](https://hub.d
 
 1. Install *cwl-airflow*
     ```sh
-    $ pip install cwl-airflow==1.0.16 --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/ # --user
+    $ pip install cwl-airflow --find-links https://michael-kotliar.github.io/cwl-airflow-wheels/ # --user
     ```
     `--user` - explained in [Installation](./installation.md) section
 
@@ -20,9 +20,9 @@ and **docker** that has access to pull images from the [DockerHub](https://hub.d
     ```sh
     $ cwl-airflow demo --auto
     ```
-    
+
     For every submitted workflow you will get the following information
-    
+
     ```bash
     CWL-Airflow demo mode
     Process demo workflow 1/3
@@ -33,7 +33,7 @@ and **docker** that has access to pull images from the [DockerHub](https://hub.d
     Save job file as
     -              # path where we save submitted job for CWL-Airflow to run
     ```
-    
+
     `uid` - the unique identifier used for DAG ID and output folder name generation.
 
 4. When all demo wokrflows are submitted the program will provide you with the link for Airflow web interface (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/)).

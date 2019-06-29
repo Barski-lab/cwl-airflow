@@ -17,7 +17,7 @@ Kotliar M; Kartashov AV; Barski A (2019): Supporting data for "CWL-Airflow: a li
 
 ## **Get the latest version**
 ```
-pip install --pre cwl-airflow
+pip install cwl-airflow
 ```
 Latest version [documentation](https://cwl-airflow.readthedocs.io/en/latest/)
 
@@ -27,9 +27,3 @@ Latest version [documentation](https://cwl-airflow.readthedocs.io/en/latest/)
 pip install cwl-airflow==1.0.16
 ```
 Published version [documentation](https://cwl-airflow.readthedocs.io/en/1.0.18/)
-
-
-
-
-
-
