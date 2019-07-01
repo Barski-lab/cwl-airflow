@@ -21,6 +21,11 @@ Welcome to CWL-Airflow's documentation!
 
 Python package to extend `Apache-Airflow 1.9.0 <https://github.com/apache/incubator-airflow>`_ functionality with `CWL v1.0 <http://www.commonwl.org/v1.0/>`_ support.
 
+Note 
+----
+
+Current documentaion is still in progress. Some of the features might not be available anymore.
+
 Cite as
 -------
 
