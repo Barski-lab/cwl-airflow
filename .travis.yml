@@ -1,6 +1,7 @@
 sudo: false
 language: python
 
+dist: xenial
 os:
 - linux
 
@@ -8,7 +9,7 @@ services:
   - docker
 
 python:
-- 3.6
+- 3.7
 
 env:
 - SLUGIFY_USES_TEXT_UNIDECODE=yes AIRFLOW_CONN_PROCESS_REPORT=http://localhost:1025?endpoint=satellite%2Fv1%2F NTEST=4

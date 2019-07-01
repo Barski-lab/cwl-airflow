@@ -81,7 +81,7 @@ setup(
         'cwltool == 1.0.20181201184214',
         'jsonmerge',
         'ruamel.yaml <= 0.15.77',
-        'apache-airflow >= 1.10.1, < 1.11',
+        'apache-airflow == 1.10.3',
         'mysqlclient >= 1.3.6, < 1.4',
         'pyjwt',
         'urllib3<1.24'
