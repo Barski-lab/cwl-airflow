@@ -8,7 +8,7 @@
 # **CWL-Airflow**
 
 Python package to extend **[Apache-Airflow 1.10.3](https://github.com/apache/incubator-airflow)**
-functionality with **[CWL v1.0](http://www.commonwl.org/v1.0/)** support.
+functionality with **[CWL v1.1](https://www.commonwl.org/v1.1/)** support.
 
 
 ## **Cite as**

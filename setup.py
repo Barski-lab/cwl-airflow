@@ -78,13 +78,13 @@ setup(
     ),
     install_requires=[
         'cryptography',
-        'cwltool == 1.0.20181201184214',
+        'cwltool == 1.0.20190621234233',
         'jsonmerge',
         'ruamel.yaml <= 0.15.77',
         'apache-airflow == 1.10.3',
         'mysqlclient >= 1.3.6, < 1.4',
         'pyjwt',
-        'urllib3<1.24'
+        'urllib3'
     ],
     options={
         'app': {
