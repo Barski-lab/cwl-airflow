@@ -10,13 +10,12 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 def get_git_tag():
-    return subprocess.check_output(['git', 'describe', '--contains']).strip()
+    return subprocess.check_output(['git', 'describe', '--contains'], text=True).split("^")[0].strip()
 
 
 def get_git_timestamp():
     gitinfo = subprocess.check_output(
-        ['git', 'log', '--first-parent', '--max-count=1',
-         '--format=format:%ct', '.']).strip()
+        ['git', 'log', '--first-parent', '--max-count=1', '--format=format:%ct', '.'], text=True).strip()
     return time.strftime('%Y%m%d%H%M%S', time.gmtime(int(gitinfo)))
 
 
