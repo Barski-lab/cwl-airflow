@@ -19,7 +19,7 @@ Welcome to CWL-Airflow's documentation!
    :target: https://www.apache.org/licenses/LICENSE-2.0
 
 
-Python package to extend `Apache-Airflow 1.9.0 <https://github.com/apache/incubator-airflow>`_ functionality with `CWL v1.0 <http://www.commonwl.org/v1.0/>`_ support.
+Python package to extend `Apache-Airflow 1.10.3 <https://github.com/apache/incubator-airflow>`_ functionality with `CWL v1.1 <http://www.commonwl.org/v1.1/>`_ support.
 
 Note 
 ----
