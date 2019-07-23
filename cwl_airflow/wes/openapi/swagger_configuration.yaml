@@ -1,0 +1,159 @@
+basePath: '/wes/v1'
+swagger: '2.0'
+info:
+  title: CWL-Airflow Workflow Execution Service
+  version: 1.0.0
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+
+
+paths:
+
+  /dags:
+    get:
+      summary: List available dags.
+      description: List available dags. Equivalent to running `airflow list_dags` without parameters
+      operationId: list_dags
+      responses:
+        '200':
+          description: List of available dags.
+          schema:
+            $ref: '#/definitions/ListDagsResponse'
+        '400':
+          description: The request is malformed.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: The request is unauthorized.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '403':
+          description: The requester is not authorized to perform this action.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: An unexpected error occurred.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+  /dag_runs:
+    get:
+      summary: List dag runs. Filter results by dag id and/or state.
+      description: Equivalent to running `airflow list_dag_runs --state dag_id`
+      operationId: list_dag_runs
+      responses:
+        '200':
+          description: List of dag runs, filtered by dag id and state.
+          schema:
+            $ref: '#/definitions/ListDagRunsResponse'
+        '400':
+          description: The request is malformed.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: The request is unauthorized.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '403':
+          description: The requester is not authorized to perform this action.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: An unexpected error occurred.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      parameters:
+        - name: dag_id
+          description: Dag id
+          in: query
+          required: false
+          type: string
+        - name: state
+          description: Dag run state
+          in: query
+          required: false
+          type: string
+          enum:
+            - running
+            - success
+            - failed
+
+
+definitions:
+
+  ListDagsResponse:
+    type: object
+    properties:
+      dags:
+        type: array
+        items:
+          type: string
+        description: List of available dags.
+    description: List of available dags.
+
+  ListDagRunsResponse:
+    type: object
+    properties:
+      dag_runs:
+        type: array
+        items:
+          $ref: '#/definitions/DagRunInfo'
+        description: List of dag runs, filtered by dag id and state.
+    description: List of dag runs, filtered by dag id and state.
+
+  DagRunInfo:
+    type: object
+    required:
+     - dag_id
+     - run_id
+     - execution_date
+     - state
+    properties:
+      dag_id:
+        type: string
+      run_id:
+        type: string
+      execution_date:
+        type: string
+        format: date-time
+      state:
+        $ref: '#/definitions/DagRunState'
+    description: Dag run info
+
+  DagRunState:
+    type: string
+    enum:
+      - running
+      - success
+      - failed
+    description: Dag run state
+
+  TaskState:
+    type: string
+    enum:
+      - scheduled
+      - queued
+      - running
+      - success
+      - failed
+      - up_for_retry
+      - up_for_reschedule
+      - upstream_failed
+      - skipped
+      - none
+    description: Task state
+
+  ErrorResponse:
+    type: object
+    properties:
+      msg:
+        type: string
+        description: A detailed error message.
+      status_code:
+        type: integer
+        description: The integer representing the HTTP status code (e.g. 200, 404).
+    description: An object that can optionally include information about the error.

@@ -84,7 +84,8 @@ setup(
         'apache-airflow == 1.10.3',
         'mysqlclient >= 1.3.6, < 1.4',
         'pyjwt',
-        'urllib3'
+        'urllib3',
+        'connexion'
     ],
     options={
         'app': {
@@ -123,6 +124,11 @@ setup(
         },
     },
     zip_safe=False,
+    entry_points={
+        'console_scripts': [
+            "cwl-airflow=cwl_airflow.main:main"
+        ]
+    },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',

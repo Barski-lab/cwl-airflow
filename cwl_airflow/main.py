@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+import sys
+import argparse
+from cwl_airflow.wes.server import run_wes_server
+
+
+def arg_parser():
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    general_parser = argparse.ArgumentParser(description='cwl-airflow')
+    subparsers = general_parser.add_subparsers()
+    subparsers.required = True
+
+    wes_parser = subparsers.add_parser('wesserver', help="Running CWL-Airflow WES server", parents=[parent_parser])
+    wes_parser.set_defaults(func=run_wes_server)
+    wes_parser.add_argument("--port",  dest="port",  type=int,            help="Port to run WES server (default: 8080)",      default=8080)
+    wes_parser.add_argument("--host",  dest="host",                       help="Host to run WES server (default: 127.0.0.1)", default="127.0.0.1")
+    wes_parser.add_argument("--debug", dest="debug", action="store_true", help="Print debug messages",                        default=False)
+
+    return general_parser
+
+
+def main(argsl=None):
+    if argsl is None:
+        argsl = sys.argv[1:]
+    argsl.append("")  # To avoid raising error when argsl is empty
+    args, _ = arg_parser().parse_known_args(argsl)
+    args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
