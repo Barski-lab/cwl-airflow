@@ -137,6 +137,7 @@ definitions:
      - dag_id
      - run_id
      - execution_date
+     - start_date
      - state
      - tasks
     properties:
@@ -145,6 +146,9 @@ definitions:
       run_id:
         type: string
       execution_date:
+        type: string
+        format: date-time
+      start_date:
         type: string
         format: date-time
       state:
