@@ -15,12 +15,12 @@ paths:
 
   /dags:
     get:
-      summary: List available dags.
-      description: List available dags. Equivalent to running `airflow list_dags` without parameters
-      operationId: list_dags
+      summary: Returns list of dags by dag_ids.
+      description: Runs `airflow list_tasks` for every dag_id in dag_ids. If dag_ids is None, process all dags.
+      operationId: get_dags
       responses:
         '200':
-          description: List of available dags.
+          description: Filtered by dag_ids list of dags.
           schema:
             $ref: '#/definitions/ListDagsResponse'
         '400':
@@ -39,15 +39,23 @@ paths:
           description: An unexpected error occurred.
           schema:
             $ref: '#/definitions/ErrorResponse'
+      parameters:
+        - name: dag_ids
+          description: Dag identifiers
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
 
   /dag_runs:
     get:
-      summary: List dag runs. Filter results by dag_id and/or state.
-      description: Equivalent to running `airflow list_dag_runs --state dag_id`
-      operationId: list_dag_runs
+      summary: Returns list of dag_runs by dag_id, run_id, execution_date and state.
+      description: Runs `airflow task_state dag_id, task_id, execution_date` for every task of dag_run from `airflow list_dag_runs dag_id`
+      operationId: get_dag_runs
       responses:
         '200':
-          description: List of dag runs, filtered by dag id and state.
+          description: Filtered by dag_id, run_id, execution_date and state list of dag_runs.
           schema:
             $ref: '#/definitions/ListDagRunsResponse'
         '400':
@@ -72,6 +80,17 @@ paths:
           in: query
           required: false
           type: string
+        - name: run_id
+          description: Run identifier
+          in: query
+          required: false
+          type: string
+        - name: execution_date
+          description: Execution date
+          in: query
+          required: false
+          type: string
+          format: date-time
         - name: state
           description: Dag run state
           in: query
@@ -82,39 +101,6 @@ paths:
             - success
             - failed
 
-  /tasks:
-    get:
-      summary: List tasks. Filter results by dag_id.
-      description: Equivalent to running `airflow list_tasks dag_id`
-      operationId: list_tasks
-      responses:
-        '200':
-          description: List of tasks, filtered by dag_id.
-          schema:
-            $ref: '#/definitions/ListTasksResponse'
-        '400':
-          description: The request is malformed.
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
-          description: The request is unauthorized.
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '403':
-          description: The requester is not authorized to perform this action.
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
-          description: An unexpected error occurred.
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      parameters:
-        - name: dag_id
-          description: Dag identifier
-          in: query
-          required: false
-          type: string
-
 
 definitions:
 
@@ -122,16 +108,6 @@ definitions:
     type: object
     properties:
       dags:
-        type: array
-        items:
-          type: string
-        description: List of available dags.
-    description: List of available dags.
-
-  ListTasksResponse:
-    type: object
-    properties:
-      tasks:
         type: array
         items:
           type: object
@@ -142,8 +118,8 @@ definitions:
               type: array
               items:
                 type: string
-        description: List of tasks, filtered by dag_id.
-    description: List of tasks, filtered by dag_id.
+        description: Filtered by dag_ids list of dags.
+    description: Filtered by dag_ids list of dags.
 
   ListDagRunsResponse:
     type: object
@@ -152,8 +128,8 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/DagRunInfo'
-        description: List of dag runs, filtered by dag id and state.
-    description: List of dag runs, filtered by dag id and state.
+        description: Filtered by dag_id, run_id, execution_date and state list of dag_runs.
+    description: Filtered by dag_id, run_id, execution_date and state list of dag_runs.
 
   DagRunInfo:
     type: object
@@ -162,6 +138,7 @@ definitions:
      - run_id
      - execution_date
      - state
+     - tasks
     properties:
       dag_id:
         type: string
@@ -172,6 +149,15 @@ definitions:
         format: date-time
       state:
         $ref: '#/definitions/DagRunState'
+      tasks:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+            state:
+              $ref: '#/definitions/TaskState'
     description: Dag run info
 
   DagRunState:
