@@ -41,4 +41,4 @@ Kotliar M; Kartashov AV; Barski A (2019): Supporting data for "CWL-Airflow: a li
    Installation <readme/installation.md>
    Using cwl-airflow <readme/using_cwl_airflow.md>
    Troubleshooting <readme/troubleshooting.md>
-   REST API <readme/rest_api.md>
+   API <readme/api.md>
