@@ -22,7 +22,7 @@ paths:
         '200':
           description: Filtered by dag_ids list of dags.
           schema:
-            $ref: '#/definitions/ListDagsResponse'
+            $ref: '#/definitions/GetDagsResponse'
         '400':
           description: The request is malformed.
           schema:
@@ -50,14 +50,14 @@ paths:
 
   /dag_runs:
     get:
-      summary: Returns list of dag_runs by dag_id, run_id, execution_date and state.
+      summary: Returns list of dag_runs by dag_id, run_id, execution_date, state.
       description: Runs `airflow task_state dag_id, task_id, execution_date` for every task of dag_run from `airflow list_dag_runs dag_id`
       operationId: get_dag_runs
       responses:
         '200':
-          description: Filtered by dag_id, run_id, execution_date and state list of dag_runs.
+          description: Filtered by dag_id, run_id, execution_date, state list of dag_runs.
           schema:
-            $ref: '#/definitions/ListDagRunsResponse'
+            $ref: '#/definitions/GetDagRunsResponse'
         '400':
           description: The request is malformed.
           schema:
@@ -100,11 +100,52 @@ paths:
             - running
             - success
             - failed
-
+    post:
+      summary: Creates new dag_run for dag_id with optional run_id and conf
+      description: Creates new_dag run for dag_id with optional run_id and conf
+      operationId: post_dag_runs
+      responses:
+        '200':
+          description: Reference information about created dag_run.
+          schema:
+            $ref: '#/definitions/PostDagRunsResponse'
+        '400':
+          description: The request is malformed.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: The request is unauthorized.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '403':
+          description: The requester is not authorized to perform this action.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: An unexpected error occurred.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      parameters:
+        - name: dag_id
+          description: Dag identifier
+          in: query
+          required: true
+          type: string
+        - name: run_id
+          description: Run identifier
+          in: query
+          required: false
+          type: string
+        - name: conf
+          description: Run configuration
+          in: query
+          required: false
+          type: string
+            
 
 definitions:
 
-  ListDagsResponse:
+  GetDagsResponse:
     type: object
     properties:
       dags:
@@ -118,18 +159,39 @@ definitions:
               type: array
               items:
                 type: string
-        description: Filtered by dag_ids list of dags.
     description: Filtered by dag_ids list of dags.
 
-  ListDagRunsResponse:
+  GetDagRunsResponse:
     type: object
     properties:
       dag_runs:
         type: array
         items:
           $ref: '#/definitions/DagRunInfo'
-        description: Filtered by dag_id, run_id, execution_date and state list of dag_runs.
     description: Filtered by dag_id, run_id, execution_date and state list of dag_runs.
+
+  PostDagRunsResponse:
+    type: object
+    required:
+     - dag_id
+     - run_id
+     - execution_date
+     - state
+     - start_date
+    properties:
+      dag_id:
+        type: string
+      run_id:
+        type: string
+      execution_date:
+        type: string
+        format: date-time
+      start_date:
+        type: string
+        format: date-time
+      state:
+        $ref: '#/definitions/DagRunState'
+    description: Reference information about created dag_run.
 
   DagRunInfo:
     type: object
