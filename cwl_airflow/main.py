@@ -14,7 +14,6 @@ def arg_parser():
     wes_parser.set_defaults(func=run_wes_server)
     wes_parser.add_argument("--port",  dest="port",  type=int,            help="Port to run WES server (default: 8080)",      default=8080)
     wes_parser.add_argument("--host",  dest="host",                       help="Host to run WES server (default: 127.0.0.1)", default="127.0.0.1")
-    wes_parser.add_argument("--debug", dest="debug", action="store_true", help="Print debug messages",                        default=False)
 
     return general_parser
 

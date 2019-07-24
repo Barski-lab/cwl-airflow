@@ -10,7 +10,4 @@ def run_wes_server(args):
     def rs(x):
         return getattr(backend, x.split('.')[-1])
     app.add_api('openapi/swagger_configuration.yaml', resolver=Resolver(rs))
-    app.run(port=args.port, debug=args.debug, host=args.host)
-
-
-
+    app.run(port=args.port, host=args.host)
