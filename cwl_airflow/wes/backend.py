@@ -29,7 +29,7 @@ class CWLAirflowBackend():
     # curl -X POST "127.0.0.1:8080/wes/v1/dag_runs?dag_id=example_bash_operator&run_id=1234567&conf=%22%7B%7D%22" -H "accept: application/json"
 
     env = None
-
+    include_examples = False
 
     def __init__(self):
         extend_env = {"AIRFLOW__CORE__LOGGING_LEVEL": "ERROR"}
@@ -98,15 +98,15 @@ class CWLAirflowBackend():
 
 
     def list_dags(self):
-        return DagBag().dags.keys()
+        return DagBag(include_examples=self.include_examples).dags.keys()
 
 
     def list_tasks(self, dag_id):
-        return [t.task_id for t in DagBag().dags[dag_id].tasks]
+        return [t.task_id for t in DagBag(include_examples=self.include_examples).dags[dag_id].tasks]
 
 
     def task_state(self, dag_id, task_id, execution_date):
-        task_state = TaskInstance(DagBag().dags[dag_id].get_task(task_id=task_id), parsedate(execution_date)).current_state()
+        task_state = TaskInstance(DagBag(include_examples=self.include_examples).dags[dag_id].get_task(task_id=task_id), parsedate(execution_date)).current_state()
         task_state = task_state if task_state else "none"
         return task_state
 
