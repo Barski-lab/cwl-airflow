@@ -137,7 +137,7 @@ paths:
           required: false
           type: string
         - name: conf
-          description: Run configuration
+          description: Run configuration (JSON-formatted string)
           in: query
           required: false
           type: string
