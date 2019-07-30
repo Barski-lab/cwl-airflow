@@ -12,7 +12,7 @@ def arg_parser():
 
     wes_parser = subparsers.add_parser('wesserver', help="Running CWL-Airflow WES server", parents=[parent_parser])
     wes_parser.set_defaults(func=run_wes_server)
-    wes_parser.add_argument("--port",  dest="port",  type=int,            help="Port to run WES server (default: 8080)",      default=8080)
+    wes_parser.add_argument("--port",  dest="port",  type=int,            help="Port to run WES server (default: 8081)",      default=8081)
     wes_parser.add_argument("--host",  dest="host",                       help="Host to run WES server (default: 127.0.0.1)", default="127.0.0.1")
 
     return general_parser

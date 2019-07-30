@@ -47,6 +47,44 @@ paths:
           type: array
           items:
             type: string
+    post:
+      summary: Creates new dag with dag_id from the attached workflow.cwl file.
+      description: Creates new dag with dag_id from the attached workflow.cwl file.
+      operationId: post_dag
+      responses:
+        '200':
+          description: dag_id, py and cwl file locations of a created dag.
+          schema:
+            $ref: '#/definitions/PostDagsResponse'
+        '400':
+          description: The request is malformed.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: The request is unauthorized.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '403':
+          description: The requester is not authorized to perform this action.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: An unexpected error occurred.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      consumes:
+         - multipart/form-data
+      parameters:
+        - name: dag_id
+          description: Dag identifier
+          in: query
+          required: false
+          type: string
+        - name: workflow
+          description: CWL workflow file with embedded tools and all other dependencies
+          in: formData
+          required: true
+          type: file
 
   /dag_runs:
     get:
@@ -160,6 +198,21 @@ definitions:
               items:
                 type: string
     description: Filtered by dag_ids list of dags.
+
+  PostDagsResponse:
+    type: object
+    required:
+     - dag_id
+     - dag_path
+     - cwl_path
+    properties:
+      dag_id:
+        type: string
+      dag_path:
+        type: string
+      cwl_path:
+        type: string
+    description: dag_id, py and cwl file locations of a created dag.
 
   GetDagRunsResponse:
     type: object
