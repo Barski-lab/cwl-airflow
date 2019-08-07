@@ -4,7 +4,7 @@ Besides built-in API, provided by Airflow Webserver, CWL-Airflow allows to run A
 
 To start API server run the following command
 ```sh
-$ cwl-airflow wesserver
+$ cwl-airflow webserver
 ```
 
 Optional parameters:
