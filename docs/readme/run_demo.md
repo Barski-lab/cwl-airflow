@@ -36,7 +36,7 @@ and **docker** that has access to pull images from the [DockerHub](https://hub.d
 
     `uid` - the unique identifier used for DAG ID and output folder name generation.
 
-4. When all demo wokrflows are submitted the program will provide you with the link for Airflow web interface (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/)).
+4. When all demo workflows are submitted the program will provide you with the link for Airflow web interface (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/)).
 It may take some time (usually less then half a minute) for Airflow web interface to load and display all the data.
 
 5. On completion the workflow results will be saved in the current folder.
