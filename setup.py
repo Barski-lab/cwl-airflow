@@ -85,7 +85,8 @@ setup(
         'mysqlclient >= 1.3.6, < 1.4',
         'pyjwt',
         'urllib3',
-        'connexion'
+        'connexion',
+        'Flask'==1.0.4
     ],
     options={
         'app': {
