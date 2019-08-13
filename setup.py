@@ -86,7 +86,7 @@ setup(
         'pyjwt',
         'urllib3',
         'connexion',
-        'Flask'==1.0.4
+        'Flask == 1.0.4'
     ],
     options={
         'app': {
