@@ -45,14 +45,13 @@ class CWLDAG(DAG):
             'email_on_failure': False,
             'email_on_retry': False,
             'end_date': None,
-
             'tmp_folder': conf_get_default('cwl', 'tmp_folder', '/tmp'),
             'basedir': conf_get_default('cwl', 'tmp_folder', '/tmp'),
+            'no_match_user': conf_get_default('cwl', 'no_match_user', False),
             'quiet': False,
             'strict': False,
             'on_error': 'continue',
             'skip_schemas': True,
-
             'cwl_workflow': cwl_workflow
         }
 
