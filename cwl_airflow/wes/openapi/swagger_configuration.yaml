@@ -179,7 +179,51 @@ paths:
           in: query
           required: false
           type: string
-            
+
+  # delete this path if not actively used 
+  /dags/{dag_id}/dag_runs:
+    post:
+      summary: Creates new dag_run for dag_id with optional run_id and conf
+      description: Creates new dag_run for dag_id with optional run_id and conf. Corresponds to the original Airflow API to trigger dag_run
+      operationId: post_dag_runs_legacy
+      responses:
+        '200':
+          description: Reference information about created dag_run.
+          schema:
+            $ref: '#/definitions/PostDagRunsResponse'
+        '400':
+          description: The request is malformed.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: The request is unauthorized.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '403':
+          description: The requester is not authorized to perform this action.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: An unexpected error occurred.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      parameters:
+        - name: dag_id
+          description: Dag identifier
+          in: path
+          required: true
+          type: string
+        - name: run_id
+          description: Run identifier
+          in: query
+          required: false
+          type: string
+        - name: conf
+          description: Run configuration (JSON-formatted string)
+          in: query
+          required: false
+          type: string
+
 
 definitions:
 

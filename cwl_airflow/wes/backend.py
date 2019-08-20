@@ -31,6 +31,8 @@ class CWLAirflowBackend():
     # curl -X GET "127.0.0.1:8081/wes/v1/dag_runs?execution_date=2019-07-20T00%3A00%3A00%2B00%3A00" -H "accept: application/json"
 
     # curl -X POST "127.0.0.1:8081/wes/v1/dag_runs?dag_id=example_bash_operator&run_id=1234567&conf=%22%7B%7D%22" -H "accept: application/json"
+    # curl -X POST "localhost:8081/wes/v1/dags?dag_id=bowtie2-indices" -H "accept: application/json" -H "Content-Type: multipart/form-data" -F "workflow=@bowtie2-indices.cwl"
+    # curl -X POST "localhost:8081/wes/v1//dags/bowtie2-indices/dag_runs?run_id=bowtie2_indices_1&conf=%22%7B%7D%22" -H "accept: application/json"
 
     env = None
     include_examples = False
@@ -109,6 +111,12 @@ class CWLAirflowBackend():
         except Exception as err:
             logger.error(f"""Failed to call post_dag_runs {err}""")
             return connexion.problem(500, "Failed to create dag_run", str(err))
+
+
+    # delete this function if path /dags/{dag_id}/dag_runs isn't actively used
+    def post_dag_runs_legacy(self, dag_id, run_id=None, conf=None):
+        """For Swagger 2.0 the id MUST be unique among all operations described in the API"""
+        return self.post_dag_runs(dag_id, run_id, conf)
 
 
     def trigger_dag(self, dag_id, run_id, conf):
