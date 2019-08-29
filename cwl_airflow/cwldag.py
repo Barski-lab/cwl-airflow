@@ -48,6 +48,7 @@ class CWLDAG(DAG):
             'tmp_folder': conf_get_default('cwl', 'tmp_folder', '/tmp'),
             'basedir': conf_get_default('cwl', 'tmp_folder', '/tmp'),
             'no_match_user': conf_get_default('cwl', 'no_match_user', False),
+            'task_retries': conf_get_default('cwl', 'retry', 0),
             'quiet': False,
             'strict': False,
             'on_error': 'continue',
