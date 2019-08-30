@@ -30,8 +30,7 @@ class CWLJobGatherer(BaseOperator):
 
         kwargs.update({"on_success_callback": kwargs.get("on_success_callback", task_on_success),
                        "on_failure_callback": kwargs.get("on_failure_callback", task_on_failure),
-                       "on_retry_callback":   kwargs.get("on_retry_callback",   task_on_retry),
-                       "retries":             kwargs.get("retries", self.dag.default_args["task_retries"])})
+                       "on_retry_callback":   kwargs.get("on_retry_callback",   task_on_retry)})
 
         super(CWLJobGatherer, self).__init__(task_id=task_id, *args, **kwargs)
 

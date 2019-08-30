@@ -48,7 +48,7 @@ class CWLDAG(DAG):
             'tmp_folder': conf_get_default('cwl', 'tmp_folder', '/tmp'),
             'basedir': conf_get_default('cwl', 'tmp_folder', '/tmp'),
             'no_match_user': conf_get_default('cwl', 'no_match_user', False),
-            'task_retries': conf_get_default('cwl', 'retry', 0),
+            'task_retries': conf_get_default('cwl', 'retry', 1),
             'quiet': False,
             'strict': False,
             'on_error': 'continue',
@@ -73,6 +73,7 @@ class CWLDAG(DAG):
         if self.cwlwf["class"] in ["CommandLineTool", "ExpressionTool"]:
             cwl_task = CWLStepOperator(task_id=self.dag_id,
                                        dag=self,
+                                       retries=self.default_args["task_retries"],
                                        ui_color='#5C6BC0')
         else:
             outputs = {}
@@ -80,6 +81,7 @@ class CWLDAG(DAG):
             for step_id, step_val in self.cwlwf["steps"].items():
                 cwl_task = CWLStepOperator(task_id=step_id,
                                            dag=self,
+                                           retries=self.default_args["task_retries"],
                                            ui_color='#5C6BC0')
                 outputs[step_id] = cwl_task
 
