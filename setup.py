@@ -125,11 +125,7 @@ setup(
         },
     },
     zip_safe=False,
-    entry_points={
-        'console_scripts': [
-            "cwl-airflow=cwl_airflow.main:main"
-        ]
-    },
+    scripts=["cwl_airflow/bin/cwl-airflow"],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',

@@ -12,11 +12,13 @@ class Launcher:
 
     __AIRFLOW_SCH = "~/Library/LaunchAgents/com.biowardrobe.airflow-scheduler.plist"
     __AIRFLOW_WEB = "~/Library/LaunchAgents/com.biowardrobe.airflow-webserver.plist"
+    __AIRFLOW_API = "~/Library/LaunchAgents/com.biowardrobe.airflow-apiserver.plist"
 
     __airflow_home = None
     __airflow_cfg = None
     __sch_conf = None
     __web_conf = None
+    __api_conf = None
     __contents_dir = None
 
 
@@ -31,10 +33,12 @@ class Launcher:
         try:
             self.__sch_conf = self.__read_plist(os.path.expanduser(self.__AIRFLOW_SCH))
             self.__web_conf = self.__read_plist(os.path.expanduser(self.__AIRFLOW_WEB))
+            self.__api_conf = self.__read_plist(os.path.expanduser(self.__AIRFLOW_API))
         except:
             default_conf_folder = os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, "../"))), "scripts", "macos")
             self.__sch_conf = self.__read_plist(os.path.join(default_conf_folder, os.path.basename(self.__AIRFLOW_SCH)))
             self.__web_conf = self.__read_plist(os.path.join(default_conf_folder, os.path.basename(self.__AIRFLOW_WEB)))
+            self.__api_conf = self.__read_plist(os.path.join(default_conf_folder, os.path.basename(self.__AIRFLOW_API)))
             self.__update_variables()
             self.__update_shebang()
             self.__init_airflow_db()
@@ -43,6 +47,7 @@ class Launcher:
             self.__add_connections()
             self.__write_plist(self.__sch_conf, os.path.expanduser(self.__AIRFLOW_SCH))
             self.__write_plist(self.__web_conf, os.path.expanduser(self.__AIRFLOW_WEB))
+            self.__write_plist(self.__api_conf, os.path.expanduser(self.__AIRFLOW_API))
 
 
     def __read_plist(self, path):
@@ -59,6 +64,7 @@ class Launcher:
         path_list = [
             os.path.join(self.__contents_dir, "Resources/python/bin"),
             os.path.join(self.__contents_dir, "Resources/app_packages/bin"),
+            os.path.join(self.__contents_dir, "Resources/app/bin"),
             os.path.join(self.__contents_dir, "MacOS"),
             "/usr/local/bin",
             "/usr/local/sbin",
@@ -81,24 +87,40 @@ class Launcher:
     def __update_variables(self):
         path = self.__get_path()
         pythonpath = self.__get_pythonpath()
-        airflow = os.path.join(self.__contents_dir, "Resources/app_packages/bin/airflow")
+        airflow_exe = os.path.join(self.__contents_dir, "Resources/app_packages/bin/airflow")
+        cwlairflow_exe = os.path.join(self.__contents_dir, "Resources/app/bin/cwl-airflow")
         log_sch = os.path.join(self.__airflow_home, os.path.splitext(os.path.basename(self.__AIRFLOW_SCH))[0])
         log_web = os.path.join(self.__airflow_home, os.path.splitext(os.path.basename(self.__AIRFLOW_WEB))[0])
+        log_api = os.path.join(self.__airflow_home, os.path.splitext(os.path.basename(self.__AIRFLOW_API))[0])
 
         self.__sch_conf["EnvironmentVariables"]["PATH"] = path
         self.__web_conf["EnvironmentVariables"]["PATH"] = path
+        self.__api_conf["EnvironmentVariables"]["PATH"] = path
+
         self.__sch_conf["EnvironmentVariables"]["PYTHONPATH"] = pythonpath
         self.__web_conf["EnvironmentVariables"]["PYTHONPATH"] = pythonpath
+        self.__api_conf["EnvironmentVariables"]["PYTHONPATH"] = pythonpath
+
         self.__sch_conf["EnvironmentVariables"]["AIRFLOW_HOME"] = self.__airflow_home
         self.__web_conf["EnvironmentVariables"]["AIRFLOW_HOME"] = self.__airflow_home
-        self.__sch_conf["ProgramArguments"][0] = airflow
-        self.__web_conf["ProgramArguments"][0] = airflow
+        self.__api_conf["EnvironmentVariables"]["AIRFLOW_HOME"] = self.__airflow_home
+
+        self.__sch_conf["ProgramArguments"][0] = airflow_exe
+        self.__web_conf["ProgramArguments"][0] = airflow_exe
+        self.__api_conf["ProgramArguments"][0] = cwlairflow_exe
+
         self.__sch_conf["WorkingDirectory"] = self.__airflow_home
         self.__web_conf["WorkingDirectory"] = self.__airflow_home
+        self.__api_conf["WorkingDirectory"] = self.__airflow_home
+
         self.__sch_conf["StandardErrorPath"] = log_sch + ".stderr"
         self.__sch_conf["StandardOutPath"] = log_sch + ".stdout"
+
         self.__web_conf["StandardErrorPath"] = log_web + ".stderr"
         self.__web_conf["StandardOutPath"] = log_web + ".stdout"
+
+        self.__api_conf["StandardErrorPath"] = log_api + ".stderr"
+        self.__api_conf["StandardOutPath"] = log_api + ".stdout"
 
 
     def __update_shebang(self):
@@ -174,8 +196,10 @@ class Launcher:
     def load(self):
         subprocess.run(["launchctl", "load", "-w", os.path.expanduser(self.__AIRFLOW_SCH)])
         subprocess.run(["launchctl", "load", "-w", os.path.expanduser(self.__AIRFLOW_WEB)])
+        subprocess.run(["launchctl", "load", "-w", os.path.expanduser(self.__AIRFLOW_API)])
 
 
     def unload(self):
         subprocess.run(["launchctl", "unload", os.path.expanduser(self.__AIRFLOW_SCH)])
         subprocess.run(["launchctl", "unload", os.path.expanduser(self.__AIRFLOW_WEB)])
+        subprocess.run(["launchctl", "unload", os.path.expanduser(self.__AIRFLOW_API)])
