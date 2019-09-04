@@ -120,7 +120,20 @@ class CWLAirflowBackend():
 
 
     def trigger_dag(self, dag_id, run_id, conf):
-        return trigger_dag.trigger_dag(dag_id=dag_id, run_id=run_id, conf=conf, replace_microseconds=False)
+        try:
+            dag_path = DagModel.get_current(dag_id).fileloc
+        except Exception:
+            dag_path = path.join(DAGS_FOLDER, dag_id + ".py")
+        triggers = trigger_dag._trigger_dag(
+            dag_id=dag_id,
+            dag_run=DagRun(),
+            dag_bag=DagBag(dag_folder=dag_path),
+            run_id=run_id,
+            conf=conf,
+            execution_date=None,
+            replace_microseconds=False
+        )
+        return triggers[0] if triggers else None
 
 
     def list_dags(self):
