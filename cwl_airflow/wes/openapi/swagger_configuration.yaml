@@ -1,4 +1,4 @@
-basePath: '/wes/v1'
+basePath: '/api/experimental'
 swagger: '2.0'
 info:
   title: CWL-Airflow Workflow Execution Service
@@ -213,18 +213,19 @@ paths:
           in: path
           required: true
           type: string
-        - name: run_id
-          description: Run identifier
-          in: query
-          required: false
-          type: string
-        - name: conf
-          description: Run configuration (JSON-formatted string)
-          in: query
-          required: false
-          type: string
+        - name: data
+          description: Run identifier and configuration
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              run_id:
+                type: string
+              conf:
+                type: string
 
-
+                
 definitions:
 
   GetDagsResponse:
