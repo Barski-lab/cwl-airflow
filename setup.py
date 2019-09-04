@@ -81,12 +81,11 @@ setup(
         'cwltool == 1.0.20190621234233',
         'jsonmerge',
         'ruamel.yaml <= 0.15.77',
-        'apache-airflow == 1.10.3',
+        'apache-airflow == 1.10.5',
         'mysqlclient >= 1.3.6, < 1.4',
         'pyjwt',
         'urllib3',
-        'connexion',
-        'Flask == 1.0.4'
+        'connexion'
     ],
     options={
         'app': {
