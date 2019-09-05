@@ -78,9 +78,10 @@ setup(
     ),
     install_requires=[
         'cryptography',
-        'cwltool == 1.0.20190621234233',
+        'cwltool == 1.0.20190831161204',
+        'schema-salad==4.5.20190815125611',
         'jsonmerge',
-        'ruamel.yaml <= 0.15.77',
+        'ruamel.yaml == 0.15.97',
         'apache-airflow == 1.10.5',
         'mysqlclient >= 1.3.6, < 1.4',
         'pyjwt',
