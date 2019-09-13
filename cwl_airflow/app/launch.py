@@ -40,7 +40,8 @@ class Launcher:
             self.__web_conf = self.__read_plist(os.path.join(default_conf_folder, os.path.basename(self.__AIRFLOW_WEB)))
             self.__api_conf = self.__read_plist(os.path.join(default_conf_folder, os.path.basename(self.__AIRFLOW_API)))
             self.__update_variables()
-            self.__update_shebang()
+            self.__update_shebang(os.path.join(self.__contents_dir, "Resources/app_packages/bin"))
+            self.__update_shebang(os.path.join(self.__contents_dir, "Resources/app/bin"))
             self.__init_airflow_db()
             self.__update_airflow_config()
             self.__copy_dags()
@@ -123,8 +124,7 @@ class Launcher:
         self.__api_conf["StandardOutPath"] = log_api + ".stdout"
 
 
-    def __update_shebang(self):
-        lookup_dir = os.path.join(self.__contents_dir, "Resources/app_packages/bin")
+    def __update_shebang(self, lookup_dir):
         shebang = "#!{}".format(os.path.join(self.__contents_dir, "Resources/python/bin/python3"))
         for filename in os.listdir(lookup_dir):
             filename = os.path.join(lookup_dir, filename)

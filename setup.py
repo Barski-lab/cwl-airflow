@@ -83,7 +83,6 @@ setup(
         'jsonmerge',
         'ruamel.yaml == 0.15.97',
         'apache-airflow == 1.10.5',
-        'mysqlclient >= 1.3.6, < 1.4',
         'pyjwt',
         'urllib3',
         'connexion'
