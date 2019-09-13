@@ -19,6 +19,7 @@ class App(toga.App):
     def startup(self):
         # Create Launcher
         self.__launcher = Launcher(self.__airflow_home_default)
+        self.__launcher.configure()
 
         # Create a main window with a name matching the app
         self.main_window = toga.MainWindow(title=self.name, size=(250,100))

@@ -1,7 +1,19 @@
 #!/usr/bin/env python
 import sys
+import os
 import argparse
 from cwl_airflow.wes.server import run_wes_server
+from cwl_airflow.app.launch import Launcher
+
+
+def run_appinit(args):
+    launcher = Launcher(os.environ.get("AIRFLOW_HOME"))
+    launcher.update_shebang(os.path.join(launcher.contents_dir, "Resources/app_packages/bin"))
+    launcher.update_shebang(os.path.join(launcher.contents_dir, "Resources/app/bin"))
+    launcher.init_airflow_db()
+    launcher.update_airflow_config()
+    launcher.copy_dags()
+    launcher.add_connections()
 
 
 def arg_parser():
@@ -14,6 +26,9 @@ def arg_parser():
     wes_parser.set_defaults(func=run_wes_server)
     wes_parser.add_argument("--port",  dest="port",  type=int,            help="Port to run API server (default: 8081)",      default=8081)
     wes_parser.add_argument("--host",  dest="host",                       help="Host to run API server (default: 127.0.0.1)", default="127.0.0.1")
+
+    init_parser = subparsers.add_parser('appinit', help="Init CWL-Airflow configuration for App", parents=[parent_parser])
+    init_parser.set_defaults(func=run_appinit)
 
     return general_parser
 
