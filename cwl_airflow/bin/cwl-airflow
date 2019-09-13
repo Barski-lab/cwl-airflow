@@ -6,7 +6,7 @@ from cwl_airflow.wes.server import run_wes_server
 from cwl_airflow.app.launch import Launcher
 
 
-def run_relocate(args):
+def run_init(args):
     launcher = Launcher(os.environ.get("AIRFLOW_HOME"))
     launcher.update_shebang(os.path.join(launcher.contents_dir, "Resources/app_packages/bin"))
     launcher.update_shebang(os.path.join(launcher.contents_dir, "Resources/app/bin"))
@@ -27,8 +27,8 @@ def arg_parser():
     wes_parser.add_argument("--port",  dest="port",  type=int,            help="Port to run API server (default: 8081)",      default=8081)
     wes_parser.add_argument("--host",  dest="host",                       help="Host to run API server (default: 127.0.0.1)", default="127.0.0.1")
 
-    init_parser = subparsers.add_parser('relocate', help="Relocate CWL-Airflow App", parents=[parent_parser])
-    init_parser.set_defaults(func=run_relocate)
+    init_parser = subparsers.add_parser('init', help="Init CWL-Airflow App", parents=[parent_parser])
+    init_parser.set_defaults(func=run_init)
 
     return general_parser
 
