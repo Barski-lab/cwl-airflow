@@ -1,6 +1,6 @@
 #!/bin/bash
 CONTENTS_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
 export PYTHONPATH="$CONTENTS_DIR/Resources/app":"$CONTENTS_DIR/Resources/app_packages"
-export PATH="$PATH":"$CONTENTS_DIR/Resources/python/bin":"$CONTENTS_DIR/Resources/app_packages/bin":"$CONTENTS_DIR/Resources/app/bin":"$CONTENTS_DIR/MacOS":"/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin"
+export PATH="$CONTENTS_DIR/Resources/python/bin":"$CONTENTS_DIR/MacOS":"$CONTENTS_DIR/Resources/app/bin":"$CONTENTS_DIR/Resources/app_packages/bin":"$PATH":"/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin"
 cd "$CONTENTS_DIR/Resources"
 python/bin/python3 ./app_packages/bin/airflow "$@"

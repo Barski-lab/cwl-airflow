@@ -30,7 +30,7 @@ class Launcher:
         self.airflow_cfg = os.path.join(self.airflow_home, "airflow.cfg")
 
 
-    def configure(self):
+    def configure_macos_app(self):
         try:
             self.__sch_conf = self.__read_plist(os.path.expanduser(self.__AIRFLOW_SCH))
             self.__web_conf = self.__read_plist(os.path.expanduser(self.__AIRFLOW_WEB))
@@ -41,15 +41,19 @@ class Launcher:
             self.__web_conf = self.__read_plist(os.path.join(default_conf_folder, os.path.basename(self.__AIRFLOW_WEB)))
             self.__api_conf = self.__read_plist(os.path.join(default_conf_folder, os.path.basename(self.__AIRFLOW_API)))
             self.__update_plist_variables()
-            self.update_shebang(os.path.join(self.contents_dir, "Resources/app_packages/bin"))
-            self.update_shebang(os.path.join(self.contents_dir, "Resources/app/bin"))
-            self.init_airflow_db()
-            self.update_airflow_config()
-            self.copy_dags()
-            self.add_connections()
+            self.init()
             self.__write_plist(self.__sch_conf, os.path.expanduser(self.__AIRFLOW_SCH))
             self.__write_plist(self.__web_conf, os.path.expanduser(self.__AIRFLOW_WEB))
             self.__write_plist(self.__api_conf, os.path.expanduser(self.__AIRFLOW_API))
+
+
+    def init(self):
+        self.update_shebang(os.path.join(self.contents_dir, "Resources/app_packages/bin"))
+        self.update_shebang(os.path.join(self.contents_dir, "Resources/app/bin"))
+        self.init_airflow_db()
+        self.update_airflow_config()
+        self.copy_dags()
+        self.add_connections()
 
 
     def __read_plist(self, path):
@@ -183,7 +187,8 @@ class Launcher:
         for root, dirs, files in os.walk(source_dags_folder):
             for filename in files:
                 if re.match(".*\.py$", filename) and filename != "__init__.py":
-                    shutil.copy(os.path.join(root, filename), target_dags_folder)
+                    if not os.path.isfile(os.path.join(target_dags_folder, filename)):
+                        shutil.copy(os.path.join(root, filename), target_dags_folder)
 
 
     def add_connections(self):

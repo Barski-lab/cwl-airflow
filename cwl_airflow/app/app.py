@@ -7,7 +7,6 @@ from cwl_airflow.app.launch import Launcher
 
 class App(toga.App):
 
-    __airflow_home_default = "~/airflow"
     __launcher = None
 
     def load(self, widget):
@@ -18,8 +17,8 @@ class App(toga.App):
 
     def startup(self):
         # Create Launcher
-        self.__launcher = Launcher(self.__airflow_home_default)
-        self.__launcher.configure()
+        self.__launcher = Launcher(os.environ.get("AIRFLOW_HOME"))
+        self.__launcher.configure_macos_app()
 
         # Create a main window with a name matching the app
         self.main_window = toga.MainWindow(title=self.name, size=(250,100))

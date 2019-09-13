@@ -8,12 +8,7 @@ from cwl_airflow.app.launch import Launcher
 
 def run_init(args):
     launcher = Launcher(os.environ.get("AIRFLOW_HOME"))
-    launcher.update_shebang(os.path.join(launcher.contents_dir, "Resources/app_packages/bin"))
-    launcher.update_shebang(os.path.join(launcher.contents_dir, "Resources/app/bin"))
-    launcher.init_airflow_db()
-    launcher.update_airflow_config()
-    launcher.copy_dags()
-    launcher.add_connections()
+    launcher.init()
 
 
 def arg_parser():
