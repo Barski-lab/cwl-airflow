@@ -4,6 +4,7 @@ import os
 import argparse
 from cwl_airflow.wes.server import run_wes_server
 from cwl_airflow.app.launch import Launcher
+from cwl_airflow.utils.helpers import get_version
 
 
 def run_init(args):
@@ -24,6 +25,8 @@ def arg_parser():
 
     init_parser = subparsers.add_parser('init', help="Init CWL-Airflow App", parents=[parent_parser])
     init_parser.set_defaults(func=run_init)
+
+    general_parser.add_argument("--version", action="version", version=get_version(), help="Print version information and exit")
 
     return general_parser
 
