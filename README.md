@@ -11,7 +11,7 @@ functionality with **[CWL v1.1](https://www.commonwl.org/v1.1/)** support.
 
 ## **Cite as**
 
-Kotliar M; Kartashov AV; Barski A (2019): Supporting data for "CWL-Airflow: a lightweight pipeline manager supporting Common Workflow Language" GigaScience Database. http://dx.doi.org/10.5524/100618
+Michael Kotliar, Andrey V Kartashov, Artem Barski, CWL-Airflow: a lightweight pipeline manager supporting Common Workflow Language, GigaScience, Volume 8, Issue 7, July 2019, giz084, https://doi.org/10.1093/gigascience/giz084
 
 ## **Get the latest version**
 ```
