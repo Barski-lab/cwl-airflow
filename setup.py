@@ -77,6 +77,10 @@ setup(
         ]
     ),
     install_requires=[
+        'flask-appbuilder == 1.12.5',
+        'jsonschema == 2.6.0',
+        'urllib3 == 1.23',
+        'future==0.16.0',
         'cryptography',
         'cwltool == 1.0.20190831161204',
         'schema-salad==4.5.20190815125611',
@@ -84,8 +88,7 @@ setup(
         'ruamel.yaml == 0.15.97',
         'apache-airflow == 1.10.5',
         'pyjwt',
-        'urllib3',
-        'connexion'
+        'connexion==2.3.0'
     ],
     options={
         'app': {
@@ -94,32 +97,32 @@ setup(
         },
         'macos': {
             'app_requires': [
-                'toga-cocoa==0.3.0.dev11',
+                'toga-cocoa==0.3.0.dev14',
             ]
         },
         'linux': {
             'app_requires': [
-                'toga-gtk==0.3.0.dev11',
+                'toga-gtk==0.3.0.dev14',
             ]
         },
         'windows': {
             'app_requires': [
-                'toga-winforms==0.3.0.dev11',
+                'toga-winforms==0.3.0.dev14',
             ]
         },
         'ios': {
             'app_requires': [
-                'toga-ios==0.3.0.dev11',
+                'toga-ios==0.3.0.dev14',
             ]
         },
         'android': {
             'app_requires': [
-                'toga-android==0.3.0.dev11',
+                'toga-android==0.3.0.dev14',
             ]
         },
         'django': {
             'app_requires': [
-                'toga-django==0.3.0.dev11',
+                'toga-django==0.3.0.dev14',
             ]
         },
     },

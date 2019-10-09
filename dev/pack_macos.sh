@@ -4,7 +4,7 @@ cd build_venv
 virtualenv .
 source ./bin/activate
 pip install briefcase
-pip install --pre toga
+pip install --pre toga==0.3.0.dev14
 cd ..
 python setup.py macos
 deactivate
