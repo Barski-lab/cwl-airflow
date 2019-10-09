@@ -53,7 +53,7 @@ class CWLAirflowBackend():
     # curl -X GET "127.0.0.1:8081/api/experimental/wes/runs" -H "accept: application/json"
     # curl -X POST "127.0.0.1:8081/api/experimental/wes/runs/pracfcizfvmhdefxqdomtxktkbflhgav/cancel" -H "accept: application/json"
 
-    # curl -X GET "127.0.0.1:8081/api/experimental/wes/runs/pracfcizfvmhdefxqdomtxktkbflhgav" -H "accept: application/json"
+    # curl -X GET "127.0.0.1:8081/api/experimental/wes/runs/zlqukumkxxfkumrevclzjcsbyuguhwqy" -H "accept: application/json"
     # curl -X GET "127.0.0.1:8081/api/experimental/wes/runs/pracfcizfvmhdefxqdomtxktkbflhgav/status" -H "accept: application/json"
     # curl -X POST "127.0.0.1:8081/api/experimental/wes/runs" -H "accept: application/json" -H "Content-Type: multipart/form-data" -F "workflow_attachment[]=@custom-bash.cwl"
 
@@ -297,7 +297,10 @@ class CWLAirflowBackend():
             dag_run = DagRun.find(dag_id=run_id, state=None)[0]
             workflow_params = dag_run.conf["job"]
             del workflow_params["id"]
-            workflow_outputs = dag_run.get_task_instance(task_id="CWLJobGatherer").xcom_pull()["promises"]
+            try:
+                workflow_outputs = dag_run.get_task_instance(task_id="CWLJobGatherer").xcom_pull()[0]
+            except Exception:
+                workflow_outputs = {}
             return {
                 "run_id": run_id,
                 "request": {"workflow_params": workflow_params},
