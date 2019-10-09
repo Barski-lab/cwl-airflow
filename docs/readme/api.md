@@ -16,8 +16,8 @@ Optional parameters:
 
 Every API endpoint belongs to one of the following groups:
 
-- Airflow (mirrors Airflow's console functionality)
-- AirflowLegacy (mirrors particular functions from the original Airflow webserver's API)
+- Airflow (mirrors Airflow console functionality)
+- AirflowLegacy (mirrors particular functions from the original Airflow webserver API)
 - WorkflowExecutionService (implements main functionality of [WES](https://github.com/ga4gh/workflow-execution-service-schemas))
 
 **For detailed API specification, please follow the link on [SwaggerHub](https://app.swaggerhub.com/apis/michael-kotliar/cwl_airflow_workflow_execution_service/1.0.0)**
