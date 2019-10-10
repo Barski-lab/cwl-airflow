@@ -10,6 +10,7 @@ python setup.py macos
 deactivate
 cd macOS
 cp ../dev/macos/*  ./cwl-airflow.app/Contents/MacOS/
+find ./cwl-airflow.app -perm 555 | xargs chmod 755
 tar -zcvf cwl-airflow.macos.tar.gz cwl-airflow.app
 rm -rf cwl-airflow.app
 cd ..
