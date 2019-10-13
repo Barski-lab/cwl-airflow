@@ -79,7 +79,7 @@ setup(
     install_requires=[
         'flask-appbuilder == 1.12.5',
         'jsonschema == 2.6.0',
-        'urllib3 == 1.23',
+        'urllib3',
         'future==0.16.0',
         'cryptography',
         'cwltool == 1.0.20190831161204',
