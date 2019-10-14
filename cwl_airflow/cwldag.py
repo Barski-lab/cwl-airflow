@@ -40,6 +40,12 @@ class CWLDAG(DAG):
         kwargs.update({"on_failure_callback": kwargs.get("on_failure_callback", dag_on_failure),
                        "on_success_callback": kwargs.get("on_success_callback", dag_on_success)})
 
+        # parameters that cannot be overwritten in default_args
+        default_args.update({
+            'singularity': conf_get_default('cwl', 'singularity', default_args.get('singularity', False)),
+            'use_container': conf_get_default('cwl', 'use_container', default_args.get('use_container', True))
+        })
+
         init_default_args = {
             'start_date': days_ago(14),
             'email_on_failure': False,
