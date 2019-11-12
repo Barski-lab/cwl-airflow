@@ -86,7 +86,7 @@ setup(
         'schema-salad==4.5.20190815125611',
         'jsonmerge',
         'ruamel.yaml == 0.15.97',
-        'apache-airflow == 1.10.5',
+        'apache-airflow == 1.10.6',
         'pyjwt',
         'connexion==2.3.0'
     ],

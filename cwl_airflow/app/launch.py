@@ -48,8 +48,8 @@ class Launcher:
 
 
     def init(self):
-        self.update_shebang(os.path.join(self.contents_dir, "Resources/app_packages/bin"))
-        self.update_shebang(os.path.join(self.contents_dir, "Resources/app/bin"))
+        # self.update_shebang(os.path.join(self.contents_dir, "Resources/app_packages/bin"))
+        # self.update_shebang(os.path.join(self.contents_dir, "Resources/app/bin"))
         self.init_airflow_db()
         self.update_airflow_config()
         self.copy_dags()
