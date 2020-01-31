@@ -1,7 +1,8 @@
 #! /usr/bin/env python3
-
-import logging
 import json
+import logging
+from typing import Any, Iterable, Mapping, Sequence, Tuple
+
 from ruamel import yaml
 from six.moves import urllib
 from cwltool.argparser import get_default_args
@@ -9,9 +10,11 @@ from airflow.models import DAG
 from airflow.operators import BaseOperator
 from airflow.exceptions import AirflowException
 from airflow.utils.dates import days_ago
+
 from .cwlstepoperator import CWLStepOperator
 from .cwlutils import conf_get_default
-from cwl_airflow.utils.notifier import dag_on_success, dag_on_failure
+from .utils.notifier import dag_on_success, dag_on_failure
+
 # logging.getLogger('cwltool').setLevel(conf_get_default('core', 'logging_level', 'ERROR').upper())
 # logging.getLogger('salad').setLevel(conf_get_default('core', 'logging_level', 'ERROR').upper())
 logging.getLogger('cwltool').setLevel(logging.ERROR)
@@ -24,7 +27,6 @@ _logger.setLevel(conf_get_default('core', 'logging_level', 'ERROR').upper())
 
 
 class CWLDAG(DAG):
-
     def __init__(
             self,
             dag_id=None,
@@ -77,6 +79,26 @@ class CWLDAG(DAG):
             **kwargs,
         )
 
+    @classmethod
+    def get_items(cls, steps) -> Iterable[Tuple[str, Any]]:
+        """
+        The CWL spec allows many things to be stored as key/value mappings, or as sequences
+        with each value being a mapping that includes a 'id' key.
+
+        Return key/value pairs both for mappings and sequences -- if a sequence is given,
+        obtain the key from the 'id' field in the value.
+
+        :param steps: Either a mapping or a sequence
+        :return: Iterable of 2-tuples:
+         [0] ID of the item, either the key if 'steps' is a mapping, or the 'id' key in the item
+         [1] The item itself
+        """
+        if isinstance(steps, Mapping):
+            yield from steps.items()
+        elif isinstance(steps, Sequence):
+            for item in steps:
+                yield item['id'], item
+
     def quick_load_cwl(self, cwl_file):
         with open(cwl_file, "r") as input_stream:
             cwl_data = yaml.round_trip_load(input_stream, preserve_quotes=True)
@@ -91,7 +113,7 @@ class CWLDAG(DAG):
         else:
             outputs = {}
 
-            for step_id, step_val in self.cwlwf["steps"].items():
+            for step_id, step_val in self.get_items(self.cwlwf["steps"]):
                 cwl_task = CWLStepOperator(task_id=step_id,
                                            dag=self,
                                            retries=self.default_args["task_retries"],
@@ -101,11 +123,11 @@ class CWLDAG(DAG):
                 for out in step_val["out"]:
                     outputs["/".join([step_id, out])] = cwl_task
 
-            for step_id, step_val in self.cwlwf["steps"].items():
+            for step_id, step_val in self.get_items(self.cwlwf["steps"]):
                 current_task = outputs[step_id]
                 if not step_val["in"]:  # need to check it, because in can be set as []
                     continue
-                for inp_id, inp_val in step_val["in"].items():
+                for inp_id, inp_val in self.get_items(step_val["in"]):
                     if isinstance(inp_val, list):
                         step_input_sources = inp_val
                     elif isinstance(inp_val, str):
