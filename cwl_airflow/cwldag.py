@@ -69,9 +69,13 @@ class CWLDAG(DAG):
         merged_default_args = get_default_args()
         merged_default_args.update(init_default_args)
 
-        super(self.__class__, self).__init__(dag_id=dag_id if dag_id else urllib.parse.urldefrag(cwl_workflow)[0].split("/")[-1].replace(".cwl", "").replace(".", "_dot_"),
-                                             default_args=merged_default_args,
-                                             schedule_interval=schedule_interval, *args, **kwargs)
+        super().__init__(
+            dag_id=dag_id if dag_id else urllib.parse.urldefrag(cwl_workflow)[0].split("/")[-1].replace(".cwl", "").replace(".", "_dot_"),
+            default_args=merged_default_args,
+            schedule_interval=schedule_interval,
+            *args,
+            **kwargs,
+        )
 
     def quick_load_cwl(self, cwl_file):
         with open(cwl_file, "r") as input_stream:
