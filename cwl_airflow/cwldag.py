@@ -29,9 +29,12 @@ class CWLDAG(DAG):
             self,
             dag_id=None,
             cwl_workflow=None,
-            default_args={},
+            default_args=None,
             schedule_interval=None,
             *args, **kwargs):
+
+        if default_args is None:
+            default_args = {}
 
         self.top_task = None
         self.bottom_task = None
