@@ -172,7 +172,7 @@ class CWLDAG(DAG):
 
     def get_output_list(self):
         outputs = {}
-        for out_id, out_val in self.cwlwf["outputs"].items():
+        for out_id, out_val in self.get_items(self.cwlwf["outputs"]):
             if "outputSource" in out_val:
                 outputs[out_val["outputSource"]] = out_id
             else:
