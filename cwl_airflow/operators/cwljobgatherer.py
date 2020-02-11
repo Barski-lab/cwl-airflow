@@ -32,7 +32,7 @@ class CWLJobGatherer(BaseOperator):
                        "on_failure_callback": kwargs.get("on_failure_callback", task_on_failure),
                        "on_retry_callback":   kwargs.get("on_retry_callback",   task_on_retry)})
 
-        super(CWLJobGatherer, self).__init__(task_id=task_id, *args, **kwargs)
+        super().__init__(task_id=task_id, *args, **kwargs)
 
         self.outputs = self.dag.get_output_list()
         self.outdir = None

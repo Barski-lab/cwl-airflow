@@ -54,7 +54,7 @@ class CWLStepOperator(BaseOperator):
                        "on_failure_callback": kwargs.get("on_failure_callback", task_on_failure),
                        "on_retry_callback":   kwargs.get("on_retry_callback",   task_on_retry)})
 
-        super(self.__class__, self).__init__(task_id=task_id, *args, **kwargs)
+        super().__init__(task_id=task_id, *args, **kwargs)
 
         self.reader_task_id = reader_task_id if reader_task_id else self.reader_task_id
 

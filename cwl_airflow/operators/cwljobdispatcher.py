@@ -37,7 +37,7 @@ class CWLJobDispatcher(BaseOperator):
                        "on_failure_callback": kwargs.get("on_failure_callback", task_on_failure),
                        "on_retry_callback":   kwargs.get("on_retry_callback",   task_on_retry)})
 
-        super(CWLJobDispatcher, self).__init__(task_id=task_id, *args, **kwargs)
+        super().__init__(task_id=task_id, *args, **kwargs)
 
         self.tmp_folder = tmp_folder if tmp_folder else self.dag.default_args['tmp_folder']
         if ui_color: self.ui_color = ui_color
