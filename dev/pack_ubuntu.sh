@@ -26,9 +26,5 @@ find ./bin -type f -maxdepth 1 -exec sed -i '' -e '1s/.*/#!\/usr\/bin\/env pytho
 
 
 # copy executable files
-cp ../linux/* ./bin
-
-
-
-
-
+mkdir bin_portable
+cp ../linux/* ./bin_portable
