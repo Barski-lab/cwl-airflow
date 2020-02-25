@@ -22,7 +22,7 @@ deactivate
 
 
 # replace default path to python3
-# find ./bin -type f -maxdepth 1 -exec sed -i '' -e '1s/.*/#!\/usr\/bin\/env python3/' {}  \;
+find ./bin -executable -type f -maxdepth 1 -exec grep -Iq "^#\!.*python.*" {} \; -exec sed -i '' -e '1s/.*/#!\/usr\/bin\/env python3/' {}  \;
 
 
 # copy executable files
