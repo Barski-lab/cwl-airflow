@@ -28,3 +28,10 @@ find ./bin -executable -type f -maxdepth 1 -exec grep -Iq "^#\!.*python.*" {} \;
 # copy executable files
 mkdir bin_portable
 cp ../linux/* ./bin_portable
+
+
+# compress to tar.gz
+cd ..
+chmod -R u+w ./cwl-airflow
+tar -zcvf cwl-airflow.ubuntu.tar.gz cwl-airflow
+rm -rf cwl-airflow
