@@ -88,7 +88,8 @@ setup(
         'ruamel.yaml == 0.15.97',
         'apache-airflow == 1.10.6',
         'pyjwt',
-        'connexion==2.3.0'
+        'connexion==2.3.0',
+        'werkzeug==0.16.1'
     ],
     options={
         'app': {
