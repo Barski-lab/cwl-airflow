@@ -46,6 +46,15 @@ sudo apt install python3-pip
 ./build_app_image.sh
 ```
 
+### Build portable version for Ubuntu
+
+On the virtual machine with Ubuntu 18.04.2 (Python3, pip3 and virtualenv preinstalled)
+1. Run `pack_ubuntu.sh` from the dev folder
+```bash
+./pack_ubuntu.sh
+```
+
+
 ### Build Vagrant Box
 1. Install Vagrant from [here](https://www.vagrantup.com/downloads.html)
 2. Install VirtualBox from [here](https://www.virtualbox.org/wiki/Downloads)
