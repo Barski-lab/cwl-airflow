@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Run script in the current directory without any arguments
-# NOTE: you should have python3, pip3 and vitrualenv installed
+# NOTE: you should have python3, pip3, 2to3 and vitrualenv installed
 
 
 # create directory for portable version of cwl-airflow
@@ -28,6 +28,11 @@ find ./bin -executable -type f -maxdepth 1 -exec grep -Iq "^#\!.*python.*" {} \;
 # copy executable files
 mkdir bin_portable
 cp ../linux/* ./bin_portable
+
+
+# Copy 2to3 manually which is not included in virtual environment by default
+cp -r /usr/lib/python3.*/lib2to3 ./lib/python3.*/site-packages
+cp -r /usr/bin/2to3 ./bin
 
 
 # compress to tar.gz
