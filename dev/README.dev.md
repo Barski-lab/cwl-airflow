@@ -48,7 +48,7 @@ sudo apt install python3-pip
 
 ### Build portable version for Ubuntu
 
-On the virtual machine with Ubuntu 18.04.2 (Python3, pip3 and virtualenv preinstalled)
+On the machine with Docker installed
 1. Run `pack_ubuntu.sh` from the dev folder
 ```bash
 ./pack_ubuntu.sh
