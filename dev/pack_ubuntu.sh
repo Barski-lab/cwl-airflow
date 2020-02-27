@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
 # Run script in the current directory without any arguments
-# NOTE: you should have python3, pip3, 2to3 and vitrualenv installed
-
-# sudo apt-get install python3-distutils 2to3
-
+# Ubuntu 18.04.3
+# sudo apt-get install python3-dev python3-pip virtualenv 2to3
+#
+#
+# sudo apt-get install python3-distutils
+# sudo apt install python3-testresources
 
 
 # create directory for portable version of cwl-airflow
@@ -13,7 +15,7 @@ cd cwl-airflow
 
 
 # create virtual environment
-virtualenv -p `which python3` --always-copy .
+virtualenv -p `which python3.6` --always-copy .
 source ./bin/activate
 
 
@@ -34,9 +36,9 @@ cp ../linux/* ./bin_portable
 
 
 # Copy 2to3 and distutils/ manually which is not included in virtual environment by default
-cp -r /usr/lib/python3.*/lib2to3 ./lib/python3.*/site-packages
+cp -r /usr/lib/python3.6/lib2to3 ./lib/python3.6/site-packages
 cp -r /usr/bin/2to3 ./bin
-cp -r /usr/lib/python3.*/distutils ./lib/python3.*/site-packages
+cp -r /usr/lib/python3.6/distutils ./lib/python3.6/site-packages
 
 
 # compress to tar.gz
