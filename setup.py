@@ -77,18 +77,18 @@ setup(
         ]
     ),
     install_requires=[
-        'flask-appbuilder == 1.12.5',
-        'jsonschema == 2.6.0',
+        'flask-appbuilder == 2.2.4',
+        'jsonschema == 3.0.1',
         'urllib3',
         'future==0.16.0',
         'cryptography',
-        'cwltool == 1.0.20190831161204',
-        'schema-salad==4.5.20190815125611',
+        'cwltool == 2.0.20200224214940',
+        'schema-salad==5.0.20200220195218',
         'jsonmerge',
         'ruamel.yaml == 0.15.97',
-        'apache-airflow == 1.10.6',
+        'apache-airflow == 1.10.9',
         'pyjwt',
-        'connexion==2.3.0',
+        'connexion==2.6.0',
         'werkzeug==0.16.1'
     ],
     options={
