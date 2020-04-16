@@ -10,10 +10,11 @@ import shutil
 
 import cwltool.load_tool as load
 
+from time import sleep
 from werkzeug.utils import secure_filename
 from six import itervalues, iterlists
 from os import path, environ, makedirs
-from airflow.models import DagBag, TaskInstance, DagRun
+from airflow.models import DagBag, TaskInstance, DagRun, DagModel
 from airflow.utils.state import State
 from airflow import configuration
 from airflow.utils.timezone import parse as parsedate
@@ -148,10 +149,19 @@ class CWLAirflowBackend():
             dag_path = DagModel.get_current(dag_id).fileloc
         except Exception:
             dag_path = path.join(DAGS_FOLDER, dag_id + ".py")
+
+        dag_bag = DagBag(dag_folder=dag_path)
+        if not dag_bag.dags:
+           logger.info("Failed to import dag due to the following errors")
+           logger.info(dag_bag.import_errors)
+           logger.info("Sleep for 3 seconds and give it a second try")
+           sleep(3)
+           dag_bag = DagBag(dag_folder=dag_path)
+
         triggers = trigger_dag._trigger_dag(
             dag_id=dag_id,
             dag_run=DagRun(),
-            dag_bag=DagBag(dag_folder=dag_path),
+            dag_bag=dag_bag,
             run_id=run_id,
             conf=conf,
             execution_date=None,
