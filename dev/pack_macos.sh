@@ -7,6 +7,8 @@ pip install briefcase==0.2.10
 pip install --pre toga==0.3.0.dev14
 cd ..
 python setup.py macos
+pip uninstall lxml
+pip install --no-binary lxml lxml
 deactivate
 cd macOS
 cp ../dev/macos/*  ./cwl-airflow.app/Contents/MacOS/
