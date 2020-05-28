@@ -59,7 +59,7 @@ def post_results(context):
         dag_run = context["dag_run"]
         results = ""
         if context["ti"].xcom_pull(task_ids="CWLJobGatherer") and len(context["ti"].xcom_pull(task_ids="CWLJobGatherer")) > 0:
-            results = context["ti"].xcom_pull(task_ids="CWLJobGatherer")[0]
+            results = context["ti"].xcom_pull(task_ids="CWLJobGatherer") #[0]
         data = sign_with_jwt(data={"dag_id":  dag_run.dag_id,
                                    "run_id":  dag_run.run_id,
                                    "results": results})

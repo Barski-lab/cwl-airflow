@@ -84,7 +84,7 @@ class CWLJobGatherer(BaseOperator):
             pass
         _logger.info("Job done: {}".format(dumps(_job_result, indent=4)))
 
-        return _job_result, promises
+        return _job_result #, promises
 
     def execute(self, context):
         post_status(context)
