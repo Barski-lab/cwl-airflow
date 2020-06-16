@@ -1,11 +1,10 @@
 import sys
+import os
 import re
 import configparser
 import shutil
 import logging
 
-from os import environ, path, walk
-from plistlib import load, dump
 from subprocess import run, DEVNULL, CalledProcessError
 
 from cwl_airflow.utilities.helpers import (
@@ -38,7 +37,7 @@ def init_airflow_db(args):
     are AIRFLOW_HOME and AIRFLOW_CONFIG
     """
 
-    custom_env = environ.copy()
+    custom_env = os.environ.copy()
     custom_env["AIRFLOW_HOME"] = args.home
     custom_env["AIRFLOW_CONFIG"] = args.config
     try:
@@ -85,21 +84,21 @@ def copy_dags(airflow_home, source_folder=None):
     """
 
     if source_folder is None:
-        source_folder = path.join(
-            path.dirname(
-                path.abspath(
-                    path.join(__file__, "../../")     
+        source_folder = os.path.join(
+            os.path.dirname(
+                os.path.abspath(
+                    os.path.join(__file__, "../../")     
                 )
             ), 
             "extensions/dags",
         )
 
-    target_folder = get_dir(path.join(airflow_home, "dags"))
-    for root, dirs, files in walk(source_folder):
+    target_folder = get_dir(os.path.join(airflow_home, "dags"))
+    for root, dirs, files in os.walk(source_folder):
         for filename in files:
             if re.match(".*\\.py$", filename) and filename != "__init__.py":
-                if not path.isfile(path.join(target_folder, filename)):
-                    shutil.copy(path.join(root, filename), target_folder)
+                if not os.path.isfile(os.path.join(target_folder, filename)):
+                    shutil.copy(os.path.join(root, filename), target_folder)
 
 
 def add_connections(args):
@@ -111,7 +110,7 @@ def add_connections(args):
     that is used to report workflow execution progress and results.
     """
 
-    custom_env = environ.copy()
+    custom_env = os.environ.copy()
     custom_env["AIRFLOW_HOME"] = args.home
     custom_env["AIRFLOW_CONFIG"] = args.config
     try:
