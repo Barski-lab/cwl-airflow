@@ -1,41 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
-import os
-import argparse
-from cwl_airflow.wes.server import run_wes_server
-from cwl_airflow.app.launch import Launcher
-from cwl_airflow.utils.helpers import get_version
 
-
-def run_init(args):
-    launcher = Launcher(os.environ.get("AIRFLOW_HOME"))
-    launcher.init()
-
-
-def arg_parser():
-    parent_parser = argparse.ArgumentParser(add_help=False)
-    general_parser = argparse.ArgumentParser(description='cwl-airflow')
-    subparsers = general_parser.add_subparsers()
-    subparsers.required = True
-
-    wes_parser = subparsers.add_parser('apiserver', help="Running CWL-Airflow API server", parents=[parent_parser])
-    wes_parser.set_defaults(func=run_wes_server)
-    wes_parser.add_argument("--port",  dest="port",  type=int,            help="Port to run API server (default: 8081)",      default=8081)
-    wes_parser.add_argument("--host",  dest="host",                       help="Host to run API server (default: 127.0.0.1)", default="127.0.0.1")
-
-    init_parser = subparsers.add_parser('init', help="Init CWL-Airflow App", parents=[parent_parser])
-    init_parser.set_defaults(func=run_init)
-
-    general_parser.add_argument("--version", action="version", version=get_version(), help="Print version information and exit")
-
-    return general_parser
+from cwl_airflow.utilities.parser import parse_arguments
 
 
 def main(argsl=None):
-    if argsl is None:
-        argsl = sys.argv[1:]
-    argsl.append("")  # To avoid raising error when argsl is empty
-    args, _ = arg_parser().parse_known_args(argsl)
+    argsl = sys.argv[1:] if argsl is None else argsl
+    args = parse_arguments(argsl)
+    # TODO: maybe I need to setup logger here based on parsed parameters
     args.func(args)
 
 

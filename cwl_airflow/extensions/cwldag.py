@@ -1,19 +1,24 @@
 #! /usr/bin/env python3
 import json
 import logging
-from typing import Any, Iterable, Mapping, Sequence, Tuple
 
 from ruamel import yaml
 from six.moves import urllib
-from cwltool.argparser import get_default_args
-from airflow.models import DAG
-from airflow.operators import BaseOperator
-from airflow.exceptions import AirflowException
-from airflow.utils.dates import days_ago
+from typing import Any, Iterable, Mapping, Sequence, Tuple
 
-from .cwlstepoperator import CWLStepOperator
-from .cwlutils import conf_get_default
-from .utils.notifier import dag_on_success, dag_on_failure
+from cwltool.argparser import get_default_args
+
+from cwl_airflow.exceptions.operators.cwlstepoperator import CWLStepOperator
+from cwl_airflow.utils.cwlutils import conf_get_default
+from cwl_airflow.utils.notifier import dag_on_success, dag_on_failure
+from cwl_airflow.utils.helpers import CleanAirflowImport
+
+with CleanAirflowImport():
+    from airflow.models import DAG
+    from airflow.operators import BaseOperator
+    from airflow.exceptions import AirflowException
+    from airflow.utils.dates import days_ago
+
 
 # logging.getLogger('cwltool').setLevel(conf_get_default('core', 'logging_level', 'ERROR').upper())
 # logging.getLogger('salad').setLevel(conf_get_default('core', 'logging_level', 'ERROR').upper())

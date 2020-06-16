@@ -7,6 +7,7 @@ import copy
 import glob
 import subprocess
 import shutil
+
 from jsonmerge import merge
 
 from cwltool.executors import SingleJobExecutor
@@ -16,13 +17,24 @@ from cwltool.context import RuntimeContext, getdefault
 from cwltool.pathmapper import visit_class
 from cwltool.mutation import MutationManager
 
-from airflow.models import BaseOperator
-from airflow.utils.decorators import apply_defaults
-
-from .cwlutils import flatten, shortname, load_cwl
-from cwl_airflow.utils.notifier import task_on_success, task_on_failure, task_on_retry, post_status
-
+from cwl_airflow.utils.cwlutils import (
+    flatten, 
+    shortname, 
+    load_cwl
+)
+from cwl_airflow.utils.helpers import CleanAirflowImport
 from airflow.utils.log.logging_mixin import StreamLogWriter
+from cwl_airflow.utils.notifier import (
+    task_on_success,
+    task_on_failure,
+    task_on_retry,
+    post_status
+)
+
+with CleanAirflowImport():
+    from airflow.models import BaseOperator
+    from airflow.utils.decorators import apply_defaults
+
 
 _logger = logging.getLogger(__name__)
 

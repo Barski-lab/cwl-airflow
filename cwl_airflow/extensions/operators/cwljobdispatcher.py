@@ -2,19 +2,27 @@ import logging
 import os
 import io
 import sys
-from tempfile import mkdtemp
-from json import dumps
-
 import schema_salad.schema
-from schema_salad.ref_resolver import Loader, file_uri
 import ruamel.yaml as yaml
 
-from airflow.models import BaseOperator
-from airflow.utils.decorators import apply_defaults
-from ..cwlutils import load_cwl
-from cwl_airflow.utils.notifier import task_on_success, task_on_failure, task_on_retry, post_status
-from cwl_airflow.utils.helpers import get_folder
+from tempfile import mkdtemp
+from json import dumps
+from schema_salad.ref_resolver import Loader, file_uri
 from cwltool.main import jobloaderctx, init_job_order
+
+from cwl_airflow.utils.cwlutils import load_cwl
+from cwl_airflow.utils.notifier import (
+    task_on_success,
+    task_on_failure,
+    task_on_retry,
+    post_status
+)
+from cwl_airflow.utils.helpers import get_folder, CleanAirflowImport
+
+with CleanAirflowImport():
+    from airflow.models import BaseOperator
+    from airflow.utils.decorators import apply_defaults
+
 
 _logger = logging.getLogger(__name__)
 

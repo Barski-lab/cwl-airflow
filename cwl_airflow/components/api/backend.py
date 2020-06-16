@@ -14,15 +14,24 @@ from time import sleep
 from werkzeug.utils import secure_filename
 from six import itervalues, iterlists
 from os import path, environ, makedirs
-from airflow.models import DagBag, TaskInstance, DagRun, DagModel
-from airflow.utils.state import State
-from airflow import configuration
-from airflow.utils.timezone import parse as parsedate
-from airflow.api.common.experimental import trigger_dag
-from airflow.settings import DAGS_FOLDER
-from cwl_airflow.utils.helpers import get_version, get_folder
-from cwl_airflow.cwlutils import conf_get_default
 from schema_salad.ref_resolver import Loader
+
+from cwl_airflow.utilities.cwlutils import conf_get_default
+from cwl_airflow.utilities.helpers import (
+    get_version,
+    get_dir,
+    CleanAirflowImport
+)
+
+with CleanAirflowImport():
+    from airflow.models import DagBag, TaskInstance, DagRun, DagModel
+    from airflow.utils.state import State
+    from airflow import configuration
+    from airflow.utils.timezone import parse as parsedate
+    from airflow.api.common.experimental import trigger_dag
+    from airflow.settings import DAGS_FOLDER
+
+
 
 
 logger = logging.getLogger(__name__)
@@ -216,7 +225,7 @@ class CWLAirflowBackend():
 ###########################################################################
  
     def wes_collect_attachments(self, run_id):
-        tempdir = tempfile.mkdtemp(dir=get_folder(path.abspath(conf_get_default('cwl', 'tmp_folder', '/tmp'))), prefix="run_id_"+run_id+"_")
+        tempdir = tempfile.mkdtemp(dir=get_dir(path.abspath(conf_get_default('cwl', 'tmp_folder', '/tmp'))), prefix="run_id_"+run_id+"_")
         logger.debug(f"""Save all attached files to {tempdir}""")        
         for k, ls in iterlists(connexion.request.files):
             logger.debug(f"""Process attachment parameter {k}""")

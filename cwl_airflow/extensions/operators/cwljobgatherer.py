@@ -1,16 +1,21 @@
 import logging
 import os
 import shutil
+
 from json import dumps
 from jsonmerge import merge
 
-from airflow.models import BaseOperator
-from airflow.utils import apply_defaults
-
 from cwltool.process import relocateOutputs
 from cwltool.stdfsaccess import StdFsAccess
+
 from cwl_airflow.utils.notifier import task_on_success, task_on_failure, task_on_retry, post_status
-from ..cwlstepoperator import CWLStepOperator
+from cwl_airflow.utils.helpers import get_folder, CleanAirflowImport
+from cwl_airflow.extensions.operators.cwlstepoperator import CWLStepOperator
+
+with CleanAirflowImport():
+    from airflow.models import BaseOperator
+    from airflow.utils import apply_defaults
+
 
 _logger = logging.getLogger(__name__)
 

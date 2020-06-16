@@ -1,9 +1,13 @@
 import jwt
 import logging
 import requests
-from airflow.models import Variable
-from airflow.utils.state import State
-from airflow.hooks.http_hook import HttpHook
+
+from cwl_airflow.utilities.helpers import CleanAirflowImport
+
+with CleanAirflowImport():
+    from airflow.models import Variable
+    from airflow.utils.state import State
+    from airflow.hooks.http_hook import HttpHook
 
 
 logger = logging.getLogger(__name__)

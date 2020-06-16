@@ -1,7 +1,12 @@
 import jwt
+
 from functools import wraps
 from flask import request, Response
-from airflow.models import Variable
+
+from cwl_airflow.utilities.helpers import CleanAirflowImport
+
+with CleanAirflowImport():
+    from airflow.models import Variable
 
 
 client_auth = None

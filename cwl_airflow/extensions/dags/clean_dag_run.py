@@ -1,13 +1,18 @@
 import logging
 import psutil
 import shutil
-from airflow import configuration
-from airflow.models import DAG, DagRun, TaskInstance
-from airflow.operators.python_operator import PythonOperator
-from airflow.utils.dates import days_ago
-from airflow.utils.db import provide_session
-from airflow.utils.state import State
+
 from cwl_airflow.utils.notifier import dag_on_success, dag_on_failure
+from cwl_airflow.utilities.helpers import CleanAirflowImport
+
+with CleanAirflowImport():
+    from airflow import configuration
+    from airflow.models import DAG, DagRun, TaskInstance
+    from airflow.operators.python_operator import PythonOperator
+    from airflow.utils.dates import days_ago
+    from airflow.utils.db import provide_session
+    from airflow.utils.state import State
+
 
 
 logger = logging.getLogger(__name__)

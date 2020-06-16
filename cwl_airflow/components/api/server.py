@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 import connexion
 from connexion.resolver import Resolver
-from cwl_airflow.wes.backend import CWLAirflowBackend
+
+from cwl_airflow.components.api.backend import CWLAirflowBackend
 
 
-def run_wes_server(args):
+def run_api_server(args):
     app = connexion.App(__name__)
     backend = CWLAirflowBackend()
     def rs(x):
