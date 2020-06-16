@@ -19,21 +19,25 @@ with CleanAirflowImport():
     
 
 def run_init_config(args):
+    """
+    Runs sequence of steps required to configure CWL-Airflow
+    for the first time. Safe to run several times
+    """
+
     init_airflow_db(args)
     patch_airflow_config(args.config)
+    add_connections(args)
     copy_dags(args.home)
-    # add_connections()
 
 
 def init_airflow_db(args):
     """
     Sets AIRFLOW_HOME and AIRFLOW_CONFIG from args.
-    Although, both env variables should have been already set
-    by argument parser, we set them again mostly because of
-    the tests. For now call airflow initdb from subprocess to
-    make sure that the only two things we should care about
+    Call airflow initdb from subprocess to make sure
+    that the only two things we should care about
     are AIRFLOW_HOME and AIRFLOW_CONFIG
     """
+
     custom_env = environ.copy()
     custom_env["AIRFLOW_HOME"] = args.home
     custom_env["AIRFLOW_CONFIG"] = args.config
@@ -60,6 +64,7 @@ def patch_airflow_config(airflow_config):
     sed -i -e 's/^load_examples.*/load_examples = False/g' {airflow_config} && \
     sed -i -e 's/^hide_paused_dags_by_default.*/hide_paused_dags_by_default = True/g' {airflow_config}
     """
+
     try:
         run(
             patch,
@@ -92,15 +97,38 @@ def copy_dags(airflow_home, source_folder=None):
     target_folder = get_dir(path.join(airflow_home, "dags"))
     for root, dirs, files in walk(source_folder):
         for filename in files:
-            if re.match(".*\.py$", filename) and filename != "__init__.py":
+            if re.match(".*\\.py$", filename) and filename != "__init__.py":
                 if not path.isfile(path.join(target_folder, filename)):
                     shutil.copy(path.join(root, filename), target_folder)
 
 
-def add_connections():
-    merge_conn(models.Connection(conn_id = "process_report",
-        conn_type = "http",
-        host = "localhost",
-        port = "3070",
-        extra = "{\"endpoint\":\"/airflow/\"}")
-    )
+def add_connections(args):
+    """
+    Sets AIRFLOW_HOME and AIRFLOW_CONFIG from args.
+    Call 'airflow connections --add' from subproces to make sure that
+    the only two things we should care about are AIRFLOW_HOME and
+    AIRFLOW_CONFIG. Adds "process_report" connections to the Airflow DB
+    that is used to report workflow execution progress and results.
+    """
+
+    custom_env = environ.copy()
+    custom_env["AIRFLOW_HOME"] = args.home
+    custom_env["AIRFLOW_CONFIG"] = args.config
+    try:
+        run(
+            [
+                "airflow", "connections", "--add",
+                "--conn_id", "process_report",
+                "--conn_type", "http",
+                "--conn_host", "localhost",
+                "--conn_port", "3070",
+                "--conn_extra", "{\"endpoint\":\"/airflow/\"}"
+            ],
+            env=custom_env,
+            check=True,
+            stdout=DEVNULL,
+            stderr=DEVNULL
+        )
+    except (CalledProcessError, FileNotFoundError) as err:
+        logging.error(f"""Failed to run 'airflow connections --add'. Exiting.\n{err}""")
+        sys.exit(1)

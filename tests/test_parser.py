@@ -34,10 +34,6 @@ def test_parse_arguments_for_init_with_both_params_if_environment_is_not_set(mon
         "Failed to parse --home"
     assert result_args.config == control_airflow_cfg, \
         "Failed to parse --config"
-    assert environ["AIRFLOW_HOME"] == control_airflow_home, \
-        "Failed to set AIRFLOW_HOME"
-    assert environ["AIRFLOW_CONFIG"] == control_airflow_cfg, \
-        "Failed to set AIRFLOW_CONFIG"
 
 
 def test_parse_arguments_for_init_with_both_params_if_environment_is_set(monkeypatch):
@@ -68,10 +64,6 @@ def test_parse_arguments_for_init_with_both_params_if_environment_is_set(monkeyp
         "Failed to parse --home"
     assert result_args.config == control_airflow_cfg, \
         "Failed to parse --config"
-    assert environ["AIRFLOW_HOME"] == control_airflow_home, \
-        "Failed to set AIRFLOW_HOME"
-    assert environ["AIRFLOW_CONFIG"] == control_airflow_cfg, \
-        "Failed to set AIRFLOW_CONFIG"
 
 
 def test_parse_arguments_for_init_with_relative_path_for_both_params_if_environment_is_not_set(monkeypatch):
@@ -103,10 +95,6 @@ def test_parse_arguments_for_init_with_relative_path_for_both_params_if_environm
         "Failed to parse --home"
     assert result_args.config == control_airflow_cfg, \
         "Failed to parse --config"
-    assert environ["AIRFLOW_HOME"] == control_airflow_home, \
-        "Failed to set AIRFLOW_HOME"
-    assert environ["AIRFLOW_CONFIG"] == control_airflow_cfg, \
-        "Failed to set AIRFLOW_CONFIG"
 
 
 def test_parse_arguments_for_init_with_defaults_if_environment_is_not_set(monkeypatch):
@@ -135,10 +123,6 @@ def test_parse_arguments_for_init_with_defaults_if_environment_is_not_set(monkey
         "Failed to set default for --config \
          Check if get_airflow_home or get_airflow_config \
          from airflow.configuration were not changed"
-    assert environ["AIRFLOW_HOME"] == control_airflow_home, \
-        "Failed to set AIRFLOW_HOME"
-    assert environ["AIRFLOW_CONFIG"] == control_airflow_cfg, \
-        "Failed to set AIRFLOW_CONFIG"
 
 
 def test_parse_arguments_for_init_with_defaults_if_environment_is_set(monkeypatch):
@@ -166,7 +150,3 @@ def test_parse_arguments_for_init_with_defaults_if_environment_is_set(monkeypatc
         "Failed to set default for --config \
          Check if get_airflow_home or get_airflow_config \
          from airflow.configuration were not changed"
-    assert environ["AIRFLOW_HOME"] == temp_airflow_home, \
-        "Failed to set AIRFLOW_HOME"
-    assert environ["AIRFLOW_CONFIG"] == temp_airflow_cfg, \
-        "Failed to set AIRFLOW_CONFIG"

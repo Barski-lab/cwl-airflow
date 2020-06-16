@@ -111,14 +111,10 @@ def get_parser():
 def assert_and_fix_args_for_init(args):
     """
     Asserts, fixes and sets parameters from init parser.
-    Set env variables as early as possible in case some
-    of Airflow's modules will use it
     """
     
     if args.config is None:
         args.config = get_airflow_config(args.home)
-    environ["AIRFLOW_HOME"] = args.home
-    environ["AIRFLOW_CONFIG"] = args.config
 
 
 def assert_and_fix_args(args):
