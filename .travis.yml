@@ -13,6 +13,8 @@ install:
 
 script: ./tests/run_tests.sh
 
+after_script: bash <(curl -s https://codecov.io/bash)
+
 branches:
   only:
   - global_refactoring
