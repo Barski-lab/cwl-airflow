@@ -22,74 +22,40 @@ from cwl_airflow.utils.cwlutils import (
     shortname, 
     load_cwl
 )
-from cwl_airflow.utils.helpers import CleanAirflowImport
 from airflow.utils.log.logging_mixin import StreamLogWriter
-from cwl_airflow.utils.notifier import (
-    task_on_success,
-    task_on_failure,
-    task_on_retry,
-    post_status
-)
+from airflow.models import BaseOperator
+from airflow.utils.decorators import apply_defaults
 
-with CleanAirflowImport():
-    from airflow.models import BaseOperator
-    from airflow.utils.decorators import apply_defaults
-
-
-_logger = logging.getLogger(__name__)
-
-class StreamLogWriterUpdated (StreamLogWriter):
-
-    def fileno(self):
-        return -1
+from cwl_airflow.utilities.cwl import slow_cwl_load, get_items
+from cwl_airflow.utils.report import post_status
 
 
 class CWLStepOperator(BaseOperator):
 
-    ui_color = '#3E53B7'
-    ui_fgcolor = '#FFF'
-
-    @apply_defaults
+    @apply_defaults  # in case someone decided to overwrite default_args from the DAG
     def __init__(
-            self,
-            task_id=None,
-            reader_task_id=None,
-            ui_color=None,
-            *args, **kwargs):
-
-        self.outdir = None
-        self.reader_task_id = None
-        self.cwlwf = None
-        self.cwl_step = None
-
-        kwargs.update({"on_success_callback": kwargs.get("on_success_callback", task_on_success),
-                       "on_failure_callback": kwargs.get("on_failure_callback", task_on_failure),
-                       "on_retry_callback":   kwargs.get("on_retry_callback",   task_on_retry)})
-
+        self,
+        task_id,
+        *args, **kwargs
+    ):
         super().__init__(task_id=task_id, *args, **kwargs)
 
-        self.reader_task_id = reader_task_id if reader_task_id else self.reader_task_id
-
-        if ui_color:
-            self.ui_color = ui_color
 
     def execute(self, context):
-
         post_status(context)
 
-        self.cwlwf, it_is_workflow = load_cwl(self.dag.default_args["cwl_workflow"], self.dag.default_args)
+        default_args = context["dag"].default_args
+        workflow = default_args["default_args"]["cwl"]["workflow"]
+
+        self.workflow_data = slow_cwl_load(workflow)
+
         self.cwl_step = [step for step in self.cwlwf.steps if self.task_id == step.id.split("#")[-1]][0] if it_is_workflow else self.cwlwf
 
-        _logger.info('{0}: Running!'.format(self.task_id))
 
         upstream_task_ids = [t.task_id for t in self.upstream_list] + \
                             ([self.reader_task_id] if self.reader_task_id else [])
-        _logger.debug('{0}: Collecting outputs from: \n{1}'.format(self.task_id,
-                                                                   json.dumps(upstream_task_ids, indent=4)))
 
         upstream_data = self.xcom_pull(context=context, task_ids=upstream_task_ids)
-        _logger.info('{0}: Upstream data: \n {1}'.format(self.task_id,
-                                                         json.dumps(upstream_data, indent=4)))
 
         promises = {}
         for data in upstream_data:  # upstream_data is an array with { promises and outdir }
@@ -101,12 +67,6 @@ class CWLStepOperator(BaseOperator):
 
         if not self.outdir:
             self.outdir = _d_args['tmp_folder']
-
-        _logger.debug('{0}: Step inputs: {1}'.format(self.task_id,
-                                                     json.dumps(self.cwl_step.tool["inputs"], indent=4)))
-
-        _logger.debug('{0}: Step outputs: {1}'.format(self.task_id,
-                                                      json.dumps(self.cwl_step.tool["outputs"], indent=4)))
 
         jobobj = {}
 
@@ -145,7 +105,6 @@ class CWLStepOperator(BaseOperator):
             else:
                 continue
 
-        _logger.debug('{0}: Collected job object: \n {1}'.format(self.task_id, json.dumps(jobobj, indent=4)))
 
         def _post_scatter_eval(shortio, cwl_step):
             _value_from = {
@@ -176,8 +135,6 @@ class CWLStepOperator(BaseOperator):
         _d_args["cidfile_dir"] = _d_args['outdir']
         _d_args["cidfile_prefix"] = self.task_id
 
-        _logger.debug(
-            '{0}: Runtime context: \n {1}'.format(self, _d_args))
 
         executor = SingleJobExecutor()
         runtimeContext = RuntimeContext(_d_args)

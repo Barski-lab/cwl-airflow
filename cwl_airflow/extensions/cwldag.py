@@ -1,186 +1,196 @@
 #! /usr/bin/env python3
-import json
-import logging
+import os
 
-from ruamel import yaml
-from six.moves import urllib
-from typing import Any, Iterable, Mapping, Sequence, Tuple
-
+from copy import deepcopy
 from cwltool.argparser import get_default_args
+from airflow.models import DAG
+from airflow.utils.dates import days_ago
+from airflow.configuration import AIRFLOW_HOME
 
-from cwl_airflow.exceptions.operators.cwlstepoperator import CWLStepOperator
-from cwl_airflow.utils.cwlutils import conf_get_default
-from cwl_airflow.utils.notifier import dag_on_success, dag_on_failure
-from cwl_airflow.utils.helpers import CleanAirflowImport
-
-with CleanAirflowImport():
-    from airflow.models import DAG
-    from airflow.operators import BaseOperator
-    from airflow.exceptions import AirflowException
-    from airflow.utils.dates import days_ago
-
-
-# logging.getLogger('cwltool').setLevel(conf_get_default('core', 'logging_level', 'ERROR').upper())
-# logging.getLogger('salad').setLevel(conf_get_default('core', 'logging_level', 'ERROR').upper())
-logging.getLogger('cwltool').setLevel(logging.ERROR)
-logging.getLogger('past.translation').setLevel(logging.ERROR)
-logging.getLogger('salad').setLevel(logging.ERROR)
-logging.getLogger('rdflib').setLevel(logging.ERROR)
-
-_logger = logging.getLogger(__name__)
-_logger.setLevel(conf_get_default('core', 'logging_level', 'ERROR').upper())
+from cwl_airflow.utils.helpers import get_dir
+from cwl_airflow.utilities.airflow import conf_get
+from cwl_airflow.utilities.cwl import fast_cwl_load, get_items
+from cwl_airflow.extensions.operators.cwlstepoperator import CWLStepOperator
+from cwl_airflow.extensions.operators.cwljobdispatcher CWLJobDispatcher
+from cwl_airflow.extensions.operators.cwljobgatherer CWLJobGatherer
+from cwl_airflow.utilities.report import (
+    dag_on_success,
+    dag_on_failure,
+    task_on_success,
+    task_on_failure,
+    task_on_retry
+)
 
 
 class CWLDAG(DAG):
+
     def __init__(
-            self,
-            dag_id=None,
-            cwl_workflow=None,
-            default_args=None,
-            schedule_interval=None,
-            *args, **kwargs):
+        self,
+        dag_id,          # the id of the DAG
+        workflow,        # absolute path to the CWL workflow file
+        dispatcher=None, # custom job dispatcher. Will be assigned automatically to the same DAG. Default CWLJobDispatcher
+        gatherer=None,   # custom job gatherer. Will be assigned automatically to the same DAG. Default CWLJobGatherer
+        *args, **kwargs  # see DAG class for additional parameters
+    ):
+    """
+    Updates kwargs with the required defaults if they were not explicitely set.
+    start_date is set to days_ago(180) assuming that DAG run is not supposed to
+    be queued longer then half a year.
+    
+    dispatcher and gatherer are set to CWLJobDispatcher() and CWLJobGatherer()
+    if those were not provided by user. If user sets his own operators for dispatcher
+    and gatherer, default_args from the DAG as well as required_default_args will not
+    be set for these operators. He need to set proper agruments by himself.
+    """
+        
+        # default args provided by user.
+        # Use deepcopy to prevent from changing in place
+        user_default_args = deepcopy(kwargs.get("default_args", {}))
+        
+        # cwl args provided by user within default_args.
+        # Use deepcopy to prevent from changing in place
+        user_cwl_args = deepcopy(user_default_args.get("cwl", {}))
 
-        if default_args is None:
-            default_args = {}
+        # default arguments required by cwltool
+        required_cwl_args = get_default_args()
 
-        self.top_task = None
-        self.bottom_task = None
-        self.cwlwf = self.quick_load_cwl(cwl_workflow)
+        # update default arguments required by cwltool with those that are provided by user
+        required_cwl_args.update(user_cwl_args)
 
-        kwargs.update({"on_failure_callback": kwargs.get("on_failure_callback", dag_on_failure),
-                       "on_success_callback": kwargs.get("on_success_callback", dag_on_success)})
-
-        # parameters that cannot be overwritten in default_args
-        default_args.update({
-            'singularity': conf_get_default('cwl', 'singularity', default_args.get('singularity', False)),
-            'use_container': conf_get_default('cwl', 'use_container', default_args.get('use_container', True))
-        })
-
-        init_default_args = {
-            'start_date': days_ago(14),
-            'email_on_failure': False,
-            'email_on_retry': False,
-            'end_date': None,
-            'tmp_folder': conf_get_default('cwl', 'tmp_folder', '/tmp'),
-            'basedir': conf_get_default('cwl', 'tmp_folder', '/tmp'),
-            'no_match_user': conf_get_default('cwl', 'no_match_user', False),
-            'task_retries': conf_get_default('cwl', 'retry', 1),
-            'quiet': False,
-            'strict': False,
-            'on_error': 'continue',
-            'skip_schemas': True,
-            'cwl_workflow': cwl_workflow
-        }
-
-        init_default_args.update(default_args)
-        merged_default_args = get_default_args()
-        merged_default_args.update(init_default_args)
-
-        super().__init__(
-            dag_id=dag_id if dag_id else urllib.parse.urldefrag(cwl_workflow)[0].split("/")[-1].replace(".cwl", "").replace(".", "_dot_"),
-            default_args=merged_default_args,
-            schedule_interval=schedule_interval,
-            *args,
-            **kwargs,
+        # update default arguments required by cwltool with those that
+        # might be updated based on higher priority of airflow configuration file.
+        # If airflow configuration file doesn't include correspondent parameters,
+        # use those that were provided by user, or defaults
+        required_cwl_args.update(
+            {
+                "workflow": workflow,
+                "tmp_folder": get_dir(
+                    conf_get(
+                        "cwl", "tmp_folder",
+                        user_cwl_args.get(
+                            "tmp_folder", os.path.join(AIRFLOW_HOME, "cwl_temp_folder")
+                        )
+                    )
+                ),
+                "pickle_folder": get_dir(
+                    conf_get(
+                        "cwl", "pickle_folder",
+                        user_cwl_args.get(
+                            "pickle_folder", os.path.join(AIRFLOW_HOME, "cwl_pickle_folder")
+                        )
+                    )
+                ),
+                "use_container": conf_get(
+                    "cwl", "use_container",
+                    user_cwl_args.get("use_container", True)
+                ),
+                "match_user": conf_get(
+                    "cwl", "match_user", 
+                    user_cwl_args.get("match_user", True)
+                ),
+                "skip_schemas": conf_get(
+                    "cwl", "skip_schemas", 
+                    user_cwl_args.get("skip_schemas", True)
+                ),
+                "strict": conf_get(
+                    "cwl", "strict", 
+                    user_cwl_args.get("strict", False)
+                ),
+                "quiet": conf_get(
+                    "cwl", "quiet", 
+                    user_cwl_args.get("quiet", False)
+                )
+            }
         )
 
-    @classmethod
-    def get_items(cls, steps) -> Iterable[Tuple[str, Any]]:
+        # update default args provided by user with updated cwl args
+        user_default_args.update({
+            "cwl": required_cwl_args
+        })
+
+        # default arguments required by CWL-Airflow
+        required_default_args = {
+            "start_date": days_ago(180),
+            "email_on_failure": False,
+            "email_on_retry": False,
+            "on_failure_callback": task_on_failure,
+            "on_success_callback": task_on_success,
+            "on_retry_callback": task_on_retry
+        }
+        
+        # Updated default arguments required by CWL-Airflow with those that are provided by user
+        required_default_args.update(user_default_args)
+
+        # update kwargs with correct default_args and callbacks if those were not set by user
+        kwargs.update(
+            {
+                "default_args": required_default_args,
+                "on_failure_callback": kwargs.get("on_failure_callback", dag_on_failure),
+                "on_success_callback": kwargs.get("on_success_callback", dag_on_success),
+                "schedule_interval": "@once"
+            }
+        )
+
+        super().__init__(dag_id=dag_id, *args, **kwargs)
+
+        self.workflow_data = fast_cwl_load(kwargs["default_args"])
+
+        # it looks like I can do dag=self after super(), because all required
+        # attributes of the class should have been already created
+
+        self.dispatcher = CWLJobDispatcher(dag=self) if dispatcher is None else dispatcher  # need dag=self othereise operator will not get proper default_args
+        self.gatherer = CWLJobGatherer(dag=self) if gatherer is None else gatherer
+
+        self.__assemble()
+
+
+    def __assemble(self):
         """
-        The CWL spec allows many things to be stored as key/value mappings, or as sequences
-        with each value being a mapping that includes a 'id' key.
-
-        Return key/value pairs both for mappings and sequences -- if a sequence is given,
-        obtain the key from the 'id' field in the value.
-
-        :param steps: Either a mapping or a sequence
-        :return: Iterable of 2-tuples:
-         [0] ID of the item, either the key if 'steps' is a mapping, or the 'id' key in the item
-         [1] The item itself
+        Creates DAG based on the parsed CWL workflow structure. Assignes dispatcher and gatherer tasks
         """
-        if isinstance(steps, Mapping):
-            yield from steps.items()
-        elif isinstance(steps, Sequence):
-            for item in steps:
-                yield item['id'], item
+        # TODO: add support for CommandLineTool and ExpressionTool
+        # TODO: add colors for Tasks?
+        # TODO: do I need to pass default_args to the Operator's contructor?
 
-    def quick_load_cwl(self, cwl_file):
-        with open(cwl_file, "r") as input_stream:
-            cwl_data = yaml.round_trip_load(input_stream, preserve_quotes=True)
-        return cwl_data
+        task_by_id = {}         # to get airflow task assosiated with workflow step by its id
+        task_by_out_id = {}     # to get airflow task assosiated with workflow step by its out id
+        
+        for step_id, step_data in get_items(self.workflow_data.get("steps", [])):
+            task_by_id[step_id] = CWLStepOperator(dag=self, task_id=step_id)
+            for step_out_id in get_items(step_data.get("out", [])):
+                task_by_out_id[step_out_id] = task_by_id[step_id]
 
-    def create(self):
-        if self.cwlwf["class"] in ["CommandLineTool", "ExpressionTool"]:
-            cwl_task = CWLStepOperator(task_id=self.dag_id,
-                                       dag=self,
-                                       retries=self.default_args["task_retries"],
-                                       ui_color='#5C6BC0')
-        else:
-            outputs = {}
+        for step_id, step_data in get_items(self.workflow_data.get("steps", [])):
+            for step_in_id, step_in_data in get_items(step_data.get("in", [])):
+                for step_in_source in get_items(step_in_data.get("source", [])):
+                    try:
+                        task_by_id[step_id].set_upstream(task_by_out_id[step_in_source])  # connected to another step
+                    except KeyError:
+                        task_by_id[step_id].set_upstream(self.dispatcher)                 # connected to dispatcher
 
-            for step_id, step_val in self.get_items(self.cwlwf["steps"]):
-                cwl_task = CWLStepOperator(task_id=step_id,
-                                           dag=self,
-                                           retries=self.default_args["task_retries"],
-                                           ui_color='#5C6BC0')
-                outputs[step_id] = cwl_task
+        for _, output_data in get_items(self.workflow_data.get("outputs", [])):
+            for output_source_id in get_items(self.output_data.get("outputSource", [])):
+                self.gatherer.set_upstream(task_by_out_id[output_source_id])              # connected to gatherer
 
-                for out in step_val["out"]:
-                    outputs["/".join([step_id, out])] = cwl_task
+        # safety measure in case of very specific workflows
+        # if gatherer happened to be not connected to anything, connect it to all "leaves"
+        # if dispatcher happened to be not connected to anything, connect it to all "roots"
+        if not self.gatherer.upstream_list:
+            self.gatherer.set_upstream([task in task_by_id.values() if not task.downstream_list])
 
-            for step_id, step_val in self.get_items(self.cwlwf["steps"]):
-                current_task = outputs[step_id]
-                if not step_val["in"]:  # need to check it, because in can be set as []
-                    continue
-                for inp_id, inp_val in self.get_items(step_val["in"]):
-                    if isinstance(inp_val, list):
-                        step_input_sources = inp_val
-                    elif isinstance(inp_val, str):
-                        step_input_sources = [inp_val]
-                    elif isinstance(inp_val, dict) and "source" in inp_val:
-                        if isinstance(inp_val["source"], list):
-                            step_input_sources = inp_val["source"]
-                        else:
-                            step_input_sources = [inp_val["source"]]
-                    else:
-                        step_input_sources = []
+        if not self.dispatcher.downstream_list:
+            self.dispatcher.set_downstream([task in task_by_id.values() if not task.upstream_list])
 
-                    for source in step_input_sources:
-                        parent_task = outputs.get(source, None)
-                        if parent_task and parent_task not in current_task.upstream_list:
-                            current_task.set_upstream(parent_task)
-
-        # https://material.io/guidelines/style/color.html#color-color-palette
-        for t in self.tasks:
-            if not t.downstream_list and t.upstream_list:
-                t.ui_color = '#4527A0'
-            elif not t.upstream_list:
-                t.ui_color = '#303F9F'
-
-    def add(self, task, to=None):
-        if not isinstance(task, BaseOperator):
-            raise AirflowException(
-                "Relationships can only be set between "
-                "Operators; received {}".format(task.__class__.__name__))
-        if to == 'top':
-            self.top_task = self.top_task if self.top_task else task
-            task.set_downstream([t for t in self.tasks if t.task_id != task.task_id and not t.upstream_list])
-        elif to == 'bottom':
-            self.bottom_task = self.bottom_task if self.bottom_task else task
-            task.set_upstream([t for t in self.tasks if t.task_id != task.task_id and not t.downstream_list])
-
-        if self.top_task and self.bottom_task:
-            self.bottom_task.reader_task_id = self.top_task.task_id
-            for t in self.tasks:
-                if t.task_id != self.top_task.task_id:
-                    t.reader_task_id = self.top_task.task_id
 
     def get_output_list(self):
+        
+        # TODO: Not sure where we use it
+
         outputs = {}
         for out_id, out_val in self.get_items(self.cwlwf["outputs"]):
             if "outputSource" in out_val:
                 outputs[out_val["outputSource"]] = out_id
             else:
                 outputs[out_id] = out_id
-        _logger.debug("{0} get_output_list: \n{1}".format(self.dag_id, outputs))
+        # _logger.debug("{0} get_output_list: \n{1}".format(self.dag_id, outputs))
         return outputs

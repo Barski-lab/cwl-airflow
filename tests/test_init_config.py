@@ -28,7 +28,7 @@ def test_init_airflow_db():
     try:
         init_airflow_db(argparse.Namespace(**input_args))       # fails with SystemExit
         temp_airflow_home_content = listdir(temp_airflow_home)  # fails with FileNotFoundError
-    except (SystemExit, FileNotFoundError) as err:
+    except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
     finally:
         rmtree(temp_home)
@@ -52,7 +52,7 @@ def test_patch_airflow_config():
         patch_airflow_config(temp_airflow_cfg)             # fails with SystemExit
         conf = ConfigParser()
         conf.read(temp_airflow_cfg)                        # never fails
-    except SystemExit as err:
+    except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
     finally:
         rmtree(temp_home)
@@ -78,7 +78,7 @@ def test_copy_dags():
         init_airflow_db(argparse.Namespace(**input_args))                     # fails with SystemExit
         copy_dags(temp_airflow_home)                                          # never fails
         temp_airflow_dags_folder_content = listdir(temp_airflow_dags_folder)  # fails with FileNotFoundError
-    except (SystemExit, FileNotFoundError) as err:
+    except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
     finally:
         rmtree(temp_home)
@@ -109,7 +109,7 @@ def test_add_connections(monkeypatch):
             capture_output=True,
             text=True
         ).stdout
-    except (SystemExit, CalledProcessError, FileNotFoundError) as err:
+    except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
     finally:
         rmtree(temp_home)

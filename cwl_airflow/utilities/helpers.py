@@ -1,4 +1,5 @@
 import os
+import hashlib
 import pkg_resources
 
 from tempfile import mkdtemp
@@ -17,7 +18,7 @@ def get_dir(dir, cwd=None, permissions=None, exist_ok=None):
     except os.error:
         if not exist_ok:
             raise
-    return abs_dir    
+    return abs_dir
 
 
 def get_absolute_path(p, cwd=None):
@@ -39,6 +40,17 @@ def get_version():
     return pkg[0].version if pkg else "unknown version"
 
 
+def get_md5_sum(location, block_size=2**20):
+    md5_sum = hashlib.md5()
+    with open(location , "rb") as input_stream:
+        while True:
+            buf = input_stream.read(block_size)
+            if not buf:
+                break
+            md5_sum.update(buf)
+    return md5_sum.hexdigest()
+
+
 class CleanAirflowImport():
     """
     Replaces AIRFLOW_HOME and AIRFLOW_CONFIG from os.environ
@@ -46,13 +58,13 @@ class CleanAirflowImport():
     or removes them from os.environ, and cleans temp directory.
     Useful when importing modules from Airflow, that silently create
     airflow folder. Note, all the changes are made only within Python.
-    suppress_logging and restore_logging are used to prevent Airflow
+    __suppress_logging and __restore_logging are used to prevent Airflow
     from printing deprecation warnings
     """
 
 
     def __enter__(self):
-        self.suppress_logging()
+        self.__suppress_logging()
         self.backup_airflow_home = os.environ.get("AIRFLOW_HOME")
         self.backup_airflow_config = os.environ.get("AIRFLOW_CONFIG")
         self.temp_airflow_home = mkdtemp()
@@ -73,17 +85,17 @@ class CleanAirflowImport():
         else:
             del os.environ["AIRFLOW_CONFIG"]
 
-        self.restore_logging()
+        self.__restore_logging()
 
 
-    def suppress_logging(self):
+    def __suppress_logging(self):
         self.NULL_FDS = [os.open(os.devnull, os.O_RDWR) for x in range(2)]
         self.BACKUP_FDS = os.dup(1), os.dup(2)
         os.dup2(self.NULL_FDS[0], 1)
         os.dup2(self.NULL_FDS[1], 2)
 
 
-    def restore_logging(self):
+    def __restore_logging(self):
         os.dup2(self.BACKUP_FDS[0], 1)
         os.dup2(self.BACKUP_FDS[1], 2)
         os.close(self.NULL_FDS[0])

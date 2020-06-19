@@ -16,7 +16,7 @@ from six import itervalues, iterlists
 from os import path, environ, makedirs
 from schema_salad.ref_resolver import Loader
 
-from cwl_airflow.utilities.cwlutils import conf_get_default
+from cwl_airflow.utilities.airflow import conf_get
 from cwl_airflow.utilities.helpers import (
     get_version,
     get_dir,
@@ -225,7 +225,7 @@ class CWLAirflowBackend():
 ###########################################################################
  
     def wes_collect_attachments(self, run_id):
-        tempdir = tempfile.mkdtemp(dir=get_dir(path.abspath(conf_get_default('cwl', 'tmp_folder', '/tmp'))), prefix="run_id_"+run_id+"_")
+        tempdir = tempfile.mkdtemp(dir=get_dir(path.abspath(conf_get('cwl', 'tmp_folder', '/tmp'))), prefix="run_id_"+run_id+"_")
         logger.debug(f"""Save all attached files to {tempdir}""")        
         for k, ls in iterlists(connexion.request.files):
             logger.debug(f"""Process attachment parameter {k}""")

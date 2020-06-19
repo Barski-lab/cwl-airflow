@@ -19,9 +19,8 @@ from cwl_airflow.utils.notifier import (
 )
 from cwl_airflow.utils.helpers import get_folder, CleanAirflowImport
 
-with CleanAirflowImport():
-    from airflow.models import BaseOperator
-    from airflow.utils.decorators import apply_defaults
+from airflow.models import BaseOperator
+from airflow.utils.decorators import apply_defaults
 
 
 _logger = logging.getLogger(__name__)
