@@ -23,31 +23,19 @@ from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
 
-_logger = logging.getLogger(__name__)
 
 
 class CWLJobDispatcher(BaseOperator):
 
-    ui_color = '#1E88E5'
-    ui_fgcolor = '#FFF'
 
-    @apply_defaults
+    @apply_defaults  # in case someone decided to overwrite default_args from the DAG
     def __init__(
             self,
-            task_id=None,
-            ui_color=None,
-            tmp_folder=None,
-            *args, **kwargs):
-        task_id = task_id if task_id else self.__class__.__name__
-
-        kwargs.update({"on_success_callback": kwargs.get("on_success_callback", task_on_success),
-                       "on_failure_callback": kwargs.get("on_failure_callback", task_on_failure),
-                       "on_retry_callback":   kwargs.get("on_retry_callback",   task_on_retry)})
-
+            task_id,
+            *args, **kwargs
+    ):
         super().__init__(task_id=task_id, *args, **kwargs)
 
-        self.tmp_folder = tmp_folder if tmp_folder else self.dag.default_args['tmp_folder']
-        if ui_color: self.ui_color = ui_color
 
     def cwl_dispatch(self, json):
         try:
@@ -81,16 +69,17 @@ class CWLJobDispatcher(BaseOperator):
             pass
         return None
 
+
     def execute(self, context):
 
         post_status(context)
 
-        _json = {}
+        default_args = context["dag"].default_args
 
-        if 'job' in context['dag_run'].conf:
-            logging.debug(
-                '{0}: dag_run conf: \n {1}'.format(self.task_id, context['dag_run'].conf['job']))
-            _json = context['dag_run'].conf['job']
+        job = {}
+
+        if "job" in context["dag_run"].conf:
+            job = context["dag_run"].conf["job"]
 
         cwl_context = self.cwl_dispatch(_json)
         if cwl_context:

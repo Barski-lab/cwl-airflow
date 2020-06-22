@@ -4,6 +4,7 @@ import pkg_resources
 
 from tempfile import mkdtemp
 from shutil import rmtree
+from urllib.parse import urlparse
 
 
 def get_dir(dir, cwd=None, permissions=None, exist_ok=None):
@@ -42,7 +43,8 @@ def get_version():
 
 def get_md5_sum(location, block_size=2**20):
     md5_sum = hashlib.md5()
-    with open(location , "rb") as input_stream:
+    url_path = urlparse(location).path           # use urlparse to get rid of file:// if it was url
+    with open(url_path , "rb") as input_stream:  
         while True:
             buf = input_stream.read(block_size)
             if not buf:

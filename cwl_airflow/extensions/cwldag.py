@@ -82,15 +82,15 @@ class CWLDAG(DAG):
                 ),
                 "use_container": conf_get(
                     "cwl", "use_container",
-                    user_cwl_args.get("use_container", True)
+                    user_cwl_args.get("use_container", True)  # execute jobs in a docker containers
                 ),
-                "match_user": conf_get(
-                    "cwl", "match_user", 
-                    user_cwl_args.get("match_user", True)
+                "no_match_user": conf_get(
+                    "cwl", "no_match_user",
+                    user_cwl_args.get("no_match_user", False)  # disables passing the current uid to "docker run --user"
                 ),
                 "skip_schemas": conf_get(
                     "cwl", "skip_schemas", 
-                    user_cwl_args.get("skip_schemas", True)
+                    user_cwl_args.get("skip_schemas", True)    # it looks like this doesn't influence anything in the latest cwltool
                 ),
                 "strict": conf_get(
                     "cwl", "strict", 
@@ -133,12 +133,8 @@ class CWLDAG(DAG):
 
         super().__init__(dag_id=dag_id, *args, **kwargs)
 
-        self.workflow_data = fast_cwl_load(kwargs["default_args"])
-
-        # it looks like I can do dag=self after super(), because all required
-        # attributes of the class should have been already created
-
-        self.dispatcher = CWLJobDispatcher(dag=self) if dispatcher is None else dispatcher  # need dag=self othereise operator will not get proper default_args
+        self.workflow_tool = fast_cwl_load(kwargs["default_args"])                          # keeps only the tool (CommentedMap object)
+        self.dispatcher = CWLJobDispatcher(dag=self) if dispatcher is None else dispatcher  # need dag=self otherwise new operator will not get proper default_args
         self.gatherer = CWLJobGatherer(dag=self) if gatherer is None else gatherer
 
         self.__assemble()
@@ -150,26 +146,25 @@ class CWLDAG(DAG):
         """
         # TODO: add support for CommandLineTool and ExpressionTool
         # TODO: add colors for Tasks?
-        # TODO: do I need to pass default_args to the Operator's contructor?
 
         task_by_id = {}         # to get airflow task assosiated with workflow step by its id
         task_by_out_id = {}     # to get airflow task assosiated with workflow step by its out id
         
-        for step_id, step_data in get_items(self.workflow_data.get("steps", [])):
+        for step_id, step_data in get_items(self.workflow_tool["steps"]):
             task_by_id[step_id] = CWLStepOperator(dag=self, task_id=step_id)
-            for step_out_id in get_items(step_data.get("out", [])):
+            for step_out_id, _ in get_items(step_data["out"]):
                 task_by_out_id[step_out_id] = task_by_id[step_id]
 
-        for step_id, step_data in get_items(self.workflow_data.get("steps", [])):
-            for step_in_id, step_in_data in get_items(step_data.get("in", [])):
-                for step_in_source in get_items(step_in_data.get("source", [])):
+        for step_id, step_data in get_items(self.workflow_tool["steps"]):
+            for step_in_id, step_in_data in get_items(step_data.get("in", [])):           # step might not have "in"
+                for step_in_source, _ in get_items(step_in_data.get("source", [])):       # "in" might not have "source"
                     try:
                         task_by_id[step_id].set_upstream(task_by_out_id[step_in_source])  # connected to another step
                     except KeyError:
                         task_by_id[step_id].set_upstream(self.dispatcher)                 # connected to dispatcher
 
-        for _, output_data in get_items(self.workflow_data.get("outputs", [])):
-            for output_source_id in get_items(self.output_data.get("outputSource", [])):
+        for _, output_data in get_items(self.workflow_tool["outputs"]):
+            for output_source_id, _ in get_items(self.output_data["outputSource"]):
                 self.gatherer.set_upstream(task_by_out_id[output_source_id])              # connected to gatherer
 
         # safety measure in case of very specific workflows

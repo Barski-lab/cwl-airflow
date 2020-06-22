@@ -10,7 +10,6 @@ import shutil
 
 from jsonmerge import merge
 
-from cwltool.executors import SingleJobExecutor
 from cwltool.stdfsaccess import StdFsAccess
 from cwltool.workflow import expression
 from cwltool.context import RuntimeContext, getdefault
@@ -26,11 +25,15 @@ from airflow.utils.log.logging_mixin import StreamLogWriter
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
-from cwl_airflow.utilities.cwl import slow_cwl_load, get_items
+from cwl_airflow.utilities.cwl import (
+    fast_cwl_step_load,
+    get_items
+)
 from cwl_airflow.utils.report import post_status
 
 
 class CWLStepOperator(BaseOperator):
+
 
     @apply_defaults  # in case someone decided to overwrite default_args from the DAG
     def __init__(
@@ -45,11 +48,14 @@ class CWLStepOperator(BaseOperator):
         post_status(context)
 
         default_args = context["dag"].default_args
-        workflow = default_args["default_args"]["cwl"]["workflow"]
+        workflow_step_tool = fast_cwl_step_load(default_args, task_id)
 
-        self.workflow_data = slow_cwl_load(workflow)
 
-        self.cwl_step = [step for step in self.cwlwf.steps if self.task_id == step.id.split("#")[-1]][0] if it_is_workflow else self.cwlwf
+
+
+
+        step_outpus, step_status = SingleJobExecutor().execute(workflow_step_tool, job, runtime_context)
+
 
 
         upstream_task_ids = [t.task_id for t in self.upstream_list] + \
