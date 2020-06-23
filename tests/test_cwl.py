@@ -16,60 +16,127 @@ from cwl_airflow.utilities.cwl import (
     slow_cwl_load,
     fast_cwl_step_load,
     load_job,
-    get_items
+    get_items,
+    get_short_id,
+    execute_workflow_step
 )
 
 
 DATA_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
 
 
-# @pytest.mark.parametrize(
-#     "target_id, control_workflow",
-#     [
-#         (
-#             "bam_to_bedgraph",
-#             "bam-to-bedgraph-step.cwl"
-#         ),
-#         (
-#             "sort_bedgraph",
-#             "sort-bedgraph-step.cwl"
-#         ),
-#         (
-#             "sorted_bedgraph_to_bigwig",
-#             "sorted-bedgraph-to-bigwig-step.cwl"
-#         )
-#     ]
-# )
-# def test_fast_cwl_step_load(target_id, control_workflow):
-#     temp_pickle_folder = mkdtemp()
-#     workflow_path = os.path.join(DATA_FOLDER, "workflows", "bam-bedgraph-bigwig.cwl")
-#     control_workflow_path = os.path.join(DATA_FOLDER, "controls", control_workflow)
+@pytest.mark.parametrize(
+    "long_id, only_step_name, only_id, control",
+    [
+        (
+            "file:///Users/tester/cwl-airflow/tests/data/workflows/bam-bedgraph-bigwig.cwl#sorted_bedgraph_to_bigwig/output_filename",
+            None,
+            None,
+            "sorted_bedgraph_to_bigwig/output_filename"
+        ),
+        (
+            "file:///Users/tester/cwl-airflow/tests/data/workflows/bam-bedgraph-bigwig.cwl#sorted_bedgraph_to_bigwig/output_filename",
+            True,
+            None,
+            "sorted_bedgraph_to_bigwig"
+        ),
+        (
+            "file:///Users/tester/cwl-airflow/tests/data/workflows/bam-bedgraph-bigwig.cwl#sorted_bedgraph_to_bigwig/output_filename",
+            None,
+            True,
+            "output_filename"
+        ),
+        (
+            "file:///Users/tester/cwl-airflow/tests/data/workflows/bam-bedgraph-bigwig.cwl#sorted_bedgraph_to_bigwig/output_filename",
+            True,
+            True,
+            ""
+        ),
+        (
+            "sorted_bedgraph_to_bigwig/output_filename",
+            None,
+            None,
+            "sorted_bedgraph_to_bigwig/output_filename"
+        ),
+        (
+            "sorted_bedgraph_to_bigwig/output_filename",
+            True,
+            None,
+            "sorted_bedgraph_to_bigwig"
+        ),
+        (
+            "sorted_bedgraph_to_bigwig/output_filename",
+            None,
+            True,
+            "output_filename"
+        ),
+        (
+            "sorted_bedgraph_to_bigwig/output_filename",
+            True,
+            True,
+            ""
+        )
+    ]
+)
+def test_get_short_id(long_id, only_step_name, only_id, control):
+    result = get_short_id(long_id, only_step_name, only_id)
+    assert result == control, "Test failed"
 
-#     cwl_args = get_default_args()
-#     cwl_args.update(
-#         {
-#             "workflow": workflow_path,
-#             "pickle_folder": temp_pickle_folder
-#         }
-#     )
-#     try:
-#         workflow_step_tool = fast_cwl_step_load({"cwl": cwl_args}, target_id)
-#         cwl_args["workflow"] = control_workflow_path
-#         control_workflow_step_tool = fast_cwl_load({"cwl": cwl_args})
-#     except BaseException as err:
-#         assert False, f"Failed to run test. \n {err}"
-#     finally:
-#         rmtree(temp_pickle_folder)
 
-#     assert workflow_step_tool == control_workflow_step_tool, \
-#            "Failed to build workflow from the selected step"
+# It's also indirect testing of fast_cwl_step_load
+@pytest.mark.parametrize(
+    "workflow, job, task_id",
+    [
+        (
+            ["workflows", "bam-bedgraph-bigwig.cwl"],
+            "bam-to-bedgraph-step.json",
+            "bam_to_bedgraph"
+        ),
+        (
+            ["workflows", "bam-bedgraph-bigwig.cwl"],
+            "sort-bedgraph-step.json",
+            "sort_bedgraph"
+        ),
+        (
+            ["workflows", "bam-bedgraph-bigwig.cwl"],
+            "sorted-bedgraph-to-bigwig-step.json",
+            "sorted_bedgraph_to_bigwig"
+        )
+    ]
+)
+def test_execute_workflow_step(workflow, job, task_id):
+    temp_pickle_folder = mkdtemp()
+    workflow_path = os.path.join(DATA_FOLDER, *workflow)
+    job_path = os.path.join(DATA_FOLDER, "jobs", job)
+    
+    cwl_args = get_default_args()
+    cwl_args.update(
+        {
+            "workflow": workflow_path,
+            "pickle_folder": temp_pickle_folder
+        }
+    )
+
+    job_data = load_job(cwl_args, job_path)
+    job_data["tmp_folder"] = temp_pickle_folder  # need manually add "tmp_folder" as it is
+
+    try:
+        step_outputs, step_report = execute_workflow_step(
+            cwl_args,
+            job_data,
+            task_id
+        )
+    except BaseException as err:
+        assert False, f"Failed either to run test or execute workflow. \n {err}"
+    finally:
+        rmtree(temp_pickle_folder)
 
 
 @pytest.mark.parametrize(
     "job, workflow",
     [
         (
-            "bam-bedgraph-bigwig-1.json",
+            "bam-bedgraph-bigwig.json",
             ["workflows", "bam-bedgraph-bigwig.cwl"]
         )
     ]
@@ -87,7 +154,7 @@ def test_load_job_from_file(job, workflow):
         }
     )
     try:
-        job_data = load_job(job_path, cwl_args)
+        job_data = load_job(cwl_args, job_path)
     except BaseException as err:
         assert False, f"Failed to load job from file"
     finally:
@@ -98,7 +165,7 @@ def test_load_job_from_file(job, workflow):
     "job, workflow",
     [
         (
-            "bam-bedgraph-bigwig-1.json",
+            "bam-bedgraph-bigwig.json",
             ["workflows", "dummy.cwl"]
         )
     ]
@@ -233,7 +300,7 @@ def test_load_job_from_object(job, workflow, cwd):
         }
     )
     try:
-        job_data = load_job(job, cwl_args, cwd)
+        job_data = load_job(cwl_args, job, cwd)
     except BaseException as err:
         assert False, f"Failed to load job from parsed object"
     finally:
@@ -383,7 +450,7 @@ def test_fast_cwl_load_workflow_from_cwl():
         }
     )
     try:
-        workflow_tool = fast_cwl_load({"cwl": cwl_args})
+        workflow_tool = fast_cwl_load(cwl_args)
         temp_pickle_folder_content = os.listdir(temp_pickle_folder)
     except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
@@ -409,7 +476,7 @@ def test_fast_cwl_load_command_line_tool_from_cwl():
         }
     )
     try:
-        command_line_tool = fast_cwl_load({"cwl": cwl_args})
+        command_line_tool = fast_cwl_load(cwl_args)
         temp_pickle_folder_content = os.listdir(temp_pickle_folder)
     except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
@@ -440,9 +507,9 @@ def test_fast_cwl_load_workflow_from_pickle():
         }
     )
     try:
-        workflow_tool = fast_cwl_load({"cwl": cwl_args})         # should result in creating pickled file
+        workflow_tool = fast_cwl_load(cwl_args)         # should result in creating pickled file
         cwl_args["workflow"] = duplicate_workflow_path
-        workflow_tool = fast_cwl_load({"cwl": cwl_args})         # should load from pickled file
+        workflow_tool = fast_cwl_load(cwl_args)         # should load from pickled file
     except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
     finally:
@@ -470,9 +537,9 @@ def test_fast_cwl_load_command_line_tool_from_pickle():
         }
     )
     try:
-        command_line_tool = fast_cwl_load({"cwl": cwl_args})  # should result in creating pickled file
+        command_line_tool = fast_cwl_load(cwl_args)  # should result in creating pickled file
         cwl_args["workflow"] = duplicate_command_line_tool_path
-        command_line_tool = fast_cwl_load({"cwl": cwl_args})  # should load from pickled file
+        command_line_tool = fast_cwl_load(cwl_args)  # should load from pickled file
     except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
     finally:
@@ -495,7 +562,7 @@ def test_fast_cwl_load_workflow_from_cwl_should_fail():
     )
     with pytest.raises(AssertionError):
         try:
-            workflow_tool = fast_cwl_load({"cwl": cwl_args})
+            workflow_tool = fast_cwl_load(cwl_args)
         except BaseException as err:
             assert False, f"Should raise because cwl wasn't found. \n {err}"
         finally:

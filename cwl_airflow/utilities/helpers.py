@@ -22,6 +22,10 @@ def get_dir(dir, cwd=None, permissions=None, exist_ok=None):
     return abs_dir
 
 
+def get_path_from_url(url):
+    return urlparse(url).path
+
+
 def get_absolute_path(p, cwd=None):
     """
     Get absolute path relative to cwd or current working directory
@@ -43,7 +47,7 @@ def get_version():
 
 def get_md5_sum(location, block_size=2**20):
     md5_sum = hashlib.md5()
-    url_path = urlparse(location).path           # use urlparse to get rid of file:// if it was url
+    url_path = get_path_from_url(location)                # need to get rid of file:// if it was url
     with open(url_path , "rb") as input_stream:  
         while True:
             buf = input_stream.read(block_size)

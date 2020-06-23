@@ -7,7 +7,7 @@ from airflow.models import DAG
 from airflow.utils.dates import days_ago
 from airflow.configuration import AIRFLOW_HOME
 
-from cwl_airflow.utils.helpers import get_dir
+from cwl_airflow.utilities.helpers import get_dir
 from cwl_airflow.utilities.airflow import conf_get
 from cwl_airflow.utilities.cwl import fast_cwl_load, get_items
 from cwl_airflow.extensions.operators.cwlstepoperator import CWLStepOperator
@@ -72,6 +72,14 @@ class CWLDAG(DAG):
                         )
                     )
                 ),
+                "outputs_folder": get_dir(  # to store outputs if "outputs_folder" is not overwritten in job
+                    conf_get(
+                        "cwl", "outputs_folder",
+                        user_cwl_args.get(
+                            "outputs_folder", os.path.join(AIRFLOW_HOME, "cwl_outputs_folder")
+                        )
+                    )
+                ),
                 "pickle_folder": get_dir(
                     conf_get(
                         "cwl", "pickle_folder",
@@ -99,7 +107,9 @@ class CWLDAG(DAG):
                 "quiet": conf_get(
                     "cwl", "quiet", 
                     user_cwl_args.get("quiet", False)
-                )
+                ),
+                "rm_tmpdir": True,
+                "move_outputs": True
             }
         )
 
@@ -133,7 +143,7 @@ class CWLDAG(DAG):
 
         super().__init__(dag_id=dag_id, *args, **kwargs)
 
-        self.workflow_tool = fast_cwl_load(kwargs["default_args"])                          # keeps only the tool (CommentedMap object)
+        self.workflow_tool = fast_cwl_load(kwargs["default_args"]["cwl"])                   # keeps only the tool (CommentedMap object)
         self.dispatcher = CWLJobDispatcher(dag=self) if dispatcher is None else dispatcher  # need dag=self otherwise new operator will not get proper default_args
         self.gatherer = CWLJobGatherer(dag=self) if gatherer is None else gatherer
 

@@ -1,28 +1,16 @@
-import logging
 import os
-import io
-import sys
-import schema_salad.schema
-import ruamel.yaml as yaml
-
 from tempfile import mkdtemp
-from json import dumps
-from schema_salad.ref_resolver import Loader, file_uri
-from cwltool.main import jobloaderctx, init_job_order
-
-from cwl_airflow.utils.cwlutils import load_cwl
-from cwl_airflow.utils.notifier import (
-    task_on_success,
-    task_on_failure,
-    task_on_retry,
-    post_status
-)
-from cwl_airflow.utils.helpers import get_folder, CleanAirflowImport
 
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
-
+from cwl_airflow.utilities.helpers import get_dir
+from cwl_airflow.utilities.cwl import (
+    load_job,
+    dump_data,
+    get_temp_folders
+)
+from cwl_airflow.utilities.report import post_status
 
 
 class CWLJobDispatcher(BaseOperator):
@@ -30,60 +18,64 @@ class CWLJobDispatcher(BaseOperator):
 
     @apply_defaults  # in case someone decided to overwrite default_args from the DAG
     def __init__(
-            self,
-            task_id,
-            *args, **kwargs
+        self,
+        task_id,
+        *args, **kwargs
     ):
         super().__init__(task_id=task_id, *args, **kwargs)
 
 
-    def cwl_dispatch(self, json):
-        try:
-            cwlwf, it_is_workflow = load_cwl(self.dag.default_args["cwl_workflow"], self.dag.default_args)
-            cwl_context = {"outdir": mkdtemp(dir=get_folder(os.path.abspath(self.tmp_folder)), prefix="dag_tmp_")}
-
-            _jobloaderctx = jobloaderctx.copy()
-            _jobloaderctx.update(cwlwf.metadata.get("$namespaces", {}))
-            loader = Loader(_jobloaderctx)
-
-            try:
-                job_order_object = yaml.round_trip_load(io.StringIO(initial_value=dumps(json)))
-                job_order_object, _ = loader.resolve_all(job_order_object,
-                                                         file_uri(os.getcwd()) + "/",
-                                                         checklinks=False)
-            except Exception as e:
-                _logger.error("Job Loader: {}".format(str(e)))
-
-            job_order_object = init_job_order(job_order_object, None, cwlwf, loader, sys.stdout)
-
-            cwl_context['promises'] = job_order_object
-
-            logging.info(
-                '{0}: Final job: \n {1}'.format(self.task_id, dumps(cwl_context, indent=4)))
-
-            return cwl_context
-
-        except Exception as e:
-            _logger.info(
-                'Dispatch Exception {0}: \n {1} {2}'.format(self.task_id, type(e), e))
-            pass
-        return None
-
-
     def execute(self, context):
+        """
+        Loads job Object from the context. Sets "tmp_folder" and "output_folder"
+        if they have not been set before. Dumps step outputs as a json file into
+        "tmp_folder". Writes to X-Com results file location.
+        """
 
         post_status(context)
 
-        default_args = context["dag"].default_args
+        # for easy access
+        dag_id = context["dag"].dag_id
+        run_id = context["run_id"]
+        cwl_args = context["dag"].default_args["cwl"]
 
-        job = {}
+        # Load job from context. It doesn't fail if input files are missing
+        job_data = load_job(
+            cwl_args,
+            context["dag_run"].conf["job"]
+        )
 
-        if "job" in context["dag_run"].conf:
-            job = context["dag_run"].conf["job"]
+        job_data["tmp_folder"] = get_dir(
+            os.path.abspath(
+                job_data.get(
+                    "tmp_folder",
+                    mkdtemp(
+                        dir=cwl_args["tmp_folder"],
+                        prefix=dag_id+"_"+run_id+"_"
+                    )
+                )
+            )
+        )
 
-        cwl_context = self.cwl_dispatch(_json)
-        if cwl_context:
-            return cwl_context
-        else:
-            raise Exception("No cwl context")
+        job_data["outputs_folder"] = get_dir(
+            os.path.abspath(
+                job_data.get(
+                    "outputs_folder",
+                    os.path.join(
+                        cwl_args["outputs_folder"],
+                        dag_id,
+                        run_id
+                    )
+                )
+            )
+        )
+
+        _, _, _, step_report = get_temp_folders(
+            self.task_id,
+            job_data
+        )
+
+        dump_data(job_data, step_report)
+
+        return step_report
 

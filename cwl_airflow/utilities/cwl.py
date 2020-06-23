@@ -4,6 +4,7 @@ import argparse
 import json
 import errno
 
+from uuid import uuid4
 from copy import deepcopy
 from tempfile import mkdtemp
 from urllib.parse import urlsplit
@@ -17,39 +18,91 @@ from schema_salad.ref_resolver import Loader
 from schema_salad.exceptions import SchemaSaladException
 from schema_salad.ref_resolver import file_uri
 
-from cwl_airflow.utilities.helpers import get_md5_sum
+from cwl_airflow.utilities.helpers import (
+    get_md5_sum,
+    get_dir,
+    get_path_from_url
+)
 
 
-def execute(worfklow_tool, job, default_args, executor=None):
-
-    default_args_copy = deepcopy(default_args)
-    cwl_args = default_args_copy["cwl"]         # for easy access
+def execute_workflow_step(
+    cwl_args,
+    job_data,
+    task_id,
+    executor=None
+):
 
     executor = SingleJobExecutor() if executor is None else executor
+    
+    cwl_args_copy = deepcopy(cwl_args)
 
-    runtime_context = RuntimeContext(cwl_args)
+    step_tmp_folder, step_cache_folder, step_outputs_folder, step_report = get_temp_folders(task_id, job_data)
 
-    step_tmp = tempfile.mkdtemp(
-        prefix=os.path.join(cwl_args["tmp_folder"], "step_")
+    cwl_args_copy.update({
+        "tmp_outdir_prefix": step_cache_folder + "/",
+        "tmpdir_prefix": step_cache_folder + "/",
+        "cidfile_dir": step_tmp_folder,
+        "cidfile_prefix": task_id,
+        "basedir": os.getcwd(),            # job should have abs path for inputs, so this is useless
+        "outdir": step_outputs_folder
+    })
+    
+    workflow_step_path = os.path.join(step_tmp_folder, task_id + "_step_workflow.cwl")
+    fast_cwl_step_load(cwl_args_copy, task_id, workflow_step_path)
+    cwl_args_copy["workflow"] = workflow_step_path
+    
+    step_outputs, step_status = executor(
+        slow_cwl_load(cwl_args_copy),
+        job_data,
+        RuntimeContext(cwl_args_copy)
     )
 
-    runtime_context.tmp_outdir_prefix = os.path.join(cwl_args["tmp_folder"], "outdir_")
-    runtime_context.tmpdir_prefix = os.path.join(cwl_args["tmp_folder"], "tmpdir_")
-    runtime_context.cachedir = os.path.join(cwl_args["tmp_folder"], "cachedir_")
+    if step_status != "success":
+        raise ValueError
 
-    runtime_context.rm_tmpdir = True
-    runtime_context.cidfile_dir
-    runtime_context.cidfile_prefix
+    dump_data(step_outputs, step_report)
 
-    runtime_context.move_outputs = "move"
-    runtime_context.basedir = os.getcwd()  # job should have abs path for inputs, so this is useless
-    
-    runtime_context.outdir = ""
-
-    step_outputs, step_status = executor(workflow_step_tool, job, runtime_context)
+    return step_outputs, step_report
 
 
-def load_job(job, cwl_args, cwd=None):
+def get_temp_folders(task_id, job_data):
+
+    step_tmp_folder = get_dir(
+        os.path.join(
+            job_data["tmp_folder"],
+            task_id
+        )
+    )
+
+    step_cache_folder = get_dir(
+        os.path.join(
+            step_tmp_folder,
+            task_id + "_step_cache"
+        )
+    )
+
+
+    step_outputs_folder = get_dir(
+        os.path.join(
+            step_tmp_folder,
+            task_id + "_step_outputs"
+        )
+    )
+
+    step_report = os.path.join(
+        step_tmp_folder,
+        task_id + "_step_report.json"
+    )
+
+    return step_tmp_folder, step_cache_folder, step_outputs_folder, step_report
+
+
+def dump_data(data, location):
+    with open(location , "w") as output_stream:
+        json.dump(data, output_stream, indent=4)
+
+
+def load_job(cwl_args, job, cwd=None):
     """
     Follows standard routine for loading job order object file
     the same way as cwltool does it. cwl_args should include
@@ -108,38 +161,43 @@ def load_job(job, cwl_args, cwd=None):
     return initialized_job_data
 
 
-def fast_cwl_step_load(default_args, target_id):
+def fast_cwl_step_load(cwl_args, target_id, location=None):
     """
-    Pass default_args despite the fact that only "cwl" section
-    is required. Just to make it easier to call this function.
-    
-    default_args["cwl"] should include "pickle_folder" and
-    "workflow". Other args are required for a proper LoadingContext
-    and RuntimeContext construction when calling fast_cwl_load.
+    "cwl_args" should include "pickle_folder" and "workflow".
+    Other args are required for a proper LoadingContext
+    and RuntimeContext construction when calling "slow_cwl_load"
+    from "fast_cwl_load"
 
     Constructs workflow from a single step selected by its id.
     Other steps are removed. Workflow inputs and outputs are
     updated based on source fields of "in" and "out" from the
-    selected workflow step. All other fields remain unchanged.
+    selected workflow step. IDs of updated workflow inputs and
+    outputs as well as IDs of correspondent "source" fields
+    also include step id separated by underscore. All other
+    fields remain unchanged.
 
     Returned value is always CommentedMap with parsed tool.
+    If "location" is not None, export modified workflow.
     """
 
-    default_args_copy = deepcopy(default_args)
+    cwl_args_copy = deepcopy(cwl_args)
 
     workflow_inputs = []
     workflow_outputs = []
     workflow_steps = []
 
-    workflow_tool = fast_cwl_load(default_args_copy)
+    workflow_tool = fast_cwl_load(cwl_args_copy)
 
     selected_step = list(get_items(workflow_tool["steps"], target_id))[0][1]
 
     workflow_steps.append(selected_step)
 
     for _, step_in in get_items(selected_step.get("in", [])):           # step might not have "in"
-        for _, step_in_source in get_items(step_in.get("source", [])):  # "in" might not have "source"
-            
+        
+        updated_sources = []  # to keep track of updated sources
+
+        for step_in_source, _ in get_items(step_in.get("source", [])):  # "in" might not have "source"
+
             try:
 
                 # try to find workflow input that corresponds to "source"
@@ -148,7 +206,18 @@ def fast_cwl_step_load(default_args, target_id):
                     workflow_tool["inputs"],
                     step_in_source
                 ))[0][1]
-                workflow_inputs.append(workflow_input)
+
+                updated_workflow_input = {
+                    "id": step_in_source,
+                    "type": workflow_input["type"]
+                }
+
+                if "default" in workflow_input:
+                    updated_workflow_input["default"] = workflow_input["default"]
+                
+                workflow_inputs.append(updated_workflow_input)
+
+                updated_sources.append(step_in_source)
 
             except (IndexError, KeyError):
                 
@@ -162,32 +231,43 @@ def fast_cwl_step_load(default_args, target_id):
                 # Need to load tool from "run" of the found upstream step
                 # and look for the output that corresponds to "source"
 
-                default_args_copy["cwl"]["workflow"] = upstream_step["run"]
-                upstream_step_tool = fast_cwl_load(default_args_copy)
+                cwl_args_copy["workflow"] = upstream_step["run"]
+                upstream_step_tool = fast_cwl_load(cwl_args_copy)
 
                 upstream_step_output = list(get_items(
                     upstream_step_tool["outputs"],
                     get_short_id(step_in_source, only_id=True)
                 ))[0][1]
 
+                step_in_source_with_step_id = step_in_source.replace("/", "_")  # to include both step name and id
                 workflow_inputs.append({
-                    "id": step_in_source,
-                    "type": upstream_step_output["type"]  # TODO: maybe I need to copy format too
+                    "id": step_in_source_with_step_id,  
+                    "type": upstream_step_output["type"]
                 })
+                
+                updated_sources.append(step_in_source_with_step_id)
+
+        # replace "source" in step's "in" if anything was updated
+        if len(updated_sources) > 0:
+            if isinstance(step_in["source"], list):
+                step_in["source"] = updated_sources
+            else:
+                step_in["source"] = updated_sources[0]   
 
     # Need to load tool from the "run" field of the selected step
     # and look for the outputs that correpond to the items from "out"
 
-    default_args_copy["cwl"]["workflow"] = selected_step["run"]
-    selected_step_tool = fast_cwl_load(default_args_copy)
+    cwl_args_copy["workflow"] = selected_step["run"]
+    selected_step_tool = fast_cwl_load(cwl_args_copy)
 
-    for _, step_out in get_items(selected_step["out"]):
+    for step_out, _ in get_items(selected_step["out"]):
         selected_step_output = list(get_items(
             selected_step_tool["outputs"],
             get_short_id(step_out, only_id=True)
         ))[0][1]
+        step_out_with_step_id = step_out.replace("/", "_")  # to include both step name and id
         workflow_outputs.append({
-            "id": step_out,                         # looks like it's safe to set both "id" and "outputSource" with the same name
+            "id": step_out_with_step_id,
             "type": selected_step_output["type"],
             "outputSource": step_out
         })
@@ -199,6 +279,9 @@ def fast_cwl_step_load(default_args, target_id):
             "steps": workflow_steps
         }
     )
+
+    if location is not None:
+        dump_data(workflow_tool, location)
 
     return workflow_tool
 
@@ -279,48 +362,44 @@ def get_items(data, target_id=None):
 def get_short_id(long_id, only_step_name=None, only_id=None):
     """
     Shortens long id to include only part after symbol #.
-    If only_step_name is True, return a short step name.
-    If only_id is True, return a short id without step name.
+    If # is not present, use long_id. If only_step_name is True,
+    return a short step name. If only_id is True, return a short
+    id without step name.
     """
-    part = urlsplit(long_id).fragment
+    fragment = urlsplit(long_id).fragment
+    part = fragment if fragment != "" else long_id
     part = part.split("/")[0] if only_step_name else part
     part = "/".join(part.split("/")[1:]) if only_id else part
     return part
 
 
-def fast_cwl_load(default_args):
+def fast_cwl_load(cwl_args):
     """
-    Pass default_args despite the fact that only "cwl" section
-    is required. Just to make it easier to call this function.
-    "cwl" section should include "workflow" and "pickle_folder"
-    fields.
-
     Tries to load pickled version of CWL file from the
     pickle_folder. Uses md5 sum as a basename for the file.
     If file not found or failed to unpickle, load CWL data
     from the workflow file and save pickled version.
 
-    default_args["cwl"] should include "pickle_folder" and
-    "workflow". Other args are required for a proper LoadingContext
-    and RuntimeContext construction when calling slow_cwl_load.
+    "cwl_args" should include "pickle_folder" and "workflow".
+    Other args are required for a proper LoadingContext
+    and RuntimeContext construction when calling "slow_cwl_load".
 
     Returned value is always CommentedMap with parsed tool, because
-    slow_cwl_load is always called with reduced=True. Dill will fail
+    "slow_cwl_load" is always called with reduced=True. Dill will fail
     to pickle/unpickle the whole workflow
     """
-
-    cwl_args = default_args["cwl"]  # for easier access
+    cwl_args_copy = deepcopy(cwl_args)
 
     pickled_workflow = os.path.join(
-        cwl_args["pickle_folder"],
-        get_md5_sum(cwl_args["workflow"]) + ".p"
+        cwl_args_copy["pickle_folder"],
+        get_md5_sum(cwl_args_copy["workflow"]) + ".p"  # no need to use get_path_from_url
     )
 
     try:
         with open(pickled_workflow, "rb") as input_stream:
             workflow_tool = pickle.load(input_stream)
     except (FileNotFoundError, pickle.UnpicklingError) as err:
-        workflow_tool = slow_cwl_load(cwl_args, True)
+        workflow_tool = slow_cwl_load(cwl_args_copy, True)
         with open(pickled_workflow , "wb") as output_stream:
             pickle.dump(workflow_tool, output_stream)
 
@@ -337,17 +416,19 @@ def slow_cwl_load(cwl_args, reduced=False):
     unpickled)
     """
 
-    if not os.path.isfile(cwl_args["workflow"]):
+    cwl_args_copy = deepcopy(cwl_args)
+
+    if not os.path.isfile(get_path_from_url(cwl_args_copy["workflow"])):        # need to get rid of file:// if it was url
         raise FileNotFoundError(
-            errno.ENOENT, os.strerror(errno.ENOENT), cwl_args["workflow"]
+            errno.ENOENT, os.strerror(errno.ENOENT), cwl_args_copy["workflow"]
         )
 
     workflow_data = load_tool(
-        cwl_args["workflow"], 
+        cwl_args_copy["workflow"],               # no need to use get_path_from_url
         setup_loadingContext(
-            LoadingContext(cwl_args),
-            RuntimeContext(cwl_args),
-            argparse.Namespace(**cwl_args)
+            LoadingContext(cwl_args_copy),
+            RuntimeContext(cwl_args_copy),
+            argparse.Namespace(**cwl_args_copy)
         )
     )
 

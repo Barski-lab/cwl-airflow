@@ -1,0 +1,7 @@
+{
+    "bam_file": {
+        "class": "File",
+        "location": "../inputs/chr4_100_mapped_reads.bam"
+    },
+    "scale": 1
+}

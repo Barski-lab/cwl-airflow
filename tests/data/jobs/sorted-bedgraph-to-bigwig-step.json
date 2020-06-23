@@ -1,0 +1,11 @@
+{
+    "sort_bedgraph_sorted_file": {
+        "location": "../inputs/chr4_100_mapped_reads.bedGraph",
+        "class": "File"
+    },
+    "chrom_length_file": {
+        "class": "File",
+        "location": "../inputs/chr_name_length.txt"
+    },
+    "scale": 1
+}
