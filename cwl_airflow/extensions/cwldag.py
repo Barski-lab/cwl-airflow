@@ -11,8 +11,8 @@ from cwl_airflow.utilities.helpers import get_dir
 from cwl_airflow.utilities.airflow import conf_get
 from cwl_airflow.utilities.cwl import fast_cwl_load, get_items
 from cwl_airflow.extensions.operators.cwlstepoperator import CWLStepOperator
-from cwl_airflow.extensions.operators.cwljobdispatcher CWLJobDispatcher
-from cwl_airflow.extensions.operators.cwljobgatherer CWLJobGatherer
+from cwl_airflow.extensions.operators.cwljobdispatcher import CWLJobDispatcher
+from cwl_airflow.extensions.operators.cwljobgatherer import CWLJobGatherer
 from cwl_airflow.utilities.report import (
     dag_on_success,
     dag_on_failure,
@@ -32,16 +32,16 @@ class CWLDAG(DAG):
         gatherer=None,   # custom job gatherer. Will be assigned automatically to the same DAG. Default CWLJobGatherer
         *args, **kwargs  # see DAG class for additional parameters
     ):
-    """
-    Updates kwargs with the required defaults if they were not explicitely set.
-    start_date is set to days_ago(180) assuming that DAG run is not supposed to
-    be queued longer then half a year.
-    
-    dispatcher and gatherer are set to CWLJobDispatcher() and CWLJobGatherer()
-    if those were not provided by user. If user sets his own operators for dispatcher
-    and gatherer, default_args from the DAG as well as required_default_args will not
-    be set for these operators. He need to set proper agruments by himself.
-    """
+        """
+        Updates kwargs with the required defaults if they were not explicitely set.
+        start_date is set to days_ago(180) assuming that DAG run is not supposed to
+        be queued longer then half a year.
+        
+        dispatcher and gatherer are set to CWLJobDispatcher() and CWLJobGatherer()
+        if those were not provided by user. If user sets his own operators for dispatcher
+        and gatherer, default_args from the DAG as well as required_default_args will not
+        be set for these operators. He need to set proper agruments by himself.
+        """
         
         # default args provided by user.
         # Use deepcopy to prevent from changing in place
@@ -144,8 +144,8 @@ class CWLDAG(DAG):
         super().__init__(dag_id=dag_id, *args, **kwargs)
 
         self.workflow_tool = fast_cwl_load(kwargs["default_args"]["cwl"])                   # keeps only the tool (CommentedMap object)
-        self.dispatcher = CWLJobDispatcher(dag=self) if dispatcher is None else dispatcher  # need dag=self otherwise new operator will not get proper default_args
-        self.gatherer = CWLJobGatherer(dag=self) if gatherer is None else gatherer
+        self.dispatcher = CWLJobDispatcher(dag=self, task_id="dispatcher") if dispatcher is None else dispatcher  # need dag=self otherwise new operator will not get proper default_args
+        self.gatherer = CWLJobGatherer(dag=self, task_id="gatherer") if gatherer is None else gatherer
 
         self.__assemble()
 
@@ -174,28 +174,14 @@ class CWLDAG(DAG):
                         task_by_id[step_id].set_upstream(self.dispatcher)                 # connected to dispatcher
 
         for _, output_data in get_items(self.workflow_tool["outputs"]):
-            for output_source_id, _ in get_items(self.output_data["outputSource"]):
+            for output_source_id, _ in get_items(output_data["outputSource"]):
                 self.gatherer.set_upstream(task_by_out_id[output_source_id])              # connected to gatherer
 
         # safety measure in case of very specific workflows
         # if gatherer happened to be not connected to anything, connect it to all "leaves"
         # if dispatcher happened to be not connected to anything, connect it to all "roots"
         if not self.gatherer.upstream_list:
-            self.gatherer.set_upstream([task in task_by_id.values() if not task.downstream_list])
+            self.gatherer.set_upstream([task for task in task_by_id.values() if not task.downstream_list])
 
         if not self.dispatcher.downstream_list:
-            self.dispatcher.set_downstream([task in task_by_id.values() if not task.upstream_list])
-
-
-    def get_output_list(self):
-        
-        # TODO: Not sure where we use it
-
-        outputs = {}
-        for out_id, out_val in self.get_items(self.cwlwf["outputs"]):
-            if "outputSource" in out_val:
-                outputs[out_val["outputSource"]] = out_id
-            else:
-                outputs[out_id] = out_id
-        # _logger.debug("{0} get_output_list: \n{1}".format(self.dag_id, outputs))
-        return outputs
+            self.dispatcher.set_downstream([task for task in task_by_id.values() if not task.upstream_list])

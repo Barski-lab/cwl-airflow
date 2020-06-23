@@ -2,7 +2,7 @@ import logging
 import psutil
 import shutil
 
-from cwl_airflow.utils.notifier import dag_on_success, dag_on_failure
+from cwl_airflow.utilities.report import dag_on_success, dag_on_failure
 from cwl_airflow.utilities.helpers import CleanAirflowImport
 
 with CleanAirflowImport():

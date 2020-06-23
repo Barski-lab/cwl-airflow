@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 import os
 from tempfile import mkdtemp
 
@@ -10,7 +11,7 @@ from cwl_airflow.utilities.cwl import (
     dump_data,
     get_temp_folders
 )
-from cwl_airflow.utilities.report import post_status
+# from cwl_airflow.utilities.report import post_status
 
 
 class CWLJobDispatcher(BaseOperator):
@@ -28,11 +29,11 @@ class CWLJobDispatcher(BaseOperator):
     def execute(self, context):
         """
         Loads job Object from the context. Sets "tmp_folder" and "output_folder"
-        if they have not been set before. Dumps step outputs as a json file into
-        "tmp_folder". Writes to X-Com results file location.
+        if they have not been set before in the job. Dumps step outputs as a json
+        file into "tmp_folder". Writes to X-Com report file location.
         """
 
-        post_status(context)
+        # post_status(context)
 
         # for easy access
         dag_id = context["dag"].dag_id

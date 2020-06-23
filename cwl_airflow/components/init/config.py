@@ -63,7 +63,6 @@ def patch_airflow_config(airflow_config):
     # - use_container
 
     patch = f"""
-    sed -i -e 's/^dags_are_paused_at_creation.*/dags_are_paused_at_creation = False/g' {airflow_config} && \
     sed -i -e 's/^load_examples.*/load_examples = False/g' {airflow_config} && \
     sed -i -e 's/^hide_paused_dags_by_default.*/hide_paused_dags_by_default = True/g' {airflow_config}
     """
