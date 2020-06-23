@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 from copy import deepcopy
 from jsonmerge import merge
-
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
@@ -9,7 +8,6 @@ from cwl_airflow.utilities.cwl import (
     execute_workflow_step,
     load_job
 )
-
 # from cwl_airflow.utilities.report import post_status
 
 
@@ -28,7 +26,7 @@ class CWLStepOperator(BaseOperator):
     def execute(self, context):
         """
         Loads data from report files of all upstream tasks. Merge them into a single job
-        and executes a workflow constracted from the workflow step. Writes to X-Com report
+        and executes a workflow constructed from the workflow step. Writes to X-Com report
         file location.
         """
 

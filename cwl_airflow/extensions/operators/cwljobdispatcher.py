@@ -79,4 +79,3 @@ class CWLJobDispatcher(BaseOperator):
         dump_data(job_data, step_report)
 
         return step_report
-

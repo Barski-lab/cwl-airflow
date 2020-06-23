@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
@@ -18,7 +17,11 @@ class CWLJobGatherer(BaseOperator):
         
 
     def execute(self, context):
-        
+        """
+        Loads data from all reports from upstream tasks. Combines then into a single
+        file and rellocato to the "outputs_folder". Temp data is removed.
+        """
+
         # post_status(context)
 
         # for easy access
@@ -28,7 +31,7 @@ class CWLJobGatherer(BaseOperator):
         job_data = {}
         for upstream_report in self.xcom_pull(context=context, task_ids=self.upstream_task_ids):
             upstream_outputs = load_job(
-                cwl_args,
+                cwl_args,                 # should be ok even if cwl_args["workflow"] points to the original workflow
                 upstream_report
             )                                                           
             job_data = merge(job_data, upstream_outputs)

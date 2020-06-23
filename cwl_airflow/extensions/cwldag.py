@@ -33,16 +33,32 @@ class CWLDAG(DAG):
         *args, **kwargs  # see DAG class for additional parameters
     ):
         """
-        Updates kwargs with the required defaults if they were not explicitely set.
-        start_date is set to days_ago(180) assuming that DAG run is not supposed to
-        be queued longer then half a year.
-        
-        dispatcher and gatherer are set to CWLJobDispatcher() and CWLJobGatherer()
+        Updates kwargs with the required defaults if they were not explicitely provided
+        by user. dispatcher and gatherer are set to CWLJobDispatcher() and CWLJobGatherer()
         if those were not provided by user. If user sets his own operators for dispatcher
-        and gatherer, default_args from the DAG as well as required_default_args will not
-        be set for these operators. He need to set proper agruments by himself.
+        and gatherer, "default_args" from the DAG as well as "required_default_args" will
+        not be set for these operators. User needs to set up proper agruments by himself.
         """
-        
+
+        __setup_params(kwargs)
+
+        super().__init__(dag_id=dag_id, *args, **kwargs)
+
+        self.workflow_tool = fast_cwl_load(kwargs["default_args"]["cwl"])                                         # keeps only the tool (CommentedMap object)
+        self.dispatcher = CWLJobDispatcher(dag=self, task_id="dispatcher") if dispatcher is None else dispatcher  # need dag=self otherwise new operator will not get proper default_args
+        self.gatherer = CWLJobGatherer(dag=self, task_id="gatherer") if gatherer is None else gatherer
+
+        self.__assemble()
+
+
+    def __setup_params(kwargs):
+        """
+        Updates kwargs with default values if those were not
+        explicitely set on CWLDAG creation. "start_date" is set
+        to days_ago(180) assuming that DAG run is not supposed
+        to be queued longer then half a year:)
+        """
+
         # default args provided by user.
         # Use deepcopy to prevent from changing in place
         user_default_args = deepcopy(kwargs.get("default_args", {}))
@@ -141,19 +157,13 @@ class CWLDAG(DAG):
             }
         )
 
-        super().__init__(dag_id=dag_id, *args, **kwargs)
-
-        self.workflow_tool = fast_cwl_load(kwargs["default_args"]["cwl"])                   # keeps only the tool (CommentedMap object)
-        self.dispatcher = CWLJobDispatcher(dag=self, task_id="dispatcher") if dispatcher is None else dispatcher  # need dag=self otherwise new operator will not get proper default_args
-        self.gatherer = CWLJobGatherer(dag=self, task_id="gatherer") if gatherer is None else gatherer
-
-        self.__assemble()
-
 
     def __assemble(self):
         """
-        Creates DAG based on the parsed CWL workflow structure. Assignes dispatcher and gatherer tasks
+        Creates DAG based on the parsed CWL workflow structure.
+        Assignes dispatcher and gatherer tasks
         """
+
         # TODO: add support for CommandLineTool and ExpressionTool
         # TODO: add colors for Tasks?
 
@@ -180,6 +190,7 @@ class CWLDAG(DAG):
         # safety measure in case of very specific workflows
         # if gatherer happened to be not connected to anything, connect it to all "leaves"
         # if dispatcher happened to be not connected to anything, connect it to all "roots"
+        
         if not self.gatherer.upstream_list:
             self.gatherer.set_upstream([task for task in task_by_id.values() if not task.downstream_list])
 
