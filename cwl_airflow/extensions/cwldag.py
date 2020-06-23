@@ -40,7 +40,7 @@ class CWLDAG(DAG):
         not be set for these operators. User needs to set up proper agruments by himself.
         """
 
-        __setup_params(kwargs)
+        self.__setup_params(kwargs, workflow)
 
         super().__init__(dag_id=dag_id, *args, **kwargs)
 
@@ -51,7 +51,7 @@ class CWLDAG(DAG):
         self.__assemble()
 
 
-    def __setup_params(kwargs):
+    def __setup_params(self, kwargs, workflow):
         """
         Updates kwargs with default values if those were not
         explicitely set on CWLDAG creation. "start_date" is set
@@ -190,7 +190,7 @@ class CWLDAG(DAG):
         # safety measure in case of very specific workflows
         # if gatherer happened to be not connected to anything, connect it to all "leaves"
         # if dispatcher happened to be not connected to anything, connect it to all "roots"
-        
+
         if not self.gatherer.upstream_list:
             self.gatherer.set_upstream([task for task in task_by_id.values() if not task.downstream_list])
 
