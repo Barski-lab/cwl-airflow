@@ -18,6 +18,8 @@ from cwltool.context import LoadingContext, RuntimeContext
 from cwltool.process import relocateOutputs
 from cwltool.load_tool import load_tool, jobloaderctx
 from cwltool.executors import SingleJobExecutor
+from cwltool.utils import visit_class
+from cwltool.mutation import MutationManager
 from schema_salad.ref_resolver import Loader
 from schema_salad.exceptions import SchemaSaladException
 from schema_salad.ref_resolver import file_uri
@@ -132,6 +134,10 @@ def execute_workflow_step(
 
     if step_status != "success":
         raise ValueError
+
+    # To remove "http://commonwl.org/cwltool#generation": 0
+    # (copied from cwltool)
+    visit_class(step_outputs, ("File",), MutationManager().unset_generation)
 
     dump_data(step_outputs, step_report)
 
