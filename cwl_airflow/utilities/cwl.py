@@ -31,9 +31,14 @@ from cwl_airflow.utilities.helpers import (
 
 def relocate_outputs(cwl_args, job_data, remove_tmp_folder=None):
     """
-    Maps outputs back to normal,
-    By default remove tmp_folder, unless "remove_tmp_folder" is set
-    to False
+    Maps workflow outputs back to normal (from step_id_step_out to
+    workflow output) and filters "job_data" based on them (combining
+    items from "job_data" into a list based on "outputSource" if it
+    was a list).
+    Relocates filtered outputs to "outputs_folder" and, by default,
+    removes tmp_folder, unless "remove_tmp_folder" is set to something
+    else. Saves report with relocated outputs as "workflow_report.json" to
+    "outputs_folder"
     """
     
     remove_tmp_folder = True if remove_tmp_folder is None else remove_tmp_folder
@@ -43,30 +48,37 @@ def relocate_outputs(cwl_args, job_data, remove_tmp_folder=None):
 
     workflow_tool = fast_cwl_load(cwl_args_copy)
 
-    # get outputs mapping
-    mapped_outputs = {}
-    for output_id, output_data in get_items(workflow_tool["outputs"]):
-        for output_source_id, _ in get_items(output_data["outputSource"]):
-            output_source_id_with_step_id = output_source_id.replace("/", "_")
-            mapped_outputs[output_source_id_with_step_id] = output_id
+    # Filter "job_data" to include only items required by workflow outputs.
+    # Remap keys to the proper workflow outputs IDs (without step id).
+    # If "outputSource" was a list even of len=1, find all correspondent items
+    # from the "job_data" and assign them as list of the same size. 
 
-    # filter job_data_copy to include only items from "mapped_outputs"
     filtered_job_data = {}
-    for output_id, output_data in get_items(job_data_copy):
-        if output_id in mapped_outputs:
-            filtered_job_data[mapped_outputs[output_id]] = output_data
+    for output_id, output_data in get_items(workflow_tool["outputs"]):
+        collected_job_items = []
+        for source_id, _ in get_items(output_data["outputSource"]):
+            collected_job_items.append(
+                job_data_copy[source_id.replace("/", "_")]
+            )
+        if isinstance(output_data["outputSource"], list):
+            filtered_job_data[output_id] = collected_job_items
+        else:
+            filtered_job_data[output_id] = collected_job_items[0]
+
+    # Outputs will be always copied, because source_directories=[]
 
     runtime_context = RuntimeContext(cwl_args_copy)
-
     relocated_job_data = relocateOutputs(
         outputObj=filtered_job_data,
         destination_path=job_data_copy["outputs_folder"],
-        source_directories=[],
+        source_directories=[],                              # use it as a placeholder (shouldn't influence anything)
         action=runtime_context.move_outputs,
         fs_access=runtime_context.make_fs_access(""),
         compute_checksum=runtime_context.compute_checksum,
         path_mapper=runtime_context.path_mapper
     )
+
+    # Dump report with relocated outputs
 
     workflow_report = os.path.join(
         job_data_copy["outputs_folder"],
@@ -74,6 +86,8 @@ def relocate_outputs(cwl_args, job_data, remove_tmp_folder=None):
     )
 
     dump_data(relocated_job_data, workflow_report)
+
+    # Clean "tmp_folder"
 
     if remove_tmp_folder:
         shutil.rmtree(job_data_copy["tmp_folder"], ignore_errors=False)

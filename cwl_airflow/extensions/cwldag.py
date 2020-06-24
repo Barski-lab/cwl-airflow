@@ -184,7 +184,7 @@ class CWLDAG(DAG):
                         task_by_id[step_id].set_upstream(self.dispatcher)                 # connected to dispatcher
 
         for _, output_data in get_items(self.workflow_tool["outputs"]):
-            for output_source_id, _ in get_items(output_data["outputSource"]):
+            for output_source_id, _ in get_items(output_data["outputSource"]):            # in case "outputSource" is a list
                 self.gatherer.set_upstream(task_by_out_id[output_source_id])              # connected to gatherer
 
         # safety measure in case of very specific workflows
