@@ -75,6 +75,78 @@ DATA_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
             True,
             True,
             ""
+        ),
+        (
+            "file:///Users/tester/cwl-airflow/tests/data/workflows/bam-bedgraph-bigwig-single.cwl#bam_to_bedgraph/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            None,
+            None,
+            "bam_to_bedgraph/genome_coverage_file"
+        ),
+        (
+            "file:///Users/tester/cwl-airflow/tests/data/workflows/bam-bedgraph-bigwig-single.cwl#bam_to_bedgraph/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            True,
+            None,
+            "bam_to_bedgraph"
+        ),
+        (
+            "file:///Users/tester/cwl-airflow/tests/data/workflows/bam-bedgraph-bigwig-single.cwl#bam_to_bedgraph/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            None,
+            True,
+            "genome_coverage_file"
+        ),
+        (
+            "file:///Users/tester/cwl-airflow/tests/data/workflows/bam-bedgraph-bigwig-single.cwl#bam_to_bedgraph/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            True,
+            True,
+            ""
+        ),
+        (
+            "bam_to_bedgraph/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            None,
+            None,
+            "bam_to_bedgraph/genome_coverage_file"
+        ),
+        (
+            "bam_to_bedgraph/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            True,
+            None,
+            "bam_to_bedgraph"
+        ),
+        (
+            "bam_to_bedgraph/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            None,
+            True,
+            "genome_coverage_file"
+        ),
+        (
+            "bam_to_bedgraph/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            True,
+            True,
+            ""
+        ),
+        (
+            "output_filename",
+            None,
+            None,
+            "output_filename"
+        ),
+        (
+            "output_filename",
+            True,
+            None,
+            "output_filename"
+        ),
+        (
+            "output_filename",
+            None,
+            True,
+            "output_filename"
+        ),
+        (
+            "output_filename",
+            True,
+            True,
+            "output_filename"
         )
     ]
 )
@@ -101,6 +173,16 @@ def test_get_short_id(long_id, only_step_name, only_id, control):
             ["workflows", "bam-bedgraph-bigwig.cwl"],
             "sorted-bedgraph-to-bigwig-step.json",
             "sorted_bedgraph_to_bigwig"
+        ),
+        (
+            ["workflows", "bam-bedgraph-bigwig-single.cwl"],
+            "bam-to-bedgraph-step.json",
+            "bam_to_bedgraph"
+        ),
+        (
+            ["workflows", "bam-bedgraph-bigwig-single.cwl"],
+            "sort-bedgraph-step.json",
+            "sort_bedgraph"
         )
     ]
 )
@@ -424,6 +506,21 @@ def test_slow_cwl_load_reduced_command_line_tool():
     assert isinstance(command_line_tool, CommentedMap)
 
 
+def test_slow_cwl_load_parsed_workflow():
+    cwl_args = get_default_args()
+    cwl_args.update(
+        {
+            "workflow": os.path.join(
+                DATA_FOLDER, "workflows", "bam-bedgraph-bigwig.cwl"
+            ) 
+        }
+    )
+    cwl_args["workflow"] = slow_cwl_load(cwl_args, True)
+    workflow_data = slow_cwl_load(cwl_args)
+
+    assert isinstance(workflow_data, CommentedMap)
+
+
 def test_slow_cwl_load_workflow_should_fail():
     cwl_args = get_default_args()
     cwl_args.update(
@@ -461,7 +558,31 @@ def test_fast_cwl_load_workflow_from_cwl():
            "Failed to parse CWL file"
     assert pickled_workflow_path in temp_pickle_folder_content, \
            "Failed to pickle CWL file"
-    
+
+
+def test_fast_cwl_load_workflow_from_parsed():
+    temp_pickle_folder = mkdtemp()
+    workflow_path = os.path.join(DATA_FOLDER, "workflows", "bam-bedgraph-bigwig.cwl")
+    pickled_workflow_path = get_md5_sum(workflow_path) + ".p"
+
+    cwl_args = get_default_args()
+    cwl_args.update(
+        {
+            "workflow": workflow_path,
+            "pickle_folder": temp_pickle_folder
+        }
+    )
+    try:
+        cwl_args["workflow"] = fast_cwl_load(cwl_args)
+        workflow_tool = fast_cwl_load(cwl_args)
+    except BaseException as err:
+        assert False, f"Failed to run test. \n {err}"
+    finally:
+        rmtree(temp_pickle_folder)
+
+    assert isinstance(workflow_tool, CommentedMap), \
+           "Failed to parse CWL file"
+
 
 def test_fast_cwl_load_command_line_tool_from_cwl():
     temp_pickle_folder = mkdtemp()

@@ -10,6 +10,7 @@ from tempfile import mkdtemp
 from urllib.parse import urlsplit
 from typing import Mapping, Sequence
 from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap
 from cwltool.main import setup_loadingContext, init_job_order
 from cwltool.context import LoadingContext, RuntimeContext
 from cwltool.load_tool import load_tool, jobloaderctx
@@ -229,13 +230,14 @@ def fast_cwl_step_load(cwl_args, target_id, location=None):
                 ))[0][1]
 
                 # Need to load tool from "run" of the found upstream step
-                # and look for the output that corresponds to "source"
+                # and look for the output that corresponds to "source".
+                # We look for correspondence only based on "id"
 
                 cwl_args_copy["workflow"] = upstream_step["run"]
                 upstream_step_tool = fast_cwl_load(cwl_args_copy)
 
                 upstream_step_output = list(get_items(
-                    upstream_step_tool["outputs"],
+                    {get_short_id(k, only_id=True): v for k, v in get_items(upstream_step_tool["outputs"])},  # trick
                     get_short_id(step_in_source, only_id=True)
                 ))[0][1]
 
@@ -255,14 +257,15 @@ def fast_cwl_step_load(cwl_args, target_id, location=None):
                 step_in["source"] = updated_sources[0]   
 
     # Need to load tool from the "run" field of the selected step
-    # and look for the outputs that correpond to the items from "out"
+    # and look for the outputs that correspond to the items from "out".
+    # We look for correspondence only based on "id"
 
     cwl_args_copy["workflow"] = selected_step["run"]
     selected_step_tool = fast_cwl_load(cwl_args_copy)
 
     for step_out, _ in get_items(selected_step["out"]):
         selected_step_output = list(get_items(
-            selected_step_tool["outputs"],
+            {get_short_id(k, only_id=True): v for k, v in get_items(selected_step_tool["outputs"])},  # trick
             get_short_id(step_out, only_id=True)
         ))[0][1]
         step_out_with_step_id = step_out.replace("/", "_")  # to include both step name and id
@@ -364,10 +367,21 @@ def get_short_id(long_id, only_step_name=None, only_id=None):
     Shortens long id to include only part after symbol #.
     If # is not present, use long_id. If only_step_name is True,
     return a short step name. If only_id is True, return a short
-    id without step name.
+    id without step name. If part after symbol # includes three
+    sections separated by "/", discard the middle one. If part
+    after symbol # includes only one section separated by "/",
+    reset "only_step_name" and "only_id" to False as we don't
+    know whether it was step name of "id"
     """
     fragment = urlsplit(long_id).fragment
     part = fragment if fragment != "" else long_id
+
+    if len(part.split("/")) == 3:                                  # if "id" has weird uid between step name and id
+        part = "/".join([part.split("/")[0], part.split("/")[2]])
+
+    if len(part.split("/")) == 1:                                  # if fragment is only one word (based on "/")
+        only_step_name, only_id = False, False
+
     part = part.split("/")[0] if only_step_name else part
     part = "/".join(part.split("/")[1:]) if only_id else part
     return part
@@ -386,9 +400,15 @@ def fast_cwl_load(cwl_args):
 
     Returned value is always CommentedMap with parsed tool, because
     "slow_cwl_load" is always called with reduced=True. Dill will fail
-    to pickle/unpickle the whole workflow
+    to pickle/unpickle the whole workflow.
+
+    If "workflow" was already parsed into CommentedMap, return it
+    unchanged. Nothing will be pickled
     """
     cwl_args_copy = deepcopy(cwl_args)
+
+    if isinstance(cwl_args_copy["workflow"], CommentedMap):
+        return cwl_args_copy["workflow"]
 
     pickled_workflow = os.path.join(
         cwl_args_copy["pickle_folder"],
@@ -410,13 +430,19 @@ def slow_cwl_load(cwl_args, reduced=False):
     """
     Follows standard routine for loading CWL file
     the same way as cwltool does it. cwl_args should
-    include "workflow" field. If 'reduced' is
+    include "workflow" field. If "reduced" is
     True, return only tool (useful for pickling,
     because the whole Workflow object fails to be
-    unpickled)
+    unpickled).
+    If "workflow" was already parsed into CommentedMap,
+    return it unchanged (similar to what we can get if
+    "reduced" was True)
     """
 
     cwl_args_copy = deepcopy(cwl_args)
+
+    if isinstance(cwl_args_copy["workflow"], CommentedMap):
+        return cwl_args_copy["workflow"]
 
     if not os.path.isfile(get_path_from_url(cwl_args_copy["workflow"])):        # need to get rid of file:// if it was url
         raise FileNotFoundError(
