@@ -57,8 +57,7 @@ def test_patch_airflow_config():
     finally:
         rmtree(temp_home)
 
-    assert not conf.getboolean("core", "dags_are_paused_at_creation") and \
-           not conf.getboolean("core", "load_examples") and \
+    assert not conf.getboolean("core", "load_examples") and \
            conf.getboolean("webserver", "hide_paused_dags_by_default"), \
            "Failed to update Airflow configuration file"
 
