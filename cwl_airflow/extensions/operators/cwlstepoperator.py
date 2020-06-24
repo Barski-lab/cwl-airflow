@@ -2,7 +2,7 @@
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
-from cwl_airflow.utilities.cwl import load_job
+from cwl_airflow.utilities.cwl import execute_workflow_step
 from cwl_airflow.utilities.airflow import collect_reports
 # from cwl_airflow.utilities.report import post_status
 
