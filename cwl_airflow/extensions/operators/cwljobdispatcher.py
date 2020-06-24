@@ -37,7 +37,7 @@ class CWLJobDispatcher(BaseOperator):
 
         # for easy access
         dag_id = context["dag"].dag_id
-        run_id = context["run_id"]
+        run_id = context["run_id"].replace(":", "_").replace("+", "_")  # to make it dumpable by json
         cwl_args = context["dag"].default_args["cwl"]
 
         # Load job from context. It doesn't fail if input files are missing
