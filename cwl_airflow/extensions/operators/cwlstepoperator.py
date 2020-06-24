@@ -1,13 +1,9 @@
 #! /usr/bin/env python3
-from copy import deepcopy
-from jsonmerge import merge
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
-from cwl_airflow.utilities.cwl import (
-    execute_workflow_step,
-    load_job
-)
+from cwl_airflow.utilities.cwl import load_job
+from cwl_airflow.utilities.airflow import collect_reports
 # from cwl_airflow.utilities.report import post_status
 
 
@@ -25,9 +21,9 @@ class CWLStepOperator(BaseOperator):
 
     def execute(self, context):
         """
-        Loads data from report files of all upstream tasks. Merge them into a single job
-        and executes a workflow constructed from the workflow step. Writes to X-Com report
-        file location.
+        Creates job from collected reports of all finished tasks in a DAG.
+        Then executes a workflow constructed from the workflow step. Writes
+        report file location to X-Com.
         """
 
         # post_status(context)
@@ -36,13 +32,7 @@ class CWLStepOperator(BaseOperator):
         default_args = context["dag"].default_args
         cwl_args = default_args["cwl"]
 
-        job_data = {}
-        for upstream_report in self.xcom_pull(context=context, task_ids=self.upstream_task_ids):
-            upstream_outputs = load_job(
-                cwl_args,                 # should be ok even if cwl_args["workflow"] points to the original workflow
-                upstream_report           # as all defaults from it should have been already added by dispatcher
-            )                                                           
-            job_data = merge(job_data, upstream_outputs)
+        job_data = collect_reports(context, cwl_args)
 
         _, step_report = execute_workflow_step(
             cwl_args,

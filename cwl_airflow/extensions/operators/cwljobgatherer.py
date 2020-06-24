@@ -1,7 +1,9 @@
 #! /usr/bin/env python3
+import shutil
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
+from cwl_airflow.utilities.airflow import collect_reports
 # from cwl_airflow.utilities.report import post_status
 
 
@@ -18,8 +20,8 @@ class CWLJobGatherer(BaseOperator):
 
     def execute(self, context):
         """
-        Loads data from all reports from upstream tasks. Combines then into a single
-        file and rellocato to the "outputs_folder". Temp data is removed.
+        Loads and merges data from report files of all finished tasks in a DAG.
+        Relocates results to the "outputs_folder", removes "tmp_folder"
         """
 
         # post_status(context)
@@ -27,21 +29,9 @@ class CWLJobGatherer(BaseOperator):
         # for easy access
         default_args = context["dag"].default_args
         cwl_args = default_args["cwl"]
+        
+        job_data = collect_reports(context, cwl_args)
 
-        job_data = {}
-        for upstream_report in self.xcom_pull(context=context, task_ids=self.upstream_task_ids):
-            upstream_outputs = load_job(
-                cwl_args,                 # should be ok even if cwl_args["workflow"] points to the original workflow
-                upstream_report
-            )                                                           
-            job_data = merge(job_data, upstream_outputs)
-
-        print("job_data", job_data)
-
-        # try:
-        #     if self.outdir:
-        #         shutil.rmtree(self.outdir, ignore_errors=False)
-        # except Exception as e:
-        #     pass
+        shutil.rmtree(job_data["tmp_folder"], ignore_errors=False)
 
         return job_data

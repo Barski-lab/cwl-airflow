@@ -1,4 +1,5 @@
 import os
+import sys
 import dill as pickle  # standard pickle doesn't handle lambdas
 import argparse
 import json
@@ -52,11 +53,14 @@ def execute_workflow_step(
     fast_cwl_step_load(cwl_args_copy, task_id, workflow_step_path)
     cwl_args_copy["workflow"] = workflow_step_path
     
+    _stderr = sys.stderr                   # to trick the logger
+    sys.stderr = sys.__stderr__
     step_outputs, step_status = executor(
         slow_cwl_load(cwl_args_copy),
         job_data,
         RuntimeContext(cwl_args_copy)
     )
+    sys.stderr = _stderr
 
     if step_status != "success":
         raise ValueError
