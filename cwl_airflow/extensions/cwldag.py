@@ -125,7 +125,7 @@ class CWLDAG(DAG):
                     user_cwl_args.get("quiet", False)
                 ),
                 "rm_tmpdir": True,
-                "move_outputs": True
+                "move_outputs": "move"
             }
         )
 
