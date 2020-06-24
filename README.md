@@ -5,3 +5,9 @@
 # **CWL-Airflow (refactoring in progress)**
 
 Use **master** branch instead.
+
+When running on MacOS, you might need to set up the following env variable before starting `airflow scheduler/webserver`
+
+```
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+```
