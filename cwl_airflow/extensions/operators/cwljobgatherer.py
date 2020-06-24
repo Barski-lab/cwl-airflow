@@ -1,9 +1,9 @@
 #! /usr/bin/env python3
-import shutil
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
 from cwl_airflow.utilities.airflow import collect_reports
+from cwl_airflow.utilities.cwl import relocate_outputs
 # from cwl_airflow.utilities.report import post_status
 
 
@@ -27,11 +27,11 @@ class CWLJobGatherer(BaseOperator):
         # post_status(context)
 
         # for easy access
-        default_args = context["dag"].default_args
-        cwl_args = default_args["cwl"]
+
+        cwl_args = context["dag"].default_args["cwl"]
         
         job_data = collect_reports(context, cwl_args)
+        
+        _, workflow_report = relocate_outputs(cwl_args, job_data)
 
-        shutil.rmtree(job_data["tmp_folder"], ignore_errors=False)
-
-        return job_data
+        return workflow_report

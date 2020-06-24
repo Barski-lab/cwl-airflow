@@ -4,6 +4,7 @@ import dill as pickle  # standard pickle doesn't handle lambdas
 import argparse
 import json
 import errno
+import shutil
 
 from uuid import uuid4
 from copy import deepcopy
@@ -14,6 +15,7 @@ from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap
 from cwltool.main import setup_loadingContext, init_job_order
 from cwltool.context import LoadingContext, RuntimeContext
+from cwltool.process import relocateOutputs
 from cwltool.load_tool import load_tool, jobloaderctx
 from cwltool.executors import SingleJobExecutor
 from schema_salad.ref_resolver import Loader
@@ -25,6 +27,58 @@ from cwl_airflow.utilities.helpers import (
     get_dir,
     get_path_from_url
 )
+
+
+def relocate_outputs(cwl_args, job_data, remove_tmp_folder=None):
+    """
+    Maps outputs back to normal,
+    By default remove tmp_folder, unless "remove_tmp_folder" is set
+    to False
+    """
+    
+    remove_tmp_folder = True if remove_tmp_folder is None else remove_tmp_folder
+
+    cwl_args_copy = deepcopy(cwl_args)
+    job_data_copy = deepcopy(job_data)
+
+    workflow_tool = fast_cwl_load(cwl_args_copy)
+
+    # get outputs mapping
+    mapped_outputs = {}
+    for output_id, output_data in get_items(workflow_tool["outputs"]):
+        for output_source_id, _ in get_items(output_data["outputSource"]):
+            output_source_id_with_step_id = output_source_id.replace("/", "_")
+            mapped_outputs[output_source_id_with_step_id] = output_id
+
+    # filter job_data_copy to include only items from "mapped_outputs"
+    filtered_job_data = {}
+    for output_id, output_data in get_items(job_data_copy):
+        if output_id in mapped_outputs:
+            filtered_job_data[mapped_outputs[output_id]] = output_data
+
+    runtime_context = RuntimeContext(cwl_args_copy)
+
+    relocated_job_data = relocateOutputs(
+        outputObj=filtered_job_data,
+        destination_path=job_data_copy["outputs_folder"],
+        source_directories=[],
+        action=runtime_context.move_outputs,
+        fs_access=runtime_context.make_fs_access(""),
+        compute_checksum=runtime_context.compute_checksum,
+        path_mapper=runtime_context.path_mapper
+    )
+
+    workflow_report = os.path.join(
+        job_data_copy["outputs_folder"],
+        "workflow_report.json"
+    )
+
+    dump_data(relocated_job_data, workflow_report)
+
+    if remove_tmp_folder:
+        shutil.rmtree(job_data_copy["tmp_folder"], ignore_errors=False)
+
+    return relocated_job_data, workflow_report
 
 
 def execute_workflow_step(

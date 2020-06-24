@@ -29,8 +29,7 @@ class CWLStepOperator(BaseOperator):
         # post_status(context)
 
         # for easy access
-        default_args = context["dag"].default_args
-        cwl_args = default_args["cwl"]
+        cwl_args = context["dag"].default_args["cwl"]
 
         job_data = collect_reports(context, cwl_args)
 
