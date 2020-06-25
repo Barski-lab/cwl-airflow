@@ -1,8 +1,8 @@
-basePath: '/api/experimental'
-swagger: '2.0'
+swagger: "2.0"
 info:
   title: CWL-Airflow Workflow Execution Service
   version: 1.0.0
+basePath: "/api/experimental"
 schemes:
   - https
 consumes:
@@ -19,26 +19,26 @@ paths:
       description: Runs `airflow list_tasks` for every dag_id in dag_ids. If dag_ids is None, process all dags.
       operationId: get_dags
       responses:
-        '200':
+        "200":
           description: Filtered by dag_ids list of dags.
           schema:
-            $ref: '#/definitions/GetDagsResponse'
-        '400':
+            $ref: "#/definitions/GetDagsResponse"
+        "400":
           description: The request is malformed.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
+            $ref: "#/definitions/ErrorResponse"
+        "401":
           description: The request is unauthorized.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '403':
+            $ref: "#/definitions/ErrorResponse"
+        "403":
           description: The requester is not authorized to perform this action.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
+            $ref: "#/definitions/ErrorResponse"
+        "500":
           description: An unexpected error occurred.
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: "#/definitions/ErrorResponse"
       parameters:
         - name: dag_ids
           description: Dag identifiers
@@ -54,26 +54,26 @@ paths:
       description: Creates new dag with dag_id from the attached workflow.cwl file.
       operationId: post_dag
       responses:
-        '200':
+        "200":
           description: dag_id, py and cwl file locations of a created dag.
           schema:
-            $ref: '#/definitions/PostDagsResponse'
-        '400':
+            $ref: "#/definitions/PostDagsResponse"
+        "400":
           description: The request is malformed.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
+            $ref: "#/definitions/ErrorResponse"
+        "401":
           description: The request is unauthorized.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '403':
+            $ref: "#/definitions/ErrorResponse"
+        "403":
           description: The requester is not authorized to perform this action.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
+            $ref: "#/definitions/ErrorResponse"
+        "500":
           description: An unexpected error occurred.
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: "#/definitions/ErrorResponse"
       consumes:
          - multipart/form-data
       parameters:
@@ -96,26 +96,26 @@ paths:
       description: Runs `airflow task_state dag_id, task_id, execution_date` for every task of dag_run from `airflow list_dag_runs dag_id`
       operationId: get_dag_runs
       responses:
-        '200':
+        "200":
           description: Filtered by dag_id, run_id, execution_date, state list of dag_runs.
           schema:
-            $ref: '#/definitions/GetDagRunsResponse'
-        '400':
+            $ref: "#/definitions/GetDagRunsResponse"
+        "400":
           description: The request is malformed.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
+            $ref: "#/definitions/ErrorResponse"
+        "401":
           description: The request is unauthorized.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '403':
+            $ref: "#/definitions/ErrorResponse"
+        "403":
           description: The requester is not authorized to perform this action.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
+            $ref: "#/definitions/ErrorResponse"
+        "500":
           description: An unexpected error occurred.
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: "#/definitions/ErrorResponse"
       parameters:
         - name: dag_id
           description: Dag identifier
@@ -149,26 +149,26 @@ paths:
       description: Creates new_dag run for dag_id with optional run_id and conf
       operationId: post_dag_runs
       responses:
-        '200':
+        "200":
           description: Reference information about created dag_run.
           schema:
-            $ref: '#/definitions/PostDagRunsResponse'
-        '400':
+            $ref: "#/definitions/PostDagRunsResponse"
+        "400":
           description: The request is malformed.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
+            $ref: "#/definitions/ErrorResponse"
+        "401":
           description: The request is unauthorized.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '403':
+            $ref: "#/definitions/ErrorResponse"
+        "403":
           description: The requester is not authorized to perform this action.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
+            $ref: "#/definitions/ErrorResponse"
+        "500":
           description: An unexpected error occurred.
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: "#/definitions/ErrorResponse"
       parameters:
         - name: dag_id
           description: Dag identifier
@@ -195,26 +195,26 @@ paths:
       description: Creates new dag_run for dag_id with optional run_id and conf. Corresponds to the original Airflow API to trigger dag_run
       operationId: post_dag_runs_legacy
       responses:
-        '200':
+        "200":
           description: Reference information about created dag_run.
           schema:
-            $ref: '#/definitions/PostDagRunsResponse'
-        '400':
+            $ref: "#/definitions/PostDagRunsResponse"
+        "400":
           description: The request is malformed.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
+            $ref: "#/definitions/ErrorResponse"
+        "401":
           description: The request is unauthorized.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '403':
+            $ref: "#/definitions/ErrorResponse"
+        "403":
           description: The requester is not authorized to perform this action.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
+            $ref: "#/definitions/ErrorResponse"
+        "500":
           description: An unexpected error occurred.
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: "#/definitions/ErrorResponse"
       parameters:
         - name: dag_id
           description: Dag identifier
@@ -249,26 +249,26 @@ paths:
         supported, the WES API versions supported, and information about general service availability.
       operationId: wes_get_service_info
       responses:
-        '200':
-          description: ''
+        "200":
+          description: ""
           schema:
-            $ref: '#/definitions/ServiceInfo'
-        '400':
+            $ref: "#/definitions/ServiceInfo"
+        "400":
           description: The request is malformed.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
+            $ref: "#/definitions/ErrorResponse"
+        "401":
           description: The request is unauthorized.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '403':
+            $ref: "#/definitions/ErrorResponse"
+        "403":
           description: The requester is not authorized to perform this action.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
+            $ref: "#/definitions/ErrorResponse"
+        "500":
           description: An unexpected error occurred.
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: "#/definitions/ErrorResponse"
       tags:
         - WorkflowExecutionService
 
@@ -285,26 +285,26 @@ paths:
         workflow run, use GetRunStatus or GetRunLog.
       operationId: wes_list_runs
       responses:
-        '200':
+        "200":
           description: List of the workflow runs
           schema:
-            $ref: '#/definitions/RunListResponse'
-        '400':
+            $ref: "#/definitions/RunListResponse"
+        "400":
           description: The request is malformed.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
+            $ref: "#/definitions/ErrorResponse"
+        "401":
           description: The request is unauthorized.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '403':
+            $ref: "#/definitions/ErrorResponse"
+        "403":
           description: The requester is not authorized to perform this action.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
+            $ref: "#/definitions/ErrorResponse"
+        "500":
           description: An unexpected error occurred.
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: "#/definitions/ErrorResponse"
       parameters:
         - name: page_size                               # currently ignored by cwl-airflow apiserver
           description: >-
@@ -345,7 +345,7 @@ paths:
         These parts must have a Content-Disposition header with a
         "filename" provided for each part.  Filenames may include
         subdirectories, but must not include references to parent
-        directories with '..' -- implementations should guard against
+        directories with ".." -- implementations should guard against
         maliciously constructed filenames.
         The `workflow_url` is either an absolute URL to a workflow
         file that is accessible by the WES endpoint, or a relative URL
@@ -367,26 +367,26 @@ paths:
         See the `RunRequest` documentation for details about other fields.
       operationId: wes_run_workflow
       responses:
-        '200':
-          description: ''
+        "200":
+          description: ""
           schema:
-            $ref: '#/definitions/RunId'
-        '400':
+            $ref: "#/definitions/RunId"
+        "400":
           description: The request is malformed.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
+            $ref: "#/definitions/ErrorResponse"
+        "401":
           description: The request is unauthorized.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '403':
+            $ref: "#/definitions/ErrorResponse"
+        "403":
           description: The requester is not authorized to perform this action.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
+            $ref: "#/definitions/ErrorResponse"
+        "500":
           description: An unexpected error occurred.
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: "#/definitions/ErrorResponse"
       consumes:
          - multipart/form-data
       parameters:
@@ -431,26 +431,26 @@ paths:
         and the overall state of the workflow run (e.g. RUNNING, see the State section).
       operationId: wes_get_run_log
       responses:
-        '200':
+        "200":
           description: Detailed info about a workflow run.
           schema:
-            $ref: '#/definitions/RunLog'
-        '401':
+            $ref: "#/definitions/RunLog"
+        "401":
           description: The request is unauthorized.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
+            $ref: "#/definitions/ErrorResponse"
+        "404":
           description: The requested workflow run not found.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '403':
+            $ref: "#/definitions/ErrorResponse"
+        "403":
           description: The requester is not authorized to perform this action.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
+            $ref: "#/definitions/ErrorResponse"
+        "500":
           description: An unexpected error occurred.
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: "#/definitions/ErrorResponse"
       parameters:
         - name: run_id
           in: path
@@ -464,26 +464,26 @@ paths:
       summary: Cancel a running workflow.
       operationId: wes_cancel_run
       responses:
-        '200':
+        "200":
           description: RunId
           schema:
-            $ref: '#/definitions/RunId'
-        '401':
+            $ref: "#/definitions/RunId"
+        "401":
           description: The request is unauthorized.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
-          description: The requested workflow run wasn't found.
+            $ref: "#/definitions/ErrorResponse"
+        "404":
+          description: The requested workflow run wasn"t found.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '403':
+            $ref: "#/definitions/ErrorResponse"
+        "403":
           description: The requester is not authorized to perform this action.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
+            $ref: "#/definitions/ErrorResponse"
+        "500":
           description: An unexpected error occurred.
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: "#/definitions/ErrorResponse"
       parameters:
         - name: run_id
           in: path
@@ -501,26 +501,26 @@ paths:
         overall state of the workflow run (e.g. RUNNING, see the State section).
       operationId: wes_get_run_status
       responses:
-        '200':
+        "200":
           description: Status info about a workflow run.
           schema:
-            $ref: '#/definitions/RunStatus'
-        '401':
+            $ref: "#/definitions/RunStatus"
+        "401":
           description: The request is unauthorized.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
-          description: The requested workflow run wasn't found.
+            $ref: "#/definitions/ErrorResponse"
+        "404":
+          description: The requested workflow run wasn"t found.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '403':
+            $ref: "#/definitions/ErrorResponse"
+        "403":
           description: The requester is not authorized to perform this action.
           schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
+            $ref: "#/definitions/ErrorResponse"
+        "500":
           description: An unexpected error occurred.
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: "#/definitions/ErrorResponse"
       parameters:
         - name: run_id
           in: path
@@ -569,7 +569,7 @@ definitions:
       dag_runs:
         type: array
         items:
-          $ref: '#/definitions/DagRunInfo'
+          $ref: "#/definitions/DagRunInfo"
     description: Filtered by dag_id, run_id, execution_date and state list of dag_runs.
 
   PostDagRunsResponse:
@@ -592,7 +592,7 @@ definitions:
         type: string
         format: date-time
       state:
-        $ref: '#/definitions/DagRunState'
+        $ref: "#/definitions/DagRunState"
     description: Reference information about created dag_run.
 
   DagRunInfo:
@@ -616,7 +616,7 @@ definitions:
         type: string
         format: date-time
       state:
-        $ref: '#/definitions/DagRunState'
+        $ref: "#/definitions/DagRunState"
       tasks:
         type: array
         items:
@@ -625,7 +625,7 @@ definitions:
             id:
               type: string
             state:
-              $ref: '#/definitions/TaskState'
+              $ref: "#/definitions/TaskState"
     description: Dag run info
 
   DagRunState:
@@ -674,7 +674,7 @@ definitions:
       workflow_type_versions:
         type: object
         additionalProperties:
-          $ref: '#/definitions/WorkflowTypeVersion'
+          $ref: "#/definitions/WorkflowTypeVersion"
         description: >-
           A map with keys as the workflow format type name (currently only CWL and WDL are used
           although a service may support others) and value is a workflow_type_version object which
@@ -690,7 +690,7 @@ definitions:
           type: string
         description: >-
           The filesystem protocols supported by this service, currently these may include common
-          protocols using the terms 'http', 'https', 'sftp', 's3', 'gs', 'file', or 'synapse', but others 
+          protocols using the terms "http", "https", "sftp", "s3", "gs", "file", or "synapse", but others 
           are possible and the terms beyond these core protocols are currently not fixed.  
           This section reports those protocols (either common or not) supported by this WES service.
       workflow_engine_versions:
@@ -701,7 +701,7 @@ definitions:
       default_workflow_engine_parameters:
         type: array
         items:
-          $ref: '#/definitions/DefaultWorkflowEngineParameter'
+          $ref: "#/definitions/DefaultWorkflowEngineParameter"
         description: >-
           Each workflow engine can present additional parameters that can be sent to the
           workflow engine. This message will list the default values, and their types for each
@@ -765,7 +765,7 @@ definitions:
       runs:
         type: array
         items:
-          $ref: '#/definitions/RunStatus'
+          $ref: "#/definitions/RunStatus"
         description: >-
           A list of workflow runs that the service has executed or is executing.
           The list is filtered to only include runs that the caller has permission to see.
@@ -784,7 +784,7 @@ definitions:
       run_id:
         type: string
       state:
-        $ref: '#/definitions/State'
+        $ref: "#/definitions/State"
     description: Small description of a workflow run, returned by server during listing
 
   State:
@@ -821,18 +821,18 @@ definitions:
         type: string
         description: workflow run ID
       request:
-        $ref: '#/definitions/RunRequest'
+        $ref: "#/definitions/RunRequest"
         description: The original request message used to initiate this execution.
       state:
-        $ref: '#/definitions/State'
+        $ref: "#/definitions/State"
         description: The state of the run e.g. RUNNING (see State)
       run_log:
-        $ref: '#/definitions/Log'
+        $ref: "#/definitions/Log"
         description: The logs, and other key info like timing and exit code, for the overall run of this workflow.
       task_logs:
         type: array
         items:
-          $ref: '#/definitions/Log'
+          $ref: "#/definitions/Log"
         description: The logs, and other key info like timing and exit code, for each step in the workflow run.
       outputs:
         type: object
