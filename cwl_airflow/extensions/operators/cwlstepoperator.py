@@ -4,7 +4,7 @@ from airflow.utils.decorators import apply_defaults
 
 from cwl_airflow.utilities.cwl import execute_workflow_step
 from cwl_airflow.utilities.airflow import collect_reports
-# from cwl_airflow.utilities.report import post_status
+from cwl_airflow.utilities.report import post_status
 
 
 class CWLStepOperator(BaseOperator):
@@ -26,7 +26,7 @@ class CWLStepOperator(BaseOperator):
         report file location to X-Com.
         """
 
-        # post_status(context)
+        post_status(context)
 
         # for easy access
         cwl_args = context["dag"].default_args["cwl"]

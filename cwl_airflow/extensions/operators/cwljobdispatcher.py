@@ -11,7 +11,7 @@ from cwl_airflow.utilities.cwl import (
     dump_data,
     get_temp_folders
 )
-# from cwl_airflow.utilities.report import post_status
+from cwl_airflow.utilities.report import post_status
 
 
 class CWLJobDispatcher(BaseOperator):
@@ -33,7 +33,7 @@ class CWLJobDispatcher(BaseOperator):
         file into "tmp_folder". Writes to X-Com report file location.
         """
 
-        # post_status(context)
+        post_status(context)
 
         # for easy access
         dag_id = context["dag"].dag_id

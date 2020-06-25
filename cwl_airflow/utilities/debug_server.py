@@ -7,7 +7,7 @@ from json import dumps, loads
 try:
     PORT = int(sys.argv[1])
 except Exception:
-    PORT = 8080
+    PORT = 3070
 
 public_key = b"""-----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd

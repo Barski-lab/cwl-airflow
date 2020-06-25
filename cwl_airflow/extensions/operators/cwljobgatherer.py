@@ -4,7 +4,7 @@ from airflow.utils.decorators import apply_defaults
 
 from cwl_airflow.utilities.airflow import collect_reports
 from cwl_airflow.utilities.cwl import relocate_outputs
-# from cwl_airflow.utilities.report import post_status
+from cwl_airflow.utilities.report import post_status
 
 
 class CWLJobGatherer(BaseOperator):
@@ -24,7 +24,7 @@ class CWLJobGatherer(BaseOperator):
         Relocates results to the "outputs_folder", removes "tmp_folder"
         """
 
-        # post_status(context)
+        post_status(context)
 
         # for easy access
 
