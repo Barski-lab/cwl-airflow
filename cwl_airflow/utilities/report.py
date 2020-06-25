@@ -71,6 +71,14 @@ def post_progress(context, from_task=None):
 
 
 def post_results(context):
+    """
+    Results are collected from the task with id "CWLJobGatherer". We cannot use
+    isinstance(task, CWLJobGatherer) to find the proper task because of the
+    endless import loop (file where we define CWLJobGatherer class import this
+    file). If CWLDAG is contsructed with custom gatherer node, posting results
+    might not work.
+    """
+    
     try:
         http_hook, session, url = prepare_connection(CONN_ID, ROUTES["results"])
         dag_run = context["dag_run"]
