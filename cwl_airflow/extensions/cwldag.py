@@ -45,9 +45,9 @@ class CWLDAG(DAG):
 
         super().__init__(dag_id=dag_id, *args, **kwargs)
 
-        self.workflow_tool = fast_cwl_load(kwargs["default_args"]["cwl"])                                         # keeps only the tool (CommentedMap object)
-        self.dispatcher = CWLJobDispatcher(dag=self, task_id="dispatcher") if dispatcher is None else dispatcher  # need dag=self otherwise new operator will not get proper default_args
-        self.gatherer = CWLJobGatherer(dag=self, task_id="gatherer") if gatherer is None else gatherer
+        self.workflow_tool = fast_cwl_load(kwargs["default_args"]["cwl"])                                               # keeps only the tool (CommentedMap object)
+        self.dispatcher = CWLJobDispatcher(dag=self, task_id="CWLJobDispatcher") if dispatcher is None else dispatcher  # need dag=self otherwise new operator will not get proper default_args
+        self.gatherer = CWLJobGatherer(dag=self, task_id="CWLJobGatherer") if gatherer is None else gatherer
 
         self.__assemble()
 

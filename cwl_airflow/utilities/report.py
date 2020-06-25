@@ -76,7 +76,7 @@ def post_results(context):
         dag_run = context["dag_run"]
         results = ""
         try:
-            results_location = context["ti"].xcom_pull(task_ids="gatherer")
+            results_location = context["ti"].xcom_pull(task_ids="CWLJobGatherer")
             with open(results_location, "r") as input_stream:
                 results = json.load(input_stream)
         except Exception as err:
