@@ -16,30 +16,25 @@ from six import itervalues, iterlists
 from os import path, environ, makedirs
 from schema_salad.ref_resolver import Loader
 
-from cwl_airflow.utilities.airflow import conf_get
 from cwl_airflow.utilities.helpers import (
     get_version,
-    get_dir,
-    CleanAirflowImport
+    get_dir
 )
 
-with CleanAirflowImport():
-    from airflow.models import DagBag, TaskInstance, DagRun, DagModel
-    from airflow.utils.state import State
-    from airflow import configuration
-    from airflow.utils.timezone import parse as parsedate
-    from airflow.api.common.experimental import trigger_dag
-    from airflow.settings import DAGS_FOLDER
+from airflow.models import DagBag, TaskInstance, DagRun, DagModel
+from airflow.utils.state import State
+from airflow import configuration
+from airflow.utils.timezone import parse as parsedate
+from airflow.api.common.experimental import trigger_dag
+from airflow.settings import DAGS_FOLDER
 
+from cwl_airflow.utilities.airflow import conf_get
 
-
-
-logger = logging.getLogger(__name__)
 
 TIMEOUT = configuration.conf.getint('core', 'KILLED_TASK_CLEANUP_TIME')
 
 
-class CWLAirflowBackend():
+class CWLApiBackend():
 
     # curl -X GET "127.0.0.1:8081/wes/v1/dags" -H "accept: application/json"
     # curl -X GET "127.0.0.1:8081/wes/v1/dags?dag_ids=example_bash_operator" -H "accept: application/json"
@@ -81,41 +76,41 @@ class CWLAirflowBackend():
 
 
     def get_dags(self, dag_ids=[]):
-        logger.debug(f"""Call get_dags with dag_ids={dag_ids}""")
+        logging.debug(f"""Call get_dags with dag_ids={dag_ids}""")
         try:
             dag_ids = dag_ids or self.list_dags()
-            logger.debug(f"""Processing dags {dag_ids}""")
+            logging.debug(f"""Processing dags {dag_ids}""")
             return {"dags": [{"dag_id": dag_id, "tasks": self.list_tasks(dag_id)} for dag_id in dag_ids]}
         except Exception as err:
-            logger.error(f"""Failed while running get_dags {err}""")
+            logging.error(f"""Failed while running get_dags {err}""")
             return {"dags": []}
 
 
     def post_dag(self, dag_id=None):
-        logger.debug(f"""Call post_dag with dag_id={dag_id}""")
+        logging.debug(f"""Call post_dag with dag_id={dag_id}""")
         try:
             res = self.export_dag(dag_id or ''.join(random.choice(string.ascii_lowercase) for i in range(32)))
-            logger.debug(f"""Exported DAG {res}""")
+            logging.debug(f"""Exported DAG {res}""")
             return res
         except Exception as err:
-            logger.error(f"""Failed while running post_dag {err}""")
+            logging.error(f"""Failed while running post_dag {err}""")
             return connexion.problem(500, "Failed to create dag", str(err))
 
 
     def get_dag_runs(self, dag_id=None, run_id=None, execution_date=None, state=None):
-        logger.debug(f"""Call get_dag_runs with dag_id={dag_id}, run_id={run_id}, execution_date={execution_date}, state={state}""")
+        logging.debug(f"""Call get_dag_runs with dag_id={dag_id}, run_id={run_id}, execution_date={execution_date}, state={state}""")
         try:
             dag_runs = []
             dag_ids = [dag_id] if dag_id else self.list_dags()
-            logger.debug(f"""Processing dags {dag_ids}""")
+            logging.debug(f"""Processing dags {dag_ids}""")
             for d_id in dag_ids:
-                logger.debug(f"""Process dag  {d_id}""")
+                logging.debug(f"""Process dag  {d_id}""")
                 task_ids = self.list_tasks(d_id)
-                logger.debug(f"""Fetched tasks {task_ids}""")
+                logging.debug(f"""Fetched tasks {task_ids}""")
                 for dag_run in self.list_dag_runs(d_id, state):
-                    logger.debug(f"""Process dag run {dag_run["run_id"]}, {dag_run["execution_date"]}""")
+                    logging.debug(f"""Process dag run {dag_run["run_id"]}, {dag_run["execution_date"]}""")
                     if run_id and run_id != dag_run["run_id"] or execution_date and execution_date != dag_run["execution_date"]:
-                        logger.debug(f"""Skip dag_run {dag_run["run_id"]}, {dag_run["execution_date"]} (run_id or execution_date doesn't match)""")
+                        logging.debug(f"""Skip dag_run {dag_run["run_id"]}, {dag_run["execution_date"]} (run_id or execution_date doesn't match)""")
                         continue
                     response_item = {"dag_id": d_id,
                                      "run_id": dag_run["run_id"],
@@ -123,18 +118,18 @@ class CWLAirflowBackend():
                                      "start_date": dag_run["start_date"],
                                      "state": dag_run["state"],
                                      "tasks": []}
-                    logger.debug(f"""Get statuses for tasks {task_ids}""")
+                    logging.debug(f"""Get statuses for tasks {task_ids}""")
                     for t_id in task_ids:
                         response_item["tasks"].append({"id": t_id, "state": self.task_state(d_id, t_id, dag_run["execution_date"])})
                     dag_runs.append(response_item)
             return {"dag_runs": dag_runs}
         except Exception as err:
-            logger.error(f"""Failed to call get_dag_runs {err}""")
+            logging.error(f"""Failed to call get_dag_runs {err}""")
             return {"dag_runs": []}
         
 
     def post_dag_runs(self, dag_id, run_id=None, conf=None):
-        logger.debug(f"""Call post_dag_runs with dag_id={dag_id}, run_id={run_id}, conf={conf}""")
+        logging.debug(f"""Call post_dag_runs with dag_id={dag_id}, run_id={run_id}, conf={conf}""")
         try:
             dagrun = self.trigger_dag(dag_id, run_id, conf)
             return {"dag_id": dagrun.dag_id,
@@ -143,13 +138,13 @@ class CWLAirflowBackend():
                     "start_date": dagrun.start_date,
                     "state": dagrun.state}
         except Exception as err:
-            logger.error(f"""Failed to call post_dag_runs {err}""")
+            logging.error(f"""Failed to call post_dag_runs {err}""")
             return connexion.problem(500, "Failed to create dag_run", str(err))
 
 
     def post_dag_runs_legacy(self, dag_id):
         data = connexion.request.json
-        logger.debug(f"""Call post_dag_runs_legacy with dag_id={dag_id}, data={data}""")
+        logging.debug(f"""Call post_dag_runs_legacy with dag_id={dag_id}, data={data}""")
         return self.post_dag_runs(dag_id, data["run_id"], data["conf"])
 
 
@@ -161,9 +156,9 @@ class CWLAirflowBackend():
 
         dag_bag = DagBag(dag_folder=dag_path)
         if not dag_bag.dags:
-           logger.info("Failed to import dag due to the following errors")
-           logger.info(dag_bag.import_errors)
-           logger.info("Sleep for 3 seconds and give it a second try")
+           logging.info("Failed to import dag due to the following errors")
+           logging.info(dag_bag.import_errors)
+           logging.info("Sleep for 3 seconds and give it a second try")
            sleep(3)
            dag_bag = DagBag(dag_folder=dag_path)
 
@@ -226,13 +221,13 @@ class CWLAirflowBackend():
  
     def wes_collect_attachments(self, run_id):
         tempdir = tempfile.mkdtemp(dir=get_dir(path.abspath(conf_get('cwl', 'tmp_folder', '/tmp'))), prefix="run_id_"+run_id+"_")
-        logger.debug(f"""Save all attached files to {tempdir}""")        
+        logging.debug(f"""Save all attached files to {tempdir}""")        
         for k, ls in iterlists(connexion.request.files):
-            logger.debug(f"""Process attachment parameter {k}""")
+            logging.debug(f"""Process attachment parameter {k}""")
             if k == "workflow_attachment":
                 for v in ls:
                     try:
-                        logger.debug(f"""Process attached file {v}""")
+                        logging.debug(f"""Process attached file {v}""")
                         sp = v.filename.split("/")
                         fn = []
                         for p in sp:
@@ -241,13 +236,13 @@ class CWLAirflowBackend():
                         dest = path.join(tempdir, *fn)
                         if not path.isdir(path.dirname(dest)):
                             makedirs(path.dirname(dest))
-                        logger.debug(f"""Save {v.filename} to {dest}""")
+                        logging.debug(f"""Save {v.filename} to {dest}""")
                         v.save(dest)
                     except Exception as err:
                         raise ValueError(f"""Failed to process attached file {v}, {err}""")
         body = {}       
         for k, ls in iterlists(connexion.request.form):
-            logger.debug(f"""Process form parameter {k}""")
+            logging.debug(f"""Process form parameter {k}""")
             for v in ls:
                 try:
                     if not v:
@@ -256,7 +251,7 @@ class CWLAirflowBackend():
                         job_file = path.join(tempdir, "job.json")
                         with open(job_file, "w") as f:
                             json.dump(json.loads(v), f, indent=4)
-                        logger.debug(f"""Save job file to {job_file}""")
+                        logging.debug(f"""Save job file to {job_file}""")
                         loader = Loader(load.jobloaderctx.copy())
                         job_order_object, _ = loader.resolve_ref(job_file, checklinks=False)
                         body[k] = job_order_object
@@ -274,7 +269,7 @@ class CWLAirflowBackend():
 
 
     def wes_get_service_info(self):
-        logger.debug(f"""Call wes_get_service_info""")
+        logging.debug(f"""Call wes_get_service_info""")
         response = {
             "workflow_type_versions": {
                 "CWL": {"workflow_type_version": ["v1.0"]}
@@ -289,14 +284,14 @@ class CWLAirflowBackend():
 
 
     def wes_list_runs(self, page_size=None, page_token=None):
-        logger.debug(f"""Call wes_list_runs with page_size={page_size}, page_token={page_token}""")
-        logger.debug(f"""page_size and page_token are currently ignored by cwl-airflow apiserver""")
+        logging.debug(f"""Call wes_list_runs with page_size={page_size}, page_token={page_token}""")
+        logging.debug(f"""page_size and page_token are currently ignored by cwl-airflow apiserver""")
         dag_run_info = self.get_dag_runs()
         return [{"run_id": item["run_id"], "state": self.wes_state_conversion[item["state"]]} for item in dag_run_info["dag_runs"] ]
 
 
     def wes_run_workflow(self):
-        logger.debug(f"""Call wes_run_workflow""")
+        logging.debug(f"""Call wes_run_workflow""")
         run_id = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
         try:
             tempdir, body = self.wes_collect_attachments(run_id)
@@ -305,12 +300,12 @@ class CWLAirflowBackend():
             self.post_dag_runs(dag_id=run_id, run_id=run_id, conf=json.dumps({"job": body["workflow_params"]}))
             return {"run_id": run_id}
         except Exception as err:
-            logger.debug(f"""Failed to run workflow {err}""")
+            logging.debug(f"""Failed to run workflow {err}""")
             return connexion.problem(500, "Failed to run workflow", str(err))
         
 
     def wes_get_run_log(self, run_id):
-        logger.debug(f"""Call wes_get_run_log with {run_id}""")
+        logging.debug(f"""Call wes_get_run_log with {run_id}""")
         try:
             dag_run_info = self.get_dag_runs(dag_id=run_id, run_id=run_id)["dag_runs"][0]
             dag_run = DagRun.find(dag_id=run_id, state=None)[0]
@@ -337,54 +332,54 @@ class CWLAirflowBackend():
                 "outputs": workflow_outputs
             }
         except Exception as err:
-            logger.debug(f"""Failed to fetch infromation for {run_id}""")
+            logging.debug(f"""Failed to fetch infromation for {run_id}""")
             return {}
 
 
     def wes_get_run_status(self, run_id):
-        logger.debug(f"""Call wes_get_run_status with run_id={run_id}""")
+        logging.debug(f"""Call wes_get_run_status with run_id={run_id}""")
         try:
             dag_run_info = self.get_dag_runs(dag_id=run_id, run_id=run_id)["dag_runs"][0]
             return {"run_id": dag_run_info["run_id"], "state": self.wes_state_conversion[dag_run_info["state"]]}
         except Exception as err:
-            logger.debug(f"""Failed to fetch infromation for {run_id}""")
+            logging.debug(f"""Failed to fetch infromation for {run_id}""")
             return {}
 
 
     def wes_cancel_run(self, run_id):
-        logger.debug(f"""Call wes_cancel_run with run_id={run_id}""")
+        logging.debug(f"""Call wes_cancel_run with run_id={run_id}""")
         try:
             dag_run = DagRun.find(dag_id=run_id, state=None)[0]
             self.stop_tasks(dag_run)
             self.remove_tmp_data(dag_run)
             return {"run_id": run_id}
         except Exception as err:
-            logger.debug(f"""Failed to cancel dag run {run_id}, {err}""")
+            logging.debug(f"""Failed to cancel dag run {run_id}, {err}""")
             return connexion.problem(500, f"""Failed to cancel dag run {run_id}""", str(err))
 
 
     def stop_tasks(self, dr):
-        logger.debug(f"""Stop tasks for {dr.dag_id} - {dr.run_id}""")
+        logging.debug(f"""Stop tasks for {dr.dag_id} - {dr.run_id}""")
         for ti in dr.get_task_instances():
-            logger.debug(f"""process {ti.dag_id} - {ti.task_id} - {ti.execution_date} - {ti.pid}""")
+            logging.debug(f"""process {ti.dag_id} - {ti.task_id} - {ti.execution_date} - {ti.pid}""")
             if ti.state == State.RUNNING:
                 try:
                     process = psutil.Process(ti.pid) if ti.pid else None
                 except Exception:
-                    logger.debug(f" - cannot find process by PID {ti.pid}")
+                    logging.debug(f" - cannot find process by PID {ti.pid}")
                     process = None
                 ti.set_state(State.FAILED)
-                logger.debug(" - set state to FAILED")
+                logging.debug(" - set state to FAILED")
                 if process:
-                    logger.debug(f" - wait for process {ti.pid} to exit")
+                    logging.debug(f" - wait for process {ti.pid} to exit")
                     try:
                         process.wait(timeout=TIMEOUT * 2)  # raises psutil.TimeoutExpired if timeout. Makes task fail -> DagRun fails
                     except psutil.TimeoutExpired as e:
-                        logger.debug(f" - Done waiting for process {ti.pid} to die")
+                        logging.debug(f" - Done waiting for process {ti.pid} to die")
 
 
     def remove_tmp_data(self, dr):
-        logger.debug(f"""Remove tmp data for {dr.dag_id} - {dr.run_id}""")
+        logging.debug(f"""Remove tmp data for {dr.dag_id} - {dr.run_id}""")
         tmp_folder_set = set()
         for ti in dr.get_task_instances():
             ti_xcom_data = ti.xcom_pull(task_ids=ti.task_id) # can be None
@@ -393,6 +388,6 @@ class CWLAirflowBackend():
         for tmp_folder in tmp_folder_set:
             try:
                 shutil.rmtree(tmp_folder)
-                logger.debug(f"""Successfully removed {tmp_folder}""")
+                logging.debug(f"""Successfully removed {tmp_folder}""")
             except Exception as ex:
-                logger.error(f"""Failed to delete temporary output directory {tmp_folder}\n {ex}""")
+                logging.error(f"""Failed to delete temporary output directory {tmp_folder}\n {ex}""")

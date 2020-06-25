@@ -2,13 +2,20 @@
 import connexion
 from connexion.resolver import Resolver
 
-from cwl_airflow.components.api.backend import CWLAirflowBackend
+from cwl_airflow.components.api.backend import CWLApiBackend
 
 
 def run_api_server(args):
-    app = connexion.App(__name__)
-    backend = CWLAirflowBackend()
-    def rs(x):
-        return getattr(backend, x.split('.')[-1])
-    app.add_api('openapi/swagger_configuration.yaml', resolver=Resolver(rs))
-    app.run(port=args.port, host=args.host)
+    app = connexion.FlaskApp(
+        __name__,
+        host=args.host,
+        port=args.port,
+        specification_dir="openapi",
+        server="tornado"
+    )
+    backend = CWLApiBackend()
+    app.add_api(
+        specification="swagger_configuration.yaml",
+        resolver=Resolver(lambda x: getattr(backend, x))
+    )
+    app.run()

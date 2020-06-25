@@ -91,7 +91,9 @@ setup(
         'connexion==2.6.0',
         'werkzeug==0.16.1',
         'pytest < 6',
-        'pytest-xdist'
+        'pytest-xdist',
+        'tornado==6.0.4',
+        "swagger-ui-bundle==0.0.6"
     ],
     options={
         'app': {

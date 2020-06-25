@@ -247,7 +247,6 @@ paths:
       description: >-
         May include information related (but not limited to) the workflow descriptor formats, versions
         supported, the WES API versions supported, and information about general service availability.
-      x-swagger-router-controller: ga4gh.wes.server
       operationId: wes_get_service_info
       responses:
         '200':
@@ -284,7 +283,6 @@ paths:
         contents of the list reflect the workflow list at the moment
         that the first page is requested.  To monitor a specific
         workflow run, use GetRunStatus or GetRunLog.
-      x-swagger-router-controller: ga4gh.wes.server
       operationId: wes_list_runs
       responses:
         '200':
@@ -367,7 +365,6 @@ paths:
         The `workflow_type_version` is the version of the workflow language
         submitted and must be one supported by this WES instance.
         See the `RunRequest` documentation for details about other fields.
-      x-swagger-router-controller: ga4gh.wes.server
       operationId: wes_run_workflow
       responses:
         '200':
@@ -432,7 +429,6 @@ paths:
         (if available), a log object which allows the stderr and stdout to be retrieved,
         a log array so stderr/stdout for individual tasks can be retrieved,
         and the overall state of the workflow run (e.g. RUNNING, see the State section).
-      x-swagger-router-controller: ga4gh.wes.server
       operationId: wes_get_run_log
       responses:
         '200':
@@ -466,7 +462,6 @@ paths:
   /wes/runs/{run_id}/cancel:
     post:
       summary: Cancel a running workflow.
-      x-swagger-router-controller: ga4gh.wes.server
       operationId: wes_cancel_run
       responses:
         '200':
@@ -504,7 +499,6 @@ paths:
         This provides an abbreviated (and likely fast depending on implementation)
         status of the running workflow, returning a simple result with the 
         overall state of the workflow run (e.g. RUNNING, see the State section).
-      x-swagger-router-controller: ga4gh.wes.server
       operationId: wes_get_run_status
       responses:
         '200':
