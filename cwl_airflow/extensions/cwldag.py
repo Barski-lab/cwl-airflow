@@ -38,6 +38,7 @@ class CWLDAG(DAG):
         if those were not provided by user. If user sets his own operators for dispatcher
         and gatherer, "default_args" from the DAG as well as "required_default_args" will
         not be set for these operators. User needs to set up proper agruments by himself.
+        Also, dag results will not be posted from the custom dispatcher.
         """
 
         self.__setup_params(kwargs, workflow)
