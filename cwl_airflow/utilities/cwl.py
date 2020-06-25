@@ -294,7 +294,11 @@ def fast_cwl_step_load(cwl_args, target_id, location=None):
                 if "default" in workflow_input:
                     updated_workflow_input["default"] = workflow_input["default"]
                 
-                workflow_inputs.append(updated_workflow_input)
+                # Check if we have already added input based on the same "source"
+                # from another item from "in". Skip adding the same input twice.
+
+                if len(list(get_items(workflow_inputs, step_in_source))) == 0:
+                    workflow_inputs.append(updated_workflow_input)
 
                 updated_sources.append(step_in_source)
 
@@ -320,10 +324,17 @@ def fast_cwl_step_load(cwl_args, target_id, location=None):
                 ))[0][1]
 
                 step_in_source_with_step_id = step_in_source.replace("/", "_")  # to include both step name and id
-                workflow_inputs.append({
+
+                updated_workflow_input = {
                     "id": step_in_source_with_step_id,  
                     "type": upstream_step_output["type"]
-                })
+                }
+
+                # Check if we have already added input based on the same "source"
+                # from another item from "in". Skip adding the same input twice.
+
+                if len(list(get_items(workflow_inputs, step_in_source_with_step_id))) == 0:
+                    workflow_inputs.append(updated_workflow_input)
                 
                 updated_sources.append(step_in_source_with_step_id)
 
