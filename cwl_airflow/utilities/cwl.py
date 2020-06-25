@@ -409,15 +409,7 @@ def get_items(data, target_id=None):
                 yield get_short_id(key), value 
     elif isinstance(data, Sequence) and not isinstance(data, str):
         for item in data:
-            if "id" in item:
-                if target_id is not None:
-                    if item["id"] == target_id or get_short_id(item["id"]) == target_id:
-                        yield get_short_id(item["id"]), item
-                    else:
-                        continue
-                else:
-                    yield get_short_id(item["id"]), item
-            elif isinstance(item, str):
+            if isinstance(item, str):
                 if target_id is not None:
                     if item == target_id or get_short_id(item) == target_id:
                         yield get_short_id(item), item
@@ -425,6 +417,14 @@ def get_items(data, target_id=None):
                         continue
                 else:
                     yield get_short_id(item), item
+            elif "id" in item:  # we checked that item wasn't string, so we don't check for substring "id"
+                if target_id is not None:
+                    if item["id"] == target_id or get_short_id(item["id"]) == target_id:
+                        yield get_short_id(item["id"]), item
+                    else:
+                        continue
+                else:
+                    yield get_short_id(item["id"]), item
             else:
                 if target_id is not None:
                     if item == target_id:

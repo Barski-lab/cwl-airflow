@@ -757,6 +757,23 @@ def test_fast_cwl_load_workflow_from_cwl_should_fail():
             ]
         ),
         (
+            [
+                "file:///id/id/id/bam-bedgraph-bigwig.cwl#sorted_bedgraph_to_bigwig/bigwig_file",
+                "file:///id/id/id//bam-bedgraph-bigwig.cwl#sort_bedgraph/sorted_file"
+            ],
+            None,
+            [
+                (
+                    "sorted_bedgraph_to_bigwig/bigwig_file",
+                    "file:///id/id/id/bam-bedgraph-bigwig.cwl#sorted_bedgraph_to_bigwig/bigwig_file",
+                ), 
+                (
+                    "sort_bedgraph/sorted_file",
+                    "file:///id/id/id//bam-bedgraph-bigwig.cwl#sort_bedgraph/sorted_file"
+                )
+            ]
+        ),
+        (
             {
                 "file:///Users/tester/workflows/bam-bedgraph-bigwig.cwl#bam_file": {
                     "type": "File",
