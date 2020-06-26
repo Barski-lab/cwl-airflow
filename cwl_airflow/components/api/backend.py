@@ -57,7 +57,7 @@ class CWLApiBackend():
     def __init__(self):
         get_dir(DAGS_FOLDER)
         self.include_examples = False
-        self.dag_template = "#!/usr/bin/env python3\nfrom cwl_airflow import CWLDAG\ndag = CWLDAG(workflow='{0}', dag_id='{1}')\n"
+        self.dag_template = "#!/usr/bin/env python3\nfrom cwl_airflow.extensions.cwldag import CWLDAG\ndag = CWLDAG(workflow='{0}', dag_id='{1}')\n"
         
         self.dag_template_with_tmp_folder = "#!/usr/bin/env python3\nfrom cwl_airflow import CWLDAG, CWLJobDispatcher, CWLJobGatherer\ndag = CWLDAG(cwl_workflow='{0}', dag_id='{1}', default_args={{'tmp_folder':'{2}'}})\ndag.create()\ndag.add(CWLJobDispatcher(dag=dag), to='top')\ndag.add(CWLJobGatherer(dag=dag), to='bottom')"
         self.wes_state_conversion = {"running": "RUNNING", "success": "COMPLETE", "failed": "EXECUTOR_ERROR"}
