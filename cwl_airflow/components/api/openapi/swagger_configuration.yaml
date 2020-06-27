@@ -1,6 +1,6 @@
 swagger: "2.0"
 info:
-  title: CWL-Airflow Workflow Execution Service
+  title: CWL-Airflow API
   version: 1.0.0
 basePath: "/api/experimental"
 schemes:
