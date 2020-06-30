@@ -92,6 +92,8 @@ setup(
         'werkzeug==0.16.1',
         'pytest < 6',
         'pytest-xdist',
+        'pytest-cov',
+        'coveralls',
         'tornado==6.0.4',
         "swagger-ui-bundle==0.0.6"
     ],

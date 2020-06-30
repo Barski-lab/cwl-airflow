@@ -13,6 +13,9 @@ install:
 
 script: ./tests/run_tests.sh
 
+after_success:
+- coveralls
+
 branches:
   only:
   - global_refactoring
