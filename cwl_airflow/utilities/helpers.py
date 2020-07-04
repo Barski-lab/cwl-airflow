@@ -1,7 +1,9 @@
 import os
 import hashlib
 import pkg_resources
+import json
 
+from ruamel.yaml import YAML
 from tempfile import mkdtemp
 from shutil import rmtree
 from urllib.parse import urlparse
@@ -36,6 +38,10 @@ def get_absolute_path(p, cwd=None):
     return p if os.path.isabs(p) else os.path.normpath(os.path.join(cwd, p))
 
 
+def get_rootname(location):
+    return os.path.splitext(os.path.basename(location))[0]
+
+
 def get_version():
     """
     Returns current version of the package if it's installed
@@ -55,6 +61,35 @@ def get_md5_sum(location, block_size=2**20):
                 break
             md5_sum.update(buf)
     return md5_sum.hexdigest()
+
+
+def load_yaml(location):
+    """
+    Tries to load yaml document from file or string.
+
+    If file not found, assumes that location
+    is a string and tries to load yaml from string.
+
+    If string wasn't parsed and YAML didn't raise
+    YAMLError, check ir the parsed result is the same
+    as input. If yes, raise ValueError
+    """
+
+    yaml = YAML()
+    yaml.preserve_quotes = True
+    try:
+        with open(location, "r") as input_stream:
+            data = yaml.load(input_stream)
+    except FileNotFoundError:
+        data = yaml.load(location)
+    if data == location:
+        raise ValueError
+    return data
+
+
+def dump_json(data, location):                    # TODO: consider substitute it with dump_yaml for consistency
+    with open(location , "w") as output_stream:
+        json.dump(data, output_stream, indent=4)
 
 
 class CleanAirflowImport():

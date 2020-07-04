@@ -1,15 +1,18 @@
 import argparse
 
 from os import environ, getcwd
+from tempfile import mkdtemp
 
 from cwl_airflow.utilities.helpers import (
     get_version,
     get_absolute_path,
-    CleanAirflowImport
+    CleanAirflowImport,
+    load_yaml
 )
 
 from cwl_airflow.components.api.server import run_api_server
 from cwl_airflow.components.init.config import run_init_config
+from cwl_airflow.components.test.conformance import run_test_conformance
 
 with CleanAirflowImport():
     from airflow.configuration import (
@@ -105,6 +108,54 @@ def get_parser():
             Default: first try AIRFLOW_CONFIG then '[airflow home]/airflow.cfg'"
     )
 
+    # Test (for running conformance tests)
+    test_parser = subparsers.add_parser(
+        "test",
+        parents=[parent_parser],
+        help="Run conformance tests"
+    )
+    test_parser.set_defaults(func=run_test_conformance)
+    test_parser.add_argument(
+        "--suite", 
+        type=str,
+        required=True,
+        help="Set path to the conformance test suite"
+    )
+    test_parser.add_argument(
+        "--tmp",
+        type=str,
+        default=mkdtemp(),
+        help="Set path to the temp folder. Default: /tmp"
+    )
+    test_parser.add_argument(
+        "--port", 
+        type=int,
+        default=3070,
+        help="Set port to listen for DAG results and status updates. \
+            Should correspond to the port from 'process_report' connection. \
+            Default: 3070"
+    )
+    test_parser.add_argument(
+        "--endpoint", 
+        type=str,
+        default="http://127.0.0.1:8081",
+        help="Set CWL-Airflow 'api' endpoint to create and trigger DAGs. \
+            Default: http://127.0.0.1:8081"
+    )
+    test_parser.add_argument(
+        "--range", 
+        type=str,
+        help="Set test range to run, format 1,3-6,9. \
+            Order corresponds to the tests from --suite file, starting from 1. \
+            Default: run all tests"
+    )
+    test_parser.add_argument(
+        "--spin",
+        action="store_true",
+        help="Display spinner wher running. Useful for CI that tracks activity. \
+            Default: do not spin"
+    )
+
     return general_parser
 
 
@@ -117,16 +168,54 @@ def assert_and_fix_args_for_init(args):
         args.config = get_airflow_config(args.home)
 
 
+def assert_and_fix_args_for_test(args):
+    """
+    Asserts, fixes and sets parameters from test parser.
+
+    Tries to convert --range argument to a list of indices.
+    If --range wasn't set or indices are not valid, set it
+    to include all tests from --suite. Dublicates are removed.
+    This function should never fail.
+    """
+
+    suite_data = load_yaml(args.suite)
+    suite_len = len(suite_data)
+    try:
+        selected_indices = []
+        for interval in args.range.split(","):
+            parsed_interval = [int(i) - 1 for i in interval.split("-")]   # switch to 0-based coodrinates
+            if len(parsed_interval) == 2:
+                # safety check
+                if parsed_interval[0] >= parsed_interval[1]: raise ValueError
+                if parsed_interval[0] >= suite_len: raise ValueError
+                if parsed_interval[1] >= suite_len: raise ValueError
+                selected_indices.extend(
+                    range(parsed_interval[0], parsed_interval[1] + 1)  # need closed interval
+                )
+            elif len(parsed_interval) == 1:
+                # safety check
+                if parsed_interval[0] >= suite_len: raise ValueError
+                selected_indices.append(parsed_interval[0])
+            else:
+                raise ValueError
+    except (AttributeError, IndexError, ValueError):
+        selected_indices = list(range(0, suite_len))
+
+    args.range = sorted(set(selected_indices))           # convert to set to remove possible dublicates
+
+
 def assert_and_fix_args(args):
     """
     Should be used to assert and fix parameters.
     Also can be used to set default values for not
-    set parameters in case the later onec depends on other
+    set parameters in case the later ones depend on other
     parameters that should be first parsed by argparser
     """
 
     if args.func == run_init_config:
         assert_and_fix_args_for_init(args)
+    elif args.func == run_test_conformance:
+        assert_and_fix_args_for_test(args)
     else:
         pass  # TODO: once needed, put here something like assert_and_fix_args_for_api
 
@@ -145,7 +234,7 @@ def parse_arguments(argsl, cwd=None):
     args, _ = get_parser().parse_known_args(argsl)
     args = get_normalized_args(
         args,
-        ["func", "port", "host"],
+        ["func", "port", "host", "endpoint", "range", "spin"],
         cwd
     )
     assert_and_fix_args(args)

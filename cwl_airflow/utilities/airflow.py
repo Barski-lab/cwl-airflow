@@ -6,6 +6,12 @@ from airflow.exceptions import AirflowConfigException
 from cwl_airflow.utilities.cwl import load_job
 
 
+DAG_TEMPLATE="""#!/usr/bin/env python3
+from cwl_airflow.extensions.cwldag import CWLDAG
+dag = CWLDAG(workflow="{0}", dag_id="{1}")
+"""
+
+
 def conf_get(section, key, default):
     """
     Return value from AirflowConfigParser object.

@@ -1,0 +1,209 @@
+- tool: ../workflows/bam-bedgraph-bigwig.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 1
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 2
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 3
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 4
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 5
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig-single.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 6
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig-single.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 7
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig-single.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 8
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig-single.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 9
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig-single.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 10
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig-subworkflow.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 11
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig-subworkflow.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 12
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig-subworkflow.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 13
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig-subworkflow.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 14
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]
+
+- tool: ../workflows/bam-bedgraph-bigwig-subworkflow.cwl
+  job: ../jobs/bam-bedgraph-bigwig.json
+  output:
+    bedgraph_file:
+      class: File
+      location: chr4_100_mapped_reads.bedGraph
+    bigwig_file:
+      class: File
+      location: chr4_100_mapped_reads.bigWig
+  id: 15
+  label: dummy
+  doc: dummy
+  tags: [workflow, required]

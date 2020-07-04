@@ -1,15 +1,128 @@
+import sys
 import pytest
+import tempfile
 
 from os import environ, path
-from tempfile import mkdtemp
 from shutil import rmtree
 
 from cwl_airflow.utilities.parser import parse_arguments
 from cwl_airflow.utilities.helpers import get_absolute_path
 
 
+DATA_FOLDER = path.abspath(path.join(path.dirname(__file__), "data"))
+if sys.platform == "darwin":                                           # docker has troubles of mounting /var/private on macOs
+    tempfile.tempdir = "/private/tmp"
+
+
+@pytest.mark.parametrize(
+    "args, control",
+    [
+        (
+            [
+                "test",
+                "--suite", "./conformance/test_suite_1.yaml"
+            ],
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        ),
+        (
+            [
+                "test",
+                "--suite", "./conformance/test_suite_1.yaml",
+                "--range", "1-3,6-8"
+            ],
+            [0, 1, 2, 5, 6, 7]
+        ),
+        (
+            [
+                "test",
+                "--suite", "./conformance/test_suite_1.yaml",
+                "--range", "1-3,6-8,9"
+            ],
+            [0, 1, 2, 5, 6, 7, 8]
+        ),
+        (
+            [
+                "test",
+                "--suite", "./conformance/test_suite_1.yaml",
+                "--range", "1-3, 6-8, 9"
+            ],
+            [0, 1, 2, 5, 6, 7, 8]
+        ),
+        (
+            [
+                "test",
+                "--suite", "./conformance/test_suite_1.yaml",
+                "--range", "1-3, 6-8, 9, 9, 9"
+            ],
+            [0, 1, 2, 5, 6, 7, 8]
+        ),
+        (
+            [
+                "test",
+                "--suite", "./conformance/test_suite_1.yaml",
+                "--range", "1-2, 9, 9, 9"
+            ],
+            [0, 1, 8]
+        ),
+        (
+            [
+                "test",
+                "--suite", "./conformance/test_suite_1.yaml",
+                "--range", "3-2, 9, 9, 9"
+            ],
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        ),
+        (
+            [
+                "test",
+                "--suite", "./conformance/test_suite_1.yaml",
+                "--range", "16"
+            ],
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        ),
+        (
+            [
+                "test",
+                "--suite", "./conformance/test_suite_1.yaml",
+                "--range", "-11"
+            ],
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        ),
+        (
+            [
+                "test",
+                "--suite", "./conformance/test_suite_1.yaml",
+                "--range", "11-"
+            ],
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        ),
+        (
+            [
+                "test",
+                "--suite", "./conformance/test_suite_1.yaml",
+                "--range", "1-100"
+            ],
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        ),
+        (
+            [
+                "test",
+                "--suite", "./conformance/test_suite_1.yaml",
+                "--range", "100-110"
+            ],
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        )
+    ]
+)
+def test_parse_arguments_for_making_list_from_range_in_test_subparser(args, control):
+    result_args = parse_arguments(args, DATA_FOLDER)
+    rmtree(result_args.tmp)
+
+    assert result_args.range == control
+
+
 def test_parse_arguments_for_init_with_both_params_if_environment_is_not_set(monkeypatch):
-    temp_home = mkdtemp()
+    temp_home = tempfile.mkdtemp()
     monkeypatch.delenv("AIRFLOW_HOME", raising=False)
     monkeypatch.delenv("AIRFLOW_CONFIG", raising=False)
     monkeypatch.setattr(
@@ -37,7 +150,7 @@ def test_parse_arguments_for_init_with_both_params_if_environment_is_not_set(mon
 
 
 def test_parse_arguments_for_init_with_both_params_if_environment_is_set(monkeypatch):
-    temp_home = mkdtemp()
+    temp_home = tempfile.mkdtemp()
     temp_airflow_home = path.join(temp_home, "original", "airflow")
     temp_airflow_cfg = path.join(temp_airflow_home, "airflow.cfg")
     monkeypatch.setenv("AIRFLOW_HOME", temp_airflow_home)
@@ -67,7 +180,7 @@ def test_parse_arguments_for_init_with_both_params_if_environment_is_set(monkeyp
 
 
 def test_parse_arguments_for_init_with_relative_path_for_both_params_if_environment_is_not_set(monkeypatch):
-    temp_home = mkdtemp()
+    temp_home = tempfile.mkdtemp()
     monkeypatch.delenv("AIRFLOW_HOME", raising=False)
     monkeypatch.delenv("AIRFLOW_CONFIG", raising=False)
     monkeypatch.setattr(
@@ -98,7 +211,7 @@ def test_parse_arguments_for_init_with_relative_path_for_both_params_if_environm
 
 
 def test_parse_arguments_for_init_with_defaults_if_environment_is_not_set(monkeypatch):
-    temp_home = mkdtemp()
+    temp_home = tempfile.mkdtemp()
     monkeypatch.delenv("AIRFLOW_HOME", raising=False)
     monkeypatch.delenv("AIRFLOW_CONFIG", raising=False)
     monkeypatch.setattr(
@@ -126,7 +239,7 @@ def test_parse_arguments_for_init_with_defaults_if_environment_is_not_set(monkey
 
 
 def test_parse_arguments_for_init_with_defaults_if_environment_is_set(monkeypatch):
-    temp_home = mkdtemp()
+    temp_home = tempfile.mkdtemp()
     temp_airflow_home = path.join(temp_home, "original", "airflow")
     temp_airflow_cfg = path.join(temp_airflow_home, "airflow.cfg")
     monkeypatch.setenv("AIRFLOW_HOME", temp_airflow_home)

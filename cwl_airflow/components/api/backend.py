@@ -22,7 +22,7 @@ from airflow.utils.timezone import parse as parsedate
 from airflow.api.common.experimental import trigger_dag
 
 from cwl_airflow.utilities.helpers import get_version, get_dir
-from cwl_airflow.utilities.airflow import conf_get
+from cwl_airflow.utilities.airflow import conf_get, DAG_TEMPLATE
 
 
 class CWLApiBackend():
@@ -57,8 +57,6 @@ class CWLApiBackend():
     def __init__(self):
         get_dir(DAGS_FOLDER)
         self.include_examples = False
-        self.dag_template = "#!/usr/bin/env python3\nfrom cwl_airflow.extensions.cwldag import CWLDAG\ndag = CWLDAG(workflow='{0}', dag_id='{1}')\n"
-        
         self.dag_template_with_tmp_folder = "#!/usr/bin/env python3\nfrom cwl_airflow import CWLDAG, CWLJobDispatcher, CWLJobGatherer\ndag = CWLDAG(cwl_workflow='{0}', dag_id='{1}', default_args={{'tmp_folder':'{2}'}})\ndag.create()\ndag.add(CWLJobDispatcher(dag=dag), to='top')\ndag.add(CWLJobGatherer(dag=dag), to='bottom')"
         self.wes_state_conversion = {"running": "RUNNING", "success": "COMPLETE", "failed": "EXECUTOR_ERROR"}
 
@@ -199,8 +197,8 @@ class CWLApiBackend():
         cwl_path = path.join(DAGS_FOLDER, dag_id + ".cwl")
         dag_path = path.join(DAGS_FOLDER, dag_id + ".py")
         self.save_attachment("workflow", cwl_path)
-        with open(dag_path, 'x') as o_stream:
-            o_stream.write(self.dag_template.format(cwl_path, dag_id))
+        with open(dag_path, 'x') as output_stream:
+            output_stream.write(DAG_TEMPLATE.format(cwl_path, dag_id))
         return {"dag_id": dag_id, "cwl_path": cwl_path, "dag_path": dag_path}
 
 ###########################################################################

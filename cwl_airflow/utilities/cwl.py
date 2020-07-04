@@ -8,10 +8,8 @@ import shutil
 
 from uuid import uuid4
 from copy import deepcopy
-from tempfile import mkdtemp
 from urllib.parse import urlsplit
-from typing import Mapping, Sequence
-from ruamel.yaml import YAML
+from typing import MutableMapping, MutableSequence
 from ruamel.yaml.comments import CommentedMap
 from cwltool.main import setup_loadingContext, init_job_order
 from cwltool.context import LoadingContext, RuntimeContext
@@ -27,7 +25,9 @@ from schema_salad.ref_resolver import file_uri
 from cwl_airflow.utilities.helpers import (
     get_md5_sum,
     get_dir,
-    get_path_from_url
+    get_path_from_url,
+    load_yaml,
+    dump_json
 )
 
 
@@ -87,7 +87,7 @@ def relocate_outputs(cwl_args, job_data, remove_tmp_folder=None):
         "workflow_report.json"
     )
 
-    dump_data(relocated_job_data, workflow_report)
+    dump_json(relocated_job_data, workflow_report)
 
     # Clean "tmp_folder"
 
@@ -139,7 +139,7 @@ def execute_workflow_step(
     # (copied from cwltool)
     visit_class(step_outputs, ("File",), MutationManager().unset_generation)
 
-    dump_data(step_outputs, step_report)
+    dump_json(step_outputs, step_report)
 
     return step_outputs, step_report
 
@@ -174,11 +174,6 @@ def get_temp_folders(task_id, job_data):
     )
 
     return step_tmp_folder, step_cache_folder, step_outputs_folder, step_report
-
-
-def dump_data(data, location):
-    with open(location , "w") as output_stream:
-        json.dump(data, output_stream, indent=4)
 
 
 def load_job(cwl_args, job, cwd=None):
@@ -216,9 +211,7 @@ def load_job(cwl_args, job, cwd=None):
     try:
         job_data, _ = loading_context.loader.resolve_ref(job_copy, checklinks=True)
     except (FileNotFoundError, SchemaSaladException) as err:
-        yaml = YAML()
-        yaml.preserve_quotes = True
-        job_data = yaml.load(json.dumps(job_copy))
+        job_data = load_yaml(json.dumps(job_copy))
         if cwd is not None:
             job_data["id"] = file_uri(cwd) + "/"
             job_data, metadata = loading_context.loader.resolve_all(
@@ -373,7 +366,7 @@ def fast_cwl_step_load(cwl_args, target_id, location=None):
     )
 
     if location is not None:
-        dump_data(workflow_tool, location)
+        dump_json(workflow_tool, location)
 
     return workflow_tool
 
@@ -398,7 +391,7 @@ def get_items(data, target_id=None):
     found. Otherwise return []
     """
 
-    if isinstance(data, Mapping):
+    if isinstance(data, MutableMapping):
         for key, value in data.items():
             if target_id is not None:
                 if key == target_id or get_short_id(key) == target_id:
@@ -407,7 +400,7 @@ def get_items(data, target_id=None):
                     continue
             else:
                 yield get_short_id(key), value 
-    elif isinstance(data, Sequence) and not isinstance(data, str):
+    elif isinstance(data, MutableSequence):
         for item in data:
             if isinstance(item, str):
                 if target_id is not None:
@@ -417,7 +410,7 @@ def get_items(data, target_id=None):
                         continue
                 else:
                     yield get_short_id(item), item
-            elif "id" in item:  # we checked that item wasn't string, so we don't check for substring "id"
+            elif "id" in item:  # we checked that item wasn't string, so "id" is not substring of "item"
                 if target_id is not None:
                     if item["id"] == target_id or get_short_id(item["id"]) == target_id:
                         yield get_short_id(item["id"]), item
@@ -548,3 +541,26 @@ def slow_cwl_load(cwl_args, reduced=False):
     )
 
     return workflow_data.tool if reduced else workflow_data
+
+
+# Not used at all
+def embed_all_runs(
+    workflow_tool,
+    cwl_args
+):
+    """
+    Tries to find and load all "run" fields from the workflow_tool.
+    Updates "workflow_tool" in place.
+    """
+
+    cwl_args_copy = deepcopy(cwl_args)
+
+    if isinstance(workflow_tool, MutableSequence):
+        for item in workflow_tool:
+            embed_all_runs(item, cwl_args_copy)
+    elif isinstance(workflow_tool, MutableMapping):
+        if "run" in workflow_tool and isinstance(workflow_tool["run"], str):
+            cwl_args_copy["workflow"] = workflow_tool["run"]
+            workflow_tool["run"] = slow_cwl_load(cwl_args_copy, reduced=True)
+        for item in workflow_tool.values():
+            embed_all_runs(item, cwl_args_copy)

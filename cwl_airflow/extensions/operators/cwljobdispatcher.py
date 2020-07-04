@@ -5,10 +5,12 @@ from tempfile import mkdtemp
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
-from cwl_airflow.utilities.helpers import get_dir
+from cwl_airflow.utilities.helpers import (
+    get_dir,
+    dump_json
+)
 from cwl_airflow.utilities.cwl import (
     load_job,
-    dump_data,
     get_temp_folders
 )
 from cwl_airflow.utilities.report import post_status
@@ -76,6 +78,6 @@ class CWLJobDispatcher(BaseOperator):
             job_data
         )
 
-        dump_data(job_data, step_report)
+        dump_json(job_data, step_report)
 
         return step_report

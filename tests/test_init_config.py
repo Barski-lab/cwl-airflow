@@ -1,9 +1,11 @@
+import sys
 import argparse
 import pytest
+import tempfile
 
 from configparser import ConfigParser
 from os import path, listdir
-from tempfile import mkdtemp
+
 from shutil import rmtree
 from subprocess import run, DEVNULL, CalledProcessError
 
@@ -15,8 +17,13 @@ from cwl_airflow.components.init.config import (
 )
 
 
+DATA_FOLDER = path.abspath(path.join(path.dirname(__file__), "data"))
+if sys.platform == "darwin":                                           # docker has troubles of mounting /var/private on macOs
+    tempfile.tempdir = "/private/tmp"
+
+
 def test_init_airflow_db():
-    temp_home = mkdtemp()    
+    temp_home = tempfile.mkdtemp()
     temp_airflow_home = path.join(temp_home, "not_default_anymore", "airflow")
     temp_airflow_cfg = path.join(temp_airflow_home, "airflow.cfg")
     
@@ -38,7 +45,7 @@ def test_init_airflow_db():
 
 
 def test_patch_airflow_config():
-    temp_home = mkdtemp()    
+    temp_home = tempfile.mkdtemp()
     temp_airflow_home = path.join(temp_home, "not_default_anymore", "airflow")
     temp_airflow_cfg = path.join(temp_airflow_home, "airflow.cfg")
     
@@ -64,7 +71,7 @@ def test_patch_airflow_config():
 
 
 def test_copy_dags():
-    temp_home = mkdtemp()    
+    temp_home = tempfile.mkdtemp()
     temp_airflow_home = path.join(temp_home, "not_default_anymore", "airflow")
     temp_airflow_dags_folder = path.join(temp_airflow_home, "dags")
     temp_airflow_cfg = path.join(temp_airflow_home, "airflow.cfg")
@@ -88,7 +95,7 @@ def test_copy_dags():
 
 
 def test_add_connections(monkeypatch):
-    temp_home = mkdtemp()    
+    temp_home = tempfile.mkdtemp()
     temp_airflow_home = path.join(temp_home, "not_default_anymore", "airflow")
     temp_airflow_cfg = path.join(temp_airflow_home, "airflow.cfg")
     monkeypatch.setenv("AIRFLOW_HOME", temp_airflow_home)

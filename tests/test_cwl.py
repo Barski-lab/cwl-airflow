@@ -2,15 +2,19 @@ import os
 import sys
 import copy
 import pytest
+import tempfile
 
 from shutil import rmtree, copy
-from tempfile import mkdtemp
 from ruamel.yaml.comments import CommentedMap
 from cwltool.argparser import get_default_args
 from cwltool.workflow import Workflow
 from cwltool.command_line_tool import CommandLineTool
 
-from cwl_airflow.utilities.helpers import get_md5_sum, get_absolute_path
+from cwl_airflow.utilities.helpers import (
+    get_md5_sum,
+    get_absolute_path,
+    dump_json
+)
 from cwl_airflow.utilities.cwl import (
     fast_cwl_load,
     slow_cwl_load,
@@ -18,11 +22,68 @@ from cwl_airflow.utilities.cwl import (
     load_job,
     get_items,
     get_short_id,
-    execute_workflow_step
+    execute_workflow_step,
+    embed_all_runs
 )
 
 
 DATA_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
+if sys.platform == "darwin":                                                    # docker has troubles of mounting /var/private on macOs
+    tempfile.tempdir = "/private/tmp"
+
+
+@pytest.mark.parametrize(
+    "workflow, job, task_id",
+    [
+        (
+            ["workflows", "bam-bedgraph-bigwig.cwl"],
+            "bam-to-bedgraph-step.json",
+            "bam_to_bedgraph"
+        ),
+        (
+            ["workflows", "bam-bedgraph-bigwig-single.cwl"],
+            "bam-to-bedgraph-step.json",
+            "bam_to_bedgraph"
+        ),
+        (
+            ["workflows", "bam-bedgraph-bigwig-subworkflow.cwl"],
+            "bam-bedgraph-bigwig.json",
+            "subworkflow"
+        )
+    ]
+)
+def test_embed_all_runs(workflow, job, task_id):
+    cwl_args = get_default_args()
+    cwl_args.update(
+        {
+            "workflow": os.path.join(DATA_FOLDER, *workflow)
+        }
+    )
+    workflow_tool = slow_cwl_load(cwl_args, True)
+    embed_all_runs(workflow_tool, cwl_args)
+
+    temp_pickle_folder = tempfile.mkdtemp()
+    workflow_path = os.path.join(temp_pickle_folder, "packed.cwl")
+    dump_json(workflow_tool, workflow_path)
+    job_path = os.path.join(DATA_FOLDER, "jobs", job)
+    cwl_args.update(
+        {
+            "workflow": workflow_path,
+            "pickle_folder": temp_pickle_folder
+        }
+    )
+    try:
+        job_data = load_job(cwl_args, job_path)
+        job_data["tmp_folder"] = temp_pickle_folder         # need manually add "tmp_folder" as it is
+        step_outputs, step_report = execute_workflow_step(
+            cwl_args,
+            job_data,
+            task_id
+        )
+    except BaseException as err:
+        assert False, f"Failed either to run test or execute workflow. \n {err}"
+    finally:
+        rmtree(temp_pickle_folder)
 
 
 @pytest.mark.parametrize(
@@ -183,11 +244,21 @@ def test_get_short_id(long_id, only_step_name, only_id, control):
             ["workflows", "bam-bedgraph-bigwig-single.cwl"],
             "sort-bedgraph-step.json",
             "sort_bedgraph"
+        ),
+        (
+            ["workflows", "bam-bedgraph-bigwig-single.cwl"],
+            "sorted-bedgraph-to-bigwig-step.json",
+            "sorted_bedgraph_to_bigwig"
+        ),
+        (
+            ["workflows", "bam-bedgraph-bigwig-subworkflow.cwl"],
+            "bam-bedgraph-bigwig.json",
+            "subworkflow"
         )
     ]
 )
 def test_execute_workflow_step(workflow, job, task_id):
-    temp_pickle_folder = mkdtemp()
+    temp_pickle_folder = tempfile.mkdtemp()
     workflow_path = os.path.join(DATA_FOLDER, *workflow)
     job_path = os.path.join(DATA_FOLDER, "jobs", job)
     
@@ -224,7 +295,7 @@ def test_execute_workflow_step(workflow, job, task_id):
     ]
 )
 def test_load_job_from_file(job, workflow):
-    temp_pickle_folder = mkdtemp()
+    temp_pickle_folder = tempfile.mkdtemp()
     workflow_path = os.path.join(DATA_FOLDER, *workflow)
     job_path = os.path.join(DATA_FOLDER, "jobs", job)
 
@@ -371,7 +442,7 @@ def test_load_job_from_file_should_fail(job, workflow):
     ]
 )
 def test_load_job_from_object(job, workflow, cwd):
-    temp_pickle_folder = mkdtemp()
+    temp_pickle_folder = tempfile.mkdtemp()
     workflow_path = os.path.join(DATA_FOLDER, *workflow)
     
     cwl_args = get_default_args()
@@ -535,7 +606,7 @@ def test_slow_cwl_load_workflow_should_fail():
     
 
 def test_fast_cwl_load_workflow_from_cwl():
-    temp_pickle_folder = mkdtemp()
+    temp_pickle_folder = tempfile.mkdtemp()
     workflow_path = os.path.join(DATA_FOLDER, "workflows", "bam-bedgraph-bigwig.cwl")
     pickled_workflow_path = get_md5_sum(workflow_path) + ".p"
 
@@ -561,7 +632,7 @@ def test_fast_cwl_load_workflow_from_cwl():
 
 
 def test_fast_cwl_load_workflow_from_parsed():
-    temp_pickle_folder = mkdtemp()
+    temp_pickle_folder = tempfile.mkdtemp()
     workflow_path = os.path.join(DATA_FOLDER, "workflows", "bam-bedgraph-bigwig.cwl")
     pickled_workflow_path = get_md5_sum(workflow_path) + ".p"
 
@@ -585,7 +656,7 @@ def test_fast_cwl_load_workflow_from_parsed():
 
 
 def test_fast_cwl_load_command_line_tool_from_cwl():
-    temp_pickle_folder = mkdtemp()
+    temp_pickle_folder = tempfile.mkdtemp()
     command_line_tool_path = os.path.join(DATA_FOLDER, "tools", "linux-sort.cwl")
     pickled_command_line_tool_path = get_md5_sum(command_line_tool_path) + ".p"
 
@@ -611,7 +682,7 @@ def test_fast_cwl_load_command_line_tool_from_cwl():
 
 
 def test_fast_cwl_load_workflow_from_pickle():
-    temp_pickle_folder = mkdtemp()
+    temp_pickle_folder = tempfile.mkdtemp()
     original_workflow_path = os.path.join(
         DATA_FOLDER, "workflows", "bam-bedgraph-bigwig.cwl"
     )
@@ -641,7 +712,7 @@ def test_fast_cwl_load_workflow_from_pickle():
 
 
 def test_fast_cwl_load_command_line_tool_from_pickle():
-    temp_pickle_folder = mkdtemp()
+    temp_pickle_folder = tempfile.mkdtemp()
     original_command_line_tool_path = os.path.join(
         DATA_FOLDER, "tools", "linux-sort.cwl"
     )
@@ -671,7 +742,7 @@ def test_fast_cwl_load_command_line_tool_from_pickle():
 
 
 def test_fast_cwl_load_workflow_from_cwl_should_fail():
-    temp_pickle_folder = mkdtemp()
+    temp_pickle_folder = tempfile.mkdtemp()
     workflow_path = os.path.join(DATA_FOLDER, "workflows", "dummy.cwl")
 
     cwl_args = get_default_args()
