@@ -3,6 +3,7 @@ import sys
 import uuid
 import json
 import queue
+import logging
 import requests
 import itertools
 import threading
@@ -95,6 +96,7 @@ def check_result(suite_data, results_queue):
             continue
         processed = processed + 1
         run_id = item["run_id"]
+        logging.info(f"Check results for {run_id}")
         try:
             compare(suite_data[run_id]["output"], item["results"])
         except CompareFail as ex:
@@ -167,6 +169,7 @@ def create_dags(suite_data, dags_folder=None):
 
 def trigger_dags(suite_data, args):
     for run_id, test_data in suite_data.items():
+        logging.info(f"Trigger DAG {test_data['dag_id']} as {run_id}")
         r = requests.post(
             url=args.endpoint,
             params={
@@ -179,6 +182,18 @@ def trigger_dags(suite_data, args):
                 )
             }
         )
+
+
+def print_report(suite_data):
+    exit_code = 0
+    for run_id, test_data in suite_data.items():
+        if "error" in test_data:
+            exit_code = 1
+            logging.error(f"Test {test_data['dag_id']} run as {run_id} failed")
+            logging.debug(test_data)
+        else:
+            logging.info(f"Test {test_data['dag_id']} run as {run_id} finished successfully")
+    return exit_code
 
 
 def run_test_conformance(args):
@@ -220,5 +235,6 @@ def run_test_conformance(args):
     # Wait until all triggered dags return results
     checker.join()
 
-    if any(item.get("error", None) for item in suite_data.values()):
-        sys.exit(1)
+    exit_code = print_report(suite_data)
+
+    sys.exit(exit_code)
