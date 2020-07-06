@@ -83,7 +83,7 @@ def load_yaml(location):
     """
     Tries to load yaml document from file or string.
 
-    If file not found, assumes that location
+    If file cannot be loaded, assumes that location
     is a string and tries to load yaml from string.
 
     If string wasn't parsed and YAML didn't raise
@@ -96,7 +96,7 @@ def load_yaml(location):
     try:
         with open(location, "r") as input_stream:
             data = yaml.load(input_stream)
-    except FileNotFoundError:
+    except (FileNotFoundError, OSError):           # catch OSError raised when "filename too long"
         data = yaml.load(location)
     if data == location:
         raise ValueError
