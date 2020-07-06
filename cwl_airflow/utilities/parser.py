@@ -138,9 +138,9 @@ def get_parser():
     test_parser.add_argument(
         "--endpoint", 
         type=str,
-        default="http://127.0.0.1:8081",
+        default="http://127.0.0.1:8081/api/experimental/dag_runs",
         help="Set CWL-Airflow 'api' endpoint to create and trigger DAGs. \
-            Default: http://127.0.0.1:8081"
+            Default: http://127.0.0.1:8081/api/experimental/dag_runs"
     )
     test_parser.add_argument(
         "--range", 

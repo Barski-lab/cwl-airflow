@@ -1,4 +1,5 @@
 import os
+import re
 import hashlib
 import pkg_resources
 import json
@@ -9,19 +10,34 @@ from shutil import rmtree
 from urllib.parse import urlparse
 
 
-def get_dir(dir, cwd=None, permissions=None, exist_ok=None):
+def get_files(location, filename_pattern=None):
+    """
+    Recursively searches for files in a folder by regex pattern.
+    Results for the files with the same basenames will be overwritten.
+    """
+
+    filename_pattern = ".*" if filename_pattern is None else filename_pattern
+    files_dict = {}
+    for root, dirs, files in os.walk(location):
+        files_dict.update(
+            {filename: os.path.join(root, filename) for filename in files if re.match(filename_pattern, filename)}
+        )
+    return files_dict
+
+
+def get_dir(location, cwd=None, permissions=None, exist_ok=None):
 
     permissions = 0o0775 if permissions is None else permissions
     exist_ok = True if exist_ok is None else exist_ok
     cwd = os.getcwd() if cwd is None else cwd
 
-    abs_dir = get_absolute_path(dir, cwd)
+    abs_location = get_absolute_path(location, cwd)
     try:
-        os.makedirs(abs_dir, mode=permissions)
+        os.makedirs(abs_location, mode=permissions)
     except os.error:
         if not exist_ok:
             raise
-    return abs_dir
+    return abs_location
 
 
 def get_path_from_url(url):

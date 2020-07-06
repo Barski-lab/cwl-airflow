@@ -6,7 +6,6 @@ import tempfile
 
 from shutil import rmtree, copy
 from ruamel.yaml.comments import CommentedMap
-from cwltool.argparser import get_default_args
 from cwltool.workflow import Workflow
 from cwltool.command_line_tool import CommandLineTool
 
@@ -23,13 +22,66 @@ from cwl_airflow.utilities.cwl import (
     get_items,
     get_short_id,
     execute_workflow_step,
-    embed_all_runs
+    embed_all_runs,
+    get_default_cwl_args,
+    CWL_TMP_FOLDER,
+    CWL_OUTPUTS_FOLDER,
+    CWL_PICKLE_FOLDER,
+    CWL_USE_CONTAINER,
+    CWL_NO_MATCH_USER,
+    CWL_SKIP_SCHEMAS,
+    CWL_STRICT,
+    CWL_QUIET,
+    CWL_RM_TMPDIR,
+    CWL_MOVE_OUTPUTS
 )
 
 
 DATA_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
 if sys.platform == "darwin":                                                    # docker has troubles of mounting /var/private on macOs
     tempfile.tempdir = "/private/tmp"
+
+
+@pytest.mark.parametrize(
+    "control_defaults",
+    [
+        (
+            {
+                "tmp_folder": CWL_TMP_FOLDER,
+                "outputs_folder": CWL_OUTPUTS_FOLDER,
+                "pickle_folder": CWL_PICKLE_FOLDER,
+                "use_container": CWL_USE_CONTAINER,
+                "no_match_user": CWL_NO_MATCH_USER,
+                "skip_schemas": CWL_SKIP_SCHEMAS,
+                "strict": CWL_STRICT,
+                "quiet": CWL_QUIET,
+                "rm_tmpdir": CWL_RM_TMPDIR,
+                "move_outputs": CWL_MOVE_OUTPUTS
+            }
+        )
+    ]
+)
+def test_get_default_cwl_args(monkeypatch, control_defaults):
+    temp_home = tempfile.mkdtemp()
+    monkeypatch.delenv("AIRFLOW_HOME", raising=False)
+    monkeypatch.delenv("AIRFLOW_CONFIG", raising=False)
+    monkeypatch.setattr(
+        os.path,
+        "expanduser",
+        lambda x: x.replace("~", temp_home)
+    )
+
+    try:
+        required_cwl_args = get_default_cwl_args()
+    except (BaseException, Exception) as err:
+        assert False, f"Failed to run test. \n {err}"
+    finally:
+        rmtree(temp_home)
+
+    assert all(
+        required_cwl_args[key] == contol_value
+        for key, contol_value in control_defaults.items()
+    ), "Failed to set proper defaults"
 
 
 @pytest.mark.parametrize(
@@ -53,8 +105,7 @@ if sys.platform == "darwin":                                                    
     ]
 )
 def test_embed_all_runs(workflow, job, task_id):
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": os.path.join(DATA_FOLDER, *workflow)
         }
@@ -262,8 +313,7 @@ def test_execute_workflow_step(workflow, job, task_id):
     workflow_path = os.path.join(DATA_FOLDER, *workflow)
     job_path = os.path.join(DATA_FOLDER, "jobs", job)
     
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": workflow_path,
             "pickle_folder": temp_pickle_folder
@@ -299,13 +349,13 @@ def test_load_job_from_file(job, workflow):
     workflow_path = os.path.join(DATA_FOLDER, *workflow)
     job_path = os.path.join(DATA_FOLDER, "jobs", job)
 
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": workflow_path,
             "pickle_folder": temp_pickle_folder
         }
     )
+
     try:
         job_data = load_job(cwl_args, job_path)
     except BaseException as err:
@@ -326,6 +376,44 @@ def test_load_job_from_file(job, workflow):
 def test_load_job_from_file_should_fail(job, workflow):
     with pytest.raises(AssertionError):
         test_load_job_from_file(job, workflow)
+
+
+@pytest.mark.parametrize(
+    "job, workflow",
+    [
+        (
+            "bam-bedgraph-bigwig.json",
+            ["workflows", "bam-bedgraph-bigwig.cwl"]
+        )
+    ]
+)
+def test_load_job_from_direct_path_to_workflow(job, workflow):
+    temp_pickle_folder = tempfile.mkdtemp()
+    workflow_path = os.path.join(DATA_FOLDER, *workflow)
+    job_path = os.path.join(DATA_FOLDER, "jobs", job)
+
+    cwl_args = workflow_path
+
+    try:
+        job_data = load_job(cwl_args, job_path)
+    except BaseException as err:
+        assert False, f"Failed to load job from file"
+    finally:
+        rmtree(temp_pickle_folder)
+
+
+@pytest.mark.parametrize(
+    "job, workflow",
+    [
+        (
+            "bam-bedgraph-bigwig.json",
+            ["workflows", "dummy.cwl"]
+        )
+    ]
+)
+def test_load_job_from_direct_path_to_workflow_should_fail(job, workflow):
+    with pytest.raises(AssertionError):
+        test_load_job_from_direct_path_to_workflow(job, workflow)
 
 
 @pytest.mark.parametrize(
@@ -445,13 +533,13 @@ def test_load_job_from_object(job, workflow, cwd):
     temp_pickle_folder = tempfile.mkdtemp()
     workflow_path = os.path.join(DATA_FOLDER, *workflow)
     
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": workflow_path,
             "pickle_folder": temp_pickle_folder
         }
     )
+
     try:
         job_data = load_job(cwl_args, job, cwd)
     except BaseException as err:
@@ -522,8 +610,7 @@ def test_load_job_from_object_should_fail(job, workflow, cwd):
 
 
 def test_slow_cwl_load_workflow():
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": os.path.join(
                 DATA_FOLDER, "workflows", "bam-bedgraph-bigwig.cwl"
@@ -536,8 +623,7 @@ def test_slow_cwl_load_workflow():
 
 
 def test_slow_cwl_load_command_line_tool():
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": os.path.join(
                 DATA_FOLDER, "tools", "linux-sort.cwl"
@@ -550,8 +636,7 @@ def test_slow_cwl_load_command_line_tool():
 
 
 def test_slow_cwl_load_reduced_workflow():
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": os.path.join(
                 DATA_FOLDER, "workflows", "bam-bedgraph-bigwig.cwl"
@@ -564,8 +649,7 @@ def test_slow_cwl_load_reduced_workflow():
 
 
 def test_slow_cwl_load_reduced_command_line_tool():
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": os.path.join(
                 DATA_FOLDER, "tools", "linux-sort.cwl"
@@ -578,8 +662,7 @@ def test_slow_cwl_load_reduced_command_line_tool():
 
 
 def test_slow_cwl_load_parsed_workflow():
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": os.path.join(
                 DATA_FOLDER, "workflows", "bam-bedgraph-bigwig.cwl"
@@ -593,8 +676,7 @@ def test_slow_cwl_load_parsed_workflow():
 
 
 def test_slow_cwl_load_workflow_should_fail():
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": os.path.join(
                 DATA_FOLDER, "workflows", "dummy.cwl"
@@ -610,13 +692,13 @@ def test_fast_cwl_load_workflow_from_cwl():
     workflow_path = os.path.join(DATA_FOLDER, "workflows", "bam-bedgraph-bigwig.cwl")
     pickled_workflow_path = get_md5_sum(workflow_path) + ".p"
 
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": workflow_path,
             "pickle_folder": temp_pickle_folder
         }
     )
+
     try:
         workflow_tool = fast_cwl_load(cwl_args)
         temp_pickle_folder_content = os.listdir(temp_pickle_folder)
@@ -636,13 +718,13 @@ def test_fast_cwl_load_workflow_from_parsed():
     workflow_path = os.path.join(DATA_FOLDER, "workflows", "bam-bedgraph-bigwig.cwl")
     pickled_workflow_path = get_md5_sum(workflow_path) + ".p"
 
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": workflow_path,
             "pickle_folder": temp_pickle_folder
         }
     )
+
     try:
         cwl_args["workflow"] = fast_cwl_load(cwl_args)
         workflow_tool = fast_cwl_load(cwl_args)
@@ -660,13 +742,13 @@ def test_fast_cwl_load_command_line_tool_from_cwl():
     command_line_tool_path = os.path.join(DATA_FOLDER, "tools", "linux-sort.cwl")
     pickled_command_line_tool_path = get_md5_sum(command_line_tool_path) + ".p"
 
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": command_line_tool_path,
             "pickle_folder": temp_pickle_folder
         }
     )
+
     try:
         command_line_tool = fast_cwl_load(cwl_args)
         temp_pickle_folder_content = os.listdir(temp_pickle_folder)
@@ -691,13 +773,13 @@ def test_fast_cwl_load_workflow_from_pickle():
     )
     copy(original_workflow_path, duplicate_workflow_path)
     
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": original_workflow_path,
             "pickle_folder": temp_pickle_folder
         }
     )
+
     try:
         workflow_tool = fast_cwl_load(cwl_args)         # should result in creating pickled file
         cwl_args["workflow"] = duplicate_workflow_path
@@ -721,13 +803,13 @@ def test_fast_cwl_load_command_line_tool_from_pickle():
     )
     copy(original_command_line_tool_path, duplicate_command_line_tool_path)
     
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": original_command_line_tool_path,
             "pickle_folder": temp_pickle_folder
         }
     )
+
     try:
         command_line_tool = fast_cwl_load(cwl_args)  # should result in creating pickled file
         cwl_args["workflow"] = duplicate_command_line_tool_path
@@ -745,13 +827,13 @@ def test_fast_cwl_load_workflow_from_cwl_should_fail():
     temp_pickle_folder = tempfile.mkdtemp()
     workflow_path = os.path.join(DATA_FOLDER, "workflows", "dummy.cwl")
 
-    cwl_args = get_default_args()
-    cwl_args.update(
+    cwl_args = get_default_cwl_args(
         {
             "workflow": workflow_path,
             "pickle_folder": temp_pickle_folder
         }
     )
+
     with pytest.raises(AssertionError):
         try:
             workflow_tool = fast_cwl_load(cwl_args)

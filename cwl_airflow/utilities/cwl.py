@@ -8,13 +8,29 @@ import shutil
 
 from uuid import uuid4
 from copy import deepcopy
+from jsonmerge import merge
 from urllib.parse import urlsplit
 from typing import MutableMapping, MutableSequence
 from ruamel.yaml.comments import CommentedMap
-from cwltool.main import setup_loadingContext, init_job_order
-from cwltool.context import LoadingContext, RuntimeContext
+from airflow.configuration import (
+    AIRFLOW_HOME,
+    conf
+)
+from airflow.exceptions import AirflowConfigException
+from cwltool.argparser import get_default_args
+from cwltool.main import (
+    setup_loadingContext,
+    init_job_order
+)
+from cwltool.context import (
+    LoadingContext,
+    RuntimeContext
+)
 from cwltool.process import relocateOutputs
-from cwltool.load_tool import load_tool, jobloaderctx
+from cwltool.load_tool import (
+    load_tool,
+    jobloaderctx
+)
 from cwltool.executors import SingleJobExecutor
 from cwltool.utils import visit_class
 from cwltool.mutation import MutationManager
@@ -27,8 +43,128 @@ from cwl_airflow.utilities.helpers import (
     get_dir,
     get_path_from_url,
     load_yaml,
-    dump_json
+    dump_json,
+    get_absolute_path
 )
+
+
+CWL_TMP_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_tmp_folder")
+CWL_OUTPUTS_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_outputs_folder")
+CWL_PICKLE_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_pickle_folder")
+CWL_USE_CONTAINER = True
+CWL_NO_MATCH_USER = False
+CWL_SKIP_SCHEMAS = True
+CWL_STRICT = False
+CWL_QUIET = False
+CWL_RM_TMPDIR = True       # better not to change without need
+CWL_MOVE_OUTPUTS = "move"  # better not to change without need
+
+
+DAG_TEMPLATE="""#!/usr/bin/env python3
+from cwl_airflow.extensions.cwldag import CWLDAG
+dag = CWLDAG(workflow="{0}", dag_id="{1}")
+"""
+
+
+def conf_get(section, key, default):
+    """
+    Return value from AirflowConfigParser object.
+    If section or key is absent, return default
+    """
+
+    try:
+        return conf.get(section, key)
+    except AirflowConfigException:
+        return default
+
+
+def collect_reports(context, cwl_args, task_ids=None):
+    """
+    Collects reports from "context" for specified "task_ids".
+    If "task_ids" was not set, use all tasks from DAG.
+    Loads and merges data from reports.
+    """
+
+    task_ids = context["dag"].task_ids if task_ids is None else task_ids
+
+    job_data = {}
+    for report_location in context["ti"].xcom_pull(task_ids=task_ids):
+        if report_location is not None:
+            report_data = load_job(
+                cwl_args,                 # should be ok even if cwl_args["workflow"] points to the original workflow
+                report_location           # as all defaults from it should have been already added by dispatcher
+            )
+            job_data = merge(job_data, report_data)
+    
+    return job_data
+
+
+def get_default_cwl_args(preset_cwl_args=None):
+    """
+    Returns default arguments required by cwltool's functions with a few
+    parameters added and overwritten (required by CWL-Airflow). Defaults
+    can be preset through "preset_cwl_args" if provided. All new fields
+    from "preset_cwl_args" will be added to the returned results.
+    """
+
+    preset_cwl_args = {} if preset_cwl_args is None else deepcopy(preset_cwl_args)
+
+    # default arguments required by cwltool
+    required_cwl_args = get_default_args()
+
+    # update default arguments required by cwltool with those that were preset by user
+    required_cwl_args.update(preset_cwl_args)
+
+    # update default arguments required by cwltool with those that might
+    # be updated based on the higher priority of airflow configuration
+    # file. If airflow configuration file doesn't include correspondent
+    # parameters, use those that were preset by user, or defaults
+    required_cwl_args.update(
+        {
+            "tmp_folder": get_dir(
+                conf_get(
+                    "cwl", "tmp_folder",
+                    preset_cwl_args.get("tmp_folder", CWL_TMP_FOLDER)
+                )
+            ),
+            "outputs_folder": get_dir(                                             # for CWL-Airflow to store outputs if "outputs_folder" is not overwritten in job
+                conf_get(
+                    "cwl", "outputs_folder",
+                    preset_cwl_args.get("outputs_folder", CWL_OUTPUTS_FOLDER)
+                )
+            ),
+            "pickle_folder": get_dir(                                              # for CWL-Airflow to store pickled workflows
+                conf_get(
+                    "cwl", "pickle_folder",
+                    preset_cwl_args.get("pickle_folder", CWL_PICKLE_FOLDER)
+                )
+            ),
+            "use_container": conf_get(
+                "cwl", "use_container",
+                preset_cwl_args.get("use_container", CWL_USE_CONTAINER)            # execute jobs in a docker containers
+            ),
+            "no_match_user": conf_get(
+                "cwl", "no_match_user",
+                preset_cwl_args.get("no_match_user", CWL_NO_MATCH_USER)            # disables passing the current uid to "docker run --user"
+            ),
+            "skip_schemas": conf_get(
+                "cwl", "skip_schemas", 
+                preset_cwl_args.get("skip_schemas", CWL_SKIP_SCHEMAS)              # it looks like this doesn't influence anything in the latest cwltool
+            ),
+            "strict": conf_get(
+                "cwl", "strict", 
+                preset_cwl_args.get("strict", CWL_STRICT)
+            ),
+            "quiet": conf_get(
+                "cwl", "quiet", 
+                preset_cwl_args.get("quiet", CWL_QUIET)
+            ),
+            "rm_tmpdir": preset_cwl_args.get("rm_tmpdir", CWL_RM_TMPDIR),          # even if we can set it in "preset_cwl_args" it's better not to change
+            "move_outputs": preset_cwl_args.get("move_outputs", CWL_MOVE_OUTPUTS)  # even if we can set it in "preset_cwl_args" it's better not to change
+        }
+    )
+
+    return required_cwl_args
 
 
 def relocate_outputs(cwl_args, job_data, remove_tmp_folder=None):
@@ -179,9 +315,15 @@ def get_temp_folders(task_id, job_data):
 def load_job(cwl_args, job, cwd=None):
     """
     Follows standard routine for loading job order object file
-    the same way as cwltool does it. cwl_args should include
+    the same way as cwltool does it. "cwl_args" should include
     "workflow" field.
-    
+
+    If "cwl_args" is string, assume it's the path to the wokrflow.
+    If path is relative, it will be resolved based on "cwd" or
+    current working directory (if "cwd" is None). Default arguments
+    required for cwltool's functions will be generated and workflow
+    will be loaded.
+
     Tries to load json object from file. If failed, assumes that
     "job" has been already parsed into Object. Inits loaded
     job_data based on the workflow provided in the "workflow"
@@ -199,8 +341,17 @@ def load_job(cwl_args, job, cwd=None):
     Always returns CommentedMap
     """
 
-    cwl_args_copy = deepcopy(cwl_args)
     job_copy = deepcopy(job)
+
+    # check if instead of proper cwl_args we provided path to the workflow
+    if isinstance(cwl_args, str):
+        cwl_args_copy = get_default_cwl_args(
+            {
+                "workflow": get_absolute_path(cwl_args, cwd)
+            }
+        )
+    else:
+        cwl_args_copy = deepcopy(cwl_args)
 
     loading_context = setup_loadingContext(
         LoadingContext(cwl_args_copy),

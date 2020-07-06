@@ -10,6 +10,7 @@ from cwl_airflow.components.test.conformance import (
     create_dags
 )
 from cwl_airflow.utilities.parser import parse_arguments
+from cwl_airflow.utilities.helpers import get_files
 
 
 DATA_FOLDER = path.abspath(path.join(path.dirname(__file__), "data"))
@@ -57,7 +58,7 @@ def test_create_dags(args, control_dag_list):
     try:
         suite_data = load_test_suite(parsed_args)
         create_dags(suite_data, parsed_args.tmp)
-        dags_list = listdir(parsed_args.tmp)
+        dags_list = get_files(parsed_args.tmp, ".*\\.py$").keys()
     except Exception as err:
         assert False, f"Failed to run test, {err}"
     finally:

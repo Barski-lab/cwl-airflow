@@ -5,11 +5,12 @@ from copy import deepcopy
 from cwltool.argparser import get_default_args
 from airflow.models import DAG
 from airflow.utils.dates import days_ago
-from airflow.configuration import AIRFLOW_HOME
 
-from cwl_airflow.utilities.helpers import get_dir
-from cwl_airflow.utilities.airflow import conf_get
-from cwl_airflow.utilities.cwl import fast_cwl_load, get_items
+from cwl_airflow.utilities.cwl import (
+    fast_cwl_load,
+    get_items,
+    get_default_cwl_args
+)
 from cwl_airflow.extensions.operators.cwlstepoperator import CWLStepOperator
 from cwl_airflow.extensions.operators.cwljobdispatcher import CWLJobDispatcher
 from cwl_airflow.extensions.operators.cwljobgatherer import CWLJobGatherer
@@ -60,82 +61,23 @@ class CWLDAG(DAG):
         to be queued longer then half a year:)
         """
 
-        # default args provided by user.
-        # Use deepcopy to prevent from changing in place
+        # default args provided by user. Use deepcopy to prevent from changing in place
         user_default_args = deepcopy(kwargs.get("default_args", {}))
         
-        # cwl args provided by user within default_args.
-        # Use deepcopy to prevent from changing in place
-        user_cwl_args = deepcopy(user_default_args.get("cwl", {}))
-
-        # default arguments required by cwltool
-        required_cwl_args = get_default_args()
-
-        # update default arguments required by cwltool with those that are provided by user
-        required_cwl_args.update(user_cwl_args)
-
-        # update default arguments required by cwltool with those that
-        # might be updated based on higher priority of airflow configuration file.
-        # If airflow configuration file doesn't include correspondent parameters,
-        # use those that were provided by user, or defaults
-        required_cwl_args.update(
-            {
-                "workflow": workflow,
-                "tmp_folder": get_dir(
-                    conf_get(
-                        "cwl", "tmp_folder",
-                        user_cwl_args.get(
-                            "tmp_folder", os.path.join(AIRFLOW_HOME, "cwl_temp_folder")
-                        )
-                    )
-                ),
-                "outputs_folder": get_dir(  # to store outputs if "outputs_folder" is not overwritten in job
-                    conf_get(
-                        "cwl", "outputs_folder",
-                        user_cwl_args.get(
-                            "outputs_folder", os.path.join(AIRFLOW_HOME, "cwl_outputs_folder")
-                        )
-                    )
-                ),
-                "pickle_folder": get_dir(
-                    conf_get(
-                        "cwl", "pickle_folder",
-                        user_cwl_args.get(
-                            "pickle_folder", os.path.join(AIRFLOW_HOME, "cwl_pickle_folder")
-                        )
-                    )
-                ),
-                "use_container": conf_get(
-                    "cwl", "use_container",
-                    user_cwl_args.get("use_container", True)  # execute jobs in a docker containers
-                ),
-                "no_match_user": conf_get(
-                    "cwl", "no_match_user",
-                    user_cwl_args.get("no_match_user", False)  # disables passing the current uid to "docker run --user"
-                ),
-                "skip_schemas": conf_get(
-                    "cwl", "skip_schemas", 
-                    user_cwl_args.get("skip_schemas", True)    # it looks like this doesn't influence anything in the latest cwltool
-                ),
-                "strict": conf_get(
-                    "cwl", "strict", 
-                    user_cwl_args.get("strict", False)
-                ),
-                "quiet": conf_get(
-                    "cwl", "quiet", 
-                    user_cwl_args.get("quiet", False)
-                ),
-                "rm_tmpdir": True,
-                "move_outputs": "move"
-            }
+        # get all the parameters required by cwltool with preset by user defaults
+        required_cwl_args = get_default_cwl_args(
+            preset_cwl_args=user_default_args.get("cwl", {})
         )
 
-        # update default args provided by user with updated cwl args
+        # need to add path to the workflow
+        required_cwl_args["workflow"] = workflow
+
+        # update default args provided by user with required by cwltool args
         user_default_args.update({
             "cwl": required_cwl_args
         })
 
-        # default arguments required by CWL-Airflow
+        # default arguments required by CWL-Airflow (no need to put it in a separate function so far)
         required_default_args = {
             "start_date": days_ago(180),
             "email_on_failure": False,
@@ -145,7 +87,7 @@ class CWLDAG(DAG):
             "on_retry_callback": task_on_retry
         }
         
-        # Updated default arguments required by CWL-Airflow with those that are provided by user
+        # Updated default arguments required by CWL-Airflow with those that are provided by user for cwltool
         required_default_args.update(user_default_args)
 
         # update kwargs with correct default_args and callbacks if those were not set by user

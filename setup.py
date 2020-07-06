@@ -91,7 +91,8 @@ setup(
         'connexion==2.6.0',
         'werkzeug==0.16.1',
         'tornado==6.0.4',
-        "swagger-ui-bundle==0.0.6"
+        "swagger-ui-bundle==0.0.6",
+        "cwltest==2.0.20200220223835"
     ],
     options={
         'app': {

@@ -22,7 +22,7 @@ from airflow.utils.timezone import parse as parsedate
 from airflow.api.common.experimental import trigger_dag
 
 from cwl_airflow.utilities.helpers import get_version, get_dir
-from cwl_airflow.utilities.airflow import conf_get, DAG_TEMPLATE
+from cwl_airflow.utilities.cwl import conf_get, DAG_TEMPLATE
 
 
 class CWLApiBackend():
@@ -209,7 +209,7 @@ class CWLApiBackend():
         tempdir = tempfile.mkdtemp(
             dir=get_dir(
                 path.abspath(
-                    conf_get("cwl", "tmp_folder", os.path.join(AIRFLOW_HOME, "cwl_temp_folder"))
+                    conf_get("cwl", "tmp_folder", os.path.join(AIRFLOW_HOME, "cwl_tmp_folder"))
                 )
             ),
             prefix="run_id_"+run_id+"_"
