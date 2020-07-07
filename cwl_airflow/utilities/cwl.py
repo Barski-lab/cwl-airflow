@@ -467,9 +467,11 @@ def fast_cwl_step_load(workflow, target_id, cwl_args=None, location=None):
                     "type": workflow_input["type"]
                 }
 
-                if "default" in workflow_input:
-                    updated_workflow_input["default"] = workflow_input["default"]
-                
+                # need to copy both "default" and "secondaryFiles" if present
+                for key in ["default", "secondaryFiles"]:
+                    if key in workflow_input:
+                        updated_workflow_input[key] = workflow_input[key]
+
                 # Check if we have already added input based on the same "source"
                 # from another item from "in". Skip adding the same input twice.
 
@@ -507,6 +509,11 @@ def fast_cwl_step_load(workflow, target_id, cwl_args=None, location=None):
                     "id": step_in_source_with_step_id,  
                     "type": upstream_step_output["type"]
                 }
+
+                # TODO: looks like I don't need it here
+                # for key in ["secondaryFiles"]:
+                #     if key in upstream_step_output:
+                #         updated_workflow_input[key] = upstream_step_output[key]
 
                 # Check if we have already added input based on the same "source"
                 # from another item from "in". Skip adding the same input twice.
