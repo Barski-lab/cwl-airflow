@@ -4,10 +4,35 @@ import hashlib
 import pkg_resources
 import json
 
+from copy import deepcopy
 from ruamel.yaml import YAML
 from tempfile import mkdtemp
 from shutil import rmtree
 from urllib.parse import urlparse
+from typing import MutableMapping, MutableSequence
+
+
+def remove_field_from_dict(data, key):
+    """
+    Returns data with all occurences of "key" removed.
+    "data" should be a dictionary.
+    """
+
+    data_copy = deepcopy(data)
+
+    def __clean(data, key):
+        if isinstance(data, MutableMapping):
+            if key in data:
+                del data[key]
+            for item in data:
+                __clean(data[item], key)
+        if isinstance(data, MutableSequence):
+            for item in data:
+                __clean(item, key)
+
+    __clean(data_copy, key)
+
+    return data_copy
 
 
 def get_files(location, filename_pattern=None):

@@ -1,0 +1,8 @@
+{
+    "input_file": {
+        "class": "File",
+        "location": "../inputs/chr4_100_mapped_reads.bam"
+    },
+    "depth": "-bg",
+    "split": true
+}

@@ -9,13 +9,82 @@ from ruamel.yaml.error import YAMLError
 
 from cwl_airflow.utilities.helpers import (
     CleanAirflowImport,
-    load_yaml
+    load_yaml,
+    remove_field_from_dict
 )
 
 
 DATA_FOLDER = path.abspath(path.join(path.dirname(__file__), "data"))
 if sys.platform == "darwin":                                           # docker has troubles of mounting /var/private on macOs
     tempfile.tempdir = "/private/tmp"
+
+
+@pytest.mark.parametrize(
+    "data, key, control_data",
+    [
+        (
+            {
+                "type": {
+                    "type": "array",
+                    "items": "string",
+                    "inputBinding": {
+                        "prefix": "-k"
+                    }
+                },
+                "inputBinding": {
+                    "position": 1
+                },
+                "doc": "-k, --key=POS1[,POS2]\nstart a key at POS1, end it at POS2 (origin 1)\n",
+                "id": "linux-sort.cwl#key"
+            },
+            "inputBinding",
+            {
+                "type": {
+                    "type": "array",
+                    "items": "string"
+                },
+                "doc": "-k, --key=POS1[,POS2]\nstart a key at POS1, end it at POS2 (origin 1)\n",
+                "id": "linux-sort.cwl#key"
+            }
+        ),
+        (
+            {
+                "type": {
+                    "type": "array",
+                    "items": "string",
+                    "inputBinding": {
+                        "prefix": "-k"
+                    }
+                },
+                "inputBinding": {
+                    "position": 1
+                },
+                "doc": "-k, --key=POS1[,POS2]\nstart a key at POS1, end it at POS2 (origin 1)\n",
+                "id": "linux-sort.cwl#key"
+            },
+            "doc",
+            {
+                "type": {
+                    "type": "array",
+                    "items": "string",
+                    "inputBinding": {
+                        "prefix": "-k"
+                    }
+                },
+                "inputBinding": {
+                    "position": 1
+                },
+                "id": "linux-sort.cwl#key"
+            }
+        )
+    ]
+)
+def test_remove_field_from_dict(data, key, control_data):
+    clean_data = remove_field_from_dict(data, key)
+    assert all(
+        control_data[key] == value
+        for key, value in clean_data.items()
+    ), "Failed to remove field from dictionary"
 
 
 def test_load_yaml_from_file():

@@ -44,7 +44,9 @@ from cwl_airflow.utilities.helpers import (
     get_path_from_url,
     load_yaml,
     dump_json,
-    get_absolute_path
+    get_absolute_path,
+    get_rootname,
+    remove_field_from_dict
 )
 
 
@@ -160,7 +162,8 @@ def get_default_cwl_args(preset_cwl_args=None):
                 preset_cwl_args.get("quiet", CWL_QUIET)
             ),
             "rm_tmpdir": preset_cwl_args.get("rm_tmpdir", CWL_RM_TMPDIR),          # even if we can set it in "preset_cwl_args" it's better not to change
-            "move_outputs": preset_cwl_args.get("move_outputs", CWL_MOVE_OUTPUTS)  # even if we can set it in "preset_cwl_args" it's better not to change
+            "move_outputs": preset_cwl_args.get("move_outputs", CWL_MOVE_OUTPUTS), # even if we can set it in "preset_cwl_args" it's better not to change
+            "enable_dev": True                                                     # TODO: fails to run without it when creating workflow from tool. Ask Peter? 
         }
     )
 
@@ -715,3 +718,52 @@ def embed_all_runs(
             workflow_tool["run"] = slow_cwl_load(cwl_args_copy, reduced=True)
         for item in workflow_tool.values():
             embed_all_runs(item, cwl_args_copy)
+
+
+def convert_to_workflow(command_line_tool, location=None):
+    """
+    Converts CommandLineTool to Workflow. Copies minimum number of fields.
+    If "location" is not None, dumps results to json file.
+    """
+
+    workflow_tool = {
+        "class": "Workflow",
+        "cwlVersion": command_line_tool["cwlVersion"]
+    }
+
+    for input_id, input_data in get_items(command_line_tool["inputs"]):
+        workflow_tool.setdefault("inputs", []).append(
+            {
+                "id": input_id,
+                "type": remove_field_from_dict(input_data["type"], "inputBinding")  # "type" in WorkflowInputParameter cannot have "inputBinding"
+            }
+        )
+
+    for output_id, output_data in get_items(command_line_tool["outputs"]):
+        workflow_tool.setdefault("outputs", []).append(
+            {
+               "id": output_id,
+               "type": output_data["type"],
+               "outputSource": get_rootname(command_line_tool["id"]) + "/" + output_id
+            }
+        )
+
+    workflow_tool["steps"] = [
+        {
+            "id": get_rootname(command_line_tool["id"]),
+            "run": command_line_tool,
+            "in": [
+                {
+                    "id": input_id, "source": input_id
+                } for input_id, _ in get_items(workflow_tool["inputs"])
+            ],
+            "out": [
+                output_id for output_id, _ in get_items(workflow_tool["outputs"])
+            ]
+        }
+    ]
+
+    if location is not None:
+        dump_json(workflow_tool, location)
+
+    return workflow_tool

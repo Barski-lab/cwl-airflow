@@ -12,7 +12,8 @@ from cwltool.command_line_tool import CommandLineTool
 from cwl_airflow.utilities.helpers import (
     get_md5_sum,
     get_absolute_path,
-    dump_json
+    dump_json,
+    get_rootname
 )
 from cwl_airflow.utilities.cwl import (
     fast_cwl_load,
@@ -23,6 +24,7 @@ from cwl_airflow.utilities.cwl import (
     get_short_id,
     execute_workflow_step,
     embed_all_runs,
+    convert_to_workflow,
     get_default_cwl_args,
     CWL_TMP_FOLDER,
     CWL_OUTPUTS_FOLDER,
@@ -40,6 +42,62 @@ from cwl_airflow.utilities.cwl import (
 DATA_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
 if sys.platform == "darwin":                                                    # docker has troubles of mounting /var/private on macOs
     tempfile.tempdir = "/private/tmp"
+
+
+@pytest.mark.parametrize(
+    "tool_location, job",
+    [
+        (
+            ["tools", "bedtools-genomecov.cwl"],
+            "bedtools-genomecov.json"
+        ),
+        (
+            ["tools", "linux-sort.cwl"],
+            "linux-sort.json"
+        ),
+        (
+            ["tools", "ucsc-bedgraphtobigwig.cwl"],
+            "ucsc-bedgraphtobigwig.json"
+        )
+    ]
+)
+def test_convert_to_workflow(tool_location, job):
+    temp_pickle_folder = tempfile.mkdtemp()
+
+    cwl_args = get_default_cwl_args(
+        {
+            "workflow": os.path.join(DATA_FOLDER, *tool_location)
+        }
+    )
+
+    job_location = os.path.join(DATA_FOLDER, "jobs", job)
+    workflow_location = os.path.join(temp_pickle_folder, "workflow.cwl")
+
+    command_line_tool = slow_cwl_load(cwl_args, True)
+
+    workflow_tool = convert_to_workflow(
+        command_line_tool=command_line_tool,
+        location=workflow_location
+    )
+
+    cwl_args.update(
+        {
+            "workflow": workflow_location,
+            "pickle_folder": temp_pickle_folder
+        }
+    )
+    try:
+        job_data = load_job(cwl_args, job_location)
+        job_data["tmp_folder"] = temp_pickle_folder
+        step_outputs, step_report = execute_workflow_step(
+            cwl_args,
+            job_data,
+            get_rootname(command_line_tool["id"])
+        )
+    except BaseException as err:
+        assert False, f"Failed either to run test or execute workflow. \n {err}"
+    finally:
+        rmtree(temp_pickle_folder)
 
 
 @pytest.mark.parametrize(
