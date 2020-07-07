@@ -28,12 +28,10 @@ class CWLJobGatherer(BaseOperator):
 
         post_status(context)
 
-        # for easy access
-
-        cwl_args = context["dag"].default_args["cwl"]
-        
-        job_data = collect_reports(context, cwl_args)
-        
-        _, workflow_report = relocate_outputs(cwl_args, job_data)
-
+        _, workflow_report = relocate_outputs(
+            workflow=context["dag"].workflow,
+            job_data=collect_reports(context),
+            cwl_args=context["dag"].default_args["cwl"],
+        )
+     
         return workflow_report

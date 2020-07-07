@@ -39,13 +39,15 @@ class CWLJobDispatcher(BaseOperator):
 
         # for easy access
         dag_id = context["dag"].dag_id
+        workflow = context["dag"].workflow
         run_id = context["run_id"].replace(":", "_").replace("+", "_")  # to make it dumpable by json
         cwl_args = context["dag"].default_args["cwl"]
 
-        # Load job from context. It doesn't fail if input files are missing
+        # Loads job from dag_run configuration. Sets defaults from "workflow". Doesn't fail if input files are missing
         job_data = load_job(
-            cwl_args,
-            context["dag_run"].conf["job"]
+            workflow=workflow,
+            job=context["dag_run"].conf["job"],
+            cwl_args=cwl_args
         )
 
         job_data["tmp_folder"] = get_dir(
@@ -74,8 +76,8 @@ class CWLJobDispatcher(BaseOperator):
         )
 
         _, _, _, step_report = get_temp_folders(
-            self.task_id,
-            job_data
+            task_id=self.task_id,
+            job_data=job_data
         )
 
         dump_json(job_data, step_report)

@@ -37,23 +37,34 @@ class CWLDAG(DAG):
         Updates kwargs with the required defaults if they were not explicitely provided
         by user. dispatcher and gatherer are set to CWLJobDispatcher() and CWLJobGatherer()
         if those were not provided by user. If user sets his own operators for dispatcher
-        and gatherer, "default_args" from the DAG as well as "required_default_args" will
-        not be set for these operators. User needs to set up proper agruments by himself.
-        Also, dag results will not be posted from the custom dispatcher.
+        and gatherer, "default_args" will not be inherited. User needs to set up proper
+        agruments by himself. Also, dag results will not be posted from the custom dispatcher.
         """
 
-        self.__setup_params(kwargs, workflow)
+        self.workflow = workflow
+        self.__setup_params(kwargs)
 
         super().__init__(dag_id=dag_id, *args, **kwargs)
 
-        self.workflow_tool = fast_cwl_load(kwargs["default_args"]["cwl"])                                               # keeps only the tool (CommentedMap object)
-        self.dispatcher = CWLJobDispatcher(dag=self, task_id="CWLJobDispatcher") if dispatcher is None else dispatcher  # need dag=self otherwise new operator will not get proper default_args
-        self.gatherer = CWLJobGatherer(dag=self, task_id="CWLJobGatherer") if gatherer is None else gatherer
+        self.workflow_tool = fast_cwl_load(         # keeps only the tool (CommentedMap object)
+            workflow=self.workflow,
+            cwl_args=kwargs["default_args"]["cwl"]  # in case user has overwritten some of the default parameters
+        )
+
+        self.dispatcher = CWLJobDispatcher(
+            dag=self,                               # need dag=self otherwise new operator will not get proper default_args
+            task_id="CWLJobDispatcher"
+        ) if dispatcher is None else dispatcher
+
+        self.gatherer = CWLJobGatherer(
+            dag=self,                               # need dag=self otherwise new operator will not get proper default_args
+            task_id="CWLJobGatherer"
+        ) if gatherer is None else gatherer
 
         self.__assemble()
 
 
-    def __setup_params(self, kwargs, workflow):
+    def __setup_params(self, kwargs):
         """
         Updates kwargs with default values if those were not
         explicitely set on CWLDAG creation. "start_date" is set
@@ -68,9 +79,6 @@ class CWLDAG(DAG):
         required_cwl_args = get_default_cwl_args(
             preset_cwl_args=user_default_args.get("cwl", {})
         )
-
-        # need to add path to the workflow
-        required_cwl_args["workflow"] = workflow
 
         # update default args provided by user with required by cwltool args
         user_default_args.update({

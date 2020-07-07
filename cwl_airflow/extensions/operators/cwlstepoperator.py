@@ -30,25 +30,14 @@ class CWLStepOperator(BaseOperator):
 
         post_status(context)
 
-        # for easy access
-        cwl_args = context["dag"].default_args["cwl"]
-
-        job_data = collect_reports(context, cwl_args)
-
         _, step_report = execute_workflow_step(
-            cwl_args,
-            job_data,
-            self.task_id
+            workflow=context["dag"].workflow,
+            task_id=self.task_id,
+            job_data=collect_reports(context),
+            cwl_args=context["dag"].default_args["cwl"]
         )
 
         return step_report
-
-
-
-
-
-
-
 
 
     # def on_kill(self):

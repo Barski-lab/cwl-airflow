@@ -126,8 +126,8 @@ def load_test_suite(args):
         run_id = str(uuid.uuid4())
         tool_location = get_absolute_path(test_data["tool"], suite_dir)
         job_data = load_job(
-            tool_location,
-            get_absolute_path(test_data["job"], suite_dir)
+            workflow=tool_location,
+            job=get_absolute_path(test_data["job"], suite_dir)
         )
         job_data["outputs_folder"] = get_dir(os.path.join(args.tmp, run_id))
 
