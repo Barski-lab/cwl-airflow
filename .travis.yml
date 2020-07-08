@@ -22,6 +22,11 @@ jobs:
     - coveralls
   - name: SciDAP workflow tests
     before_install:
+    - mysql -e "CREATE DATABASE airflow;"
+    - mysql -e "CREATE USER 'airflow'@'localhost' IDENTIFIED BY 'airflow';"
+    - mysql -e "CREATE USER 'airflow'@'%' IDENTIFIED BY 'airflow';"
+    - mysql -e "GRANT ALL PRIVILEGES ON airflow.* TO 'airflow'@'localhost';"
+    - mysql -e "GRANT ALL PRIVILEGES ON airflow.* TO 'airflow'@'%';'"
     - git clone https://github.com/datirium/workflows.git --recursive
     install:
     - pip install .
@@ -32,7 +37,7 @@ jobs:
     - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^dag_dir_list_interval =.*/dag_dir_list_interval = 60/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
-    - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/root@127.0.0.1:3306\/airflow/g' ~/airflow/airflow.cfg
+    - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:3306\/airflow/g' ~/airflow/airflow.cfg
     - cat ~/airflow/airflow.cfg  # to check if airflow.cfg was updated
     - airflow initdb             # remove it later. just to see the error
     - cwl-airflow init           # to init database and add process_report connection
