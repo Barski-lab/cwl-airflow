@@ -127,10 +127,13 @@ def load_test_suite(args):
         test_data = suite_data[i]
         run_id = str(uuid.uuid4())
         tool_location = get_absolute_path(test_data["tool"], suite_dir)
-        job_data = load_job(
-            workflow=tool_location,
-            job=get_absolute_path(test_data["job"], suite_dir)
-        )
+        if "job" in test_data:
+            job_data = load_job(
+                workflow=tool_location,
+                job=get_absolute_path(test_data["job"], suite_dir)
+            )
+        else:
+            job_data = {}
         job_data["outputs_folder"] = get_dir(os.path.join(args.tmp, run_id))
 
         test_data.update({

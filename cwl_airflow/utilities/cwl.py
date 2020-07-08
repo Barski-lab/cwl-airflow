@@ -792,22 +792,27 @@ def convert_to_workflow(command_line_tool, location=None):
         "outputs": []
     }
 
+    for key in ["requirements"]:
+        if key in command_line_tool:
+            workflow_tool[key] = command_line_tool[key]
+
     for input_id, input_data in get_items(command_line_tool["inputs"]):
-        workflow_tool["inputs"].append(
-            {
-                "id": input_id,
-                "type": remove_field_from_dict(input_data["type"], "inputBinding")  # "type" in WorkflowInputParameter cannot have "inputBinding"
-            }
-        )
+        workflow_input = {
+            "id": input_id,
+            "type": remove_field_from_dict(input_data["type"], "inputBinding")       # "type" in WorkflowInputParameter cannot have "inputBinding"
+        }
+        for key in ["default"]:
+            if key in input_data:
+                workflow_input[key] = input_data[key]
+        workflow_tool["inputs"].append(workflow_input)
 
     for output_id, output_data in get_items(command_line_tool["outputs"]):
-        workflow_tool["outputs"].append(
-            {
-               "id": output_id,
-               "type": output_data["type"],
-               "outputSource": get_rootname(command_line_tool["id"]) + "/" + output_id
-            }
-        )
+        workflow_output = {
+            "id": output_id,
+            "type": output_data["type"],
+            "outputSource": get_rootname(command_line_tool["id"]) + "/" + output_id
+        }
+        workflow_tool["outputs"].append(workflow_output)
 
     workflow_tool["steps"] = [
         {
