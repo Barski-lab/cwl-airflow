@@ -7,6 +7,7 @@ os:
 
 services:
   - docker
+  - mysql
 
 python:
 - 3.7
@@ -22,8 +23,8 @@ jobs:
   - name: SciDAP workflow tests
     before_install:
     - git clone https://github.com/datirium/workflows.git --recursive
-    - docker pull mysql/mysql-server:5.7
-    - docker run -v ~/database:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=airflow -e MYSQL_DATABASE=airflow -e MYSQL_USER=airflow -e MYSQL_PASSWORD=airflow -p 6603:3306 -d mysql/mysql-server:5.7 --explicit-defaults-for-timestamp=1
+    # - docker pull mysql/mysql-server:5.7
+    # - docker run -v ~/database:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=airflow -e MYSQL_DATABASE=airflow -e MYSQL_USER=airflow -e MYSQL_PASSWORD=airflow -p 6603:3306 -d mysql/mysql-server:5.7 --explicit-defaults-for-timestamp=1
     install:
     - pip install mysqlclient
     - pip install .
@@ -33,7 +34,8 @@ jobs:
     - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^dag_dir_list_interval =.*/dag_dir_list_interval = 60/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
-    - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
+    # - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
+    - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/root:@127.0.0.1:3306\/airflow/g' ~/airflow/airflow.cfg
     - cwl-airflow init > /dev/null 2>&1 &
     - airflow scheduler > /dev/null 2>&1 &
     - cwl-airflow api > /dev/null 2>&1 &
