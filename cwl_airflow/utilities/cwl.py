@@ -510,10 +510,9 @@ def fast_cwl_step_load(workflow, target_id, cwl_args=None, location=None):
                     "type": upstream_step_output["type"]
                 }
 
-                # TODO: looks like I don't need it here
-                # for key in ["secondaryFiles"]:
-                #     if key in upstream_step_output:
-                #         updated_workflow_input[key] = upstream_step_output[key]
+                # No need to copy "secondaryFiles" for outputs from other steps
+                # because they should be already included into the generated json
+                # report file
 
                 # Check if we have already added input based on the same "source"
                 # from another item from "in". Skip adding the same input twice.
