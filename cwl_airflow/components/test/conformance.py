@@ -148,20 +148,14 @@ def load_test_suite(args):
 
 def create_dags(suite_data, args, dags_folder=None):
     """
-    Gets list of all available DAGs in Airflow. Iterates over "suite_data"
-    and creates new DAGs for those, that don't exist yet. All done through
-    API. Airflow Scheduler will parse all dags at the end of the next
-    "dag_dir_list_interval" from airflow.cfg
+    Iterates over "suite_data" and creates new DAGs. Airflow Scheduler
+    will parse all dags at the end of the next "dag_dir_list_interval"
+    from airflow.cfg
     """
 
     # TODO: think how safe is it to force scheduler reload DAGs
 
-    r = requests.get(url=urljoin(args.api, "/api/experimental/dags"))  # get list of all DAGs in Airflow. Never fails unless API is unavailable
-    dag_ids = [item["dag_id"] for item in r.json()["dags"]]
-
     for test_data in suite_data.values():
-        if test_data["dag_id"] in dag_ids:                             # do not create DAG with the same name
-            continue
         workflow_tool = fast_cwl_load(test_data["tool"])
         workflow_path = os.path.join(
             args.tmp,
