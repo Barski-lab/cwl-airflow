@@ -34,6 +34,7 @@ jobs:
     - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/root@127.0.0.1:3306\/airflow/g' ~/airflow/airflow.cfg
     - cat ~/airflow/airflow.cfg  # to check if airflow.cfg was updated
+    - airflow initdb             # remove it later. just to see the error
     - cwl-airflow init           # to init database and add process_report connection
     - airflow connections -l     # to check if connection was added
     - airflow checkdb            # to check if we can connect to database
