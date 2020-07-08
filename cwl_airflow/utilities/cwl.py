@@ -781,8 +781,10 @@ def embed_all_runs(
 
 def convert_to_workflow(command_line_tool, location=None):
     """
-    Converts CommandLineTool to Workflow. Copies minimum number of fields.
-    If "location" is not None, dumps results to json file.
+    Converts CommandLineTool to Workflow trying to keep all
+    important elements. If "location" is not None, dumps
+    results to json file. Function is used mostly for cwl
+    conformance tests.
     """
 
     workflow_tool = {
@@ -801,7 +803,7 @@ def convert_to_workflow(command_line_tool, location=None):
             "id": input_id,
             "type": remove_field_from_dict(input_data["type"], "inputBinding")       # "type" in WorkflowInputParameter cannot have "inputBinding"
         }
-        for key in ["default"]:
+        for key in ["default", "format", "label", "doc"]:
             if key in input_data:
                 workflow_input[key] = input_data[key]
         workflow_tool["inputs"].append(workflow_input)
@@ -812,6 +814,9 @@ def convert_to_workflow(command_line_tool, location=None):
             "type": output_data["type"],
             "outputSource": get_rootname(command_line_tool["id"]) + "/" + output_id
         }
+        for key in ["format", "label", "doc"]:
+            if key in output_data:
+                workflow_output[key] = output_data[key]
         workflow_tool["outputs"].append(workflow_output)
 
     workflow_tool["steps"] = [
