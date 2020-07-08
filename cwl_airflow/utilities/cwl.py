@@ -743,7 +743,6 @@ def slow_cwl_load(workflow, cwl_args=None, only_tool=None):
     return workflow_data.tool if only_tool else workflow_data
 
 
-# Never used except tests
 def embed_all_runs(
     workflow_tool,
     cwl_args=None,
@@ -780,7 +779,6 @@ def embed_all_runs(
     return workflow_tool_copy
 
 
-# Never used except tests
 def convert_to_workflow(command_line_tool, location=None):
     """
     Converts CommandLineTool to Workflow. Copies minimum number of fields.
@@ -789,11 +787,13 @@ def convert_to_workflow(command_line_tool, location=None):
 
     workflow_tool = {
         "class": "Workflow",
-        "cwlVersion": command_line_tool["cwlVersion"]
+        "cwlVersion": command_line_tool["cwlVersion"],
+        "inputs": [],
+        "outputs": []
     }
 
     for input_id, input_data in get_items(command_line_tool["inputs"]):
-        workflow_tool.setdefault("inputs", []).append(
+        workflow_tool["inputs"].append(
             {
                 "id": input_id,
                 "type": remove_field_from_dict(input_data["type"], "inputBinding")  # "type" in WorkflowInputParameter cannot have "inputBinding"
@@ -801,7 +801,7 @@ def convert_to_workflow(command_line_tool, location=None):
         )
 
     for output_id, output_data in get_items(command_line_tool["outputs"]):
-        workflow_tool.setdefault("outputs", []).append(
+        workflow_tool["outputs"].append(
             {
                "id": output_id,
                "type": output_data["type"],
