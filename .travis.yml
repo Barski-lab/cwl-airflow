@@ -29,14 +29,16 @@ jobs:
     - pip install mysqlclient
     - pip install .
     before_script:
-    - echo "Run airflow --help to generate airflow.cfg"
-    - airflow --help
+    - airflow --help          # to generate airflow.cfg
     - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^dag_dir_list_interval =.*/dag_dir_list_interval = 60/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
     # - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/root:@127.0.0.1:3306\/airflow/g' ~/airflow/airflow.cfg
-    - cwl-airflow init > /dev/null 2>&1 &
+    - cat ~/airflow/airflow.cfg  # to check if airflow.cfg was updated
+    - cwl-airflow init        # to init database and add process_report connection
+    - airflow connections -l  # to check if connection was added
+    - airflow checkdb         # to check if we can connect to database
     - airflow scheduler > /dev/null 2>&1 &
     - cwl-airflow api > /dev/null 2>&1 &
     script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1
