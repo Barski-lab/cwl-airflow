@@ -28,7 +28,7 @@ jobs:
     - pip install mysqlclient
     - pip install .
     before_script:
-    - airflow
+    - airflow --help  # to generate airflow.cfg
     - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^dag_dir_list_interval =.*/dag_dir_list_interval = 60/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
