@@ -1,0 +1,11 @@
+{
+    "bam_file": {
+        "class": "File",
+        "location": "../inputs/chr4_100_mapped_reads.bam"
+    },
+    "chrom_length_file": {
+        "class": "File",
+        "location": "../inputs/chr_name_length.txt"
+    },
+    "scale": 1
+}

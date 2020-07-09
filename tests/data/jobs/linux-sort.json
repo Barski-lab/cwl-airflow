@@ -1,0 +1,7 @@
+{
+    "unsorted_file": {
+        "class": "File",
+        "location": "../inputs/chr4_100_mapped_reads.bedGraph"
+    },
+    "key": ["1,1","2,2n"]
+}

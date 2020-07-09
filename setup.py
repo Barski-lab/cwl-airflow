@@ -82,14 +82,17 @@ setup(
         'urllib3',
         'future==0.16.0',
         'cryptography',
-        'cwltool == 2.0.20200224214940',
-        'schema-salad==5.0.20200220195218',
+        'cwltool==3.0.20200530110633',
+        'schema-salad==6.0.20200601095207',
         'jsonmerge',
         'ruamel.yaml == 0.15.97',
         'apache-airflow == 1.10.10',
         'pyjwt',
         'connexion==2.6.0',
-        'werkzeug==0.16.1'
+        'werkzeug==0.16.1',
+        'tornado==6.0.4',
+        "swagger-ui-bundle==0.0.6",
+        "cwltest==2.0.20200220223835"
     ],
     options={
         'app': {

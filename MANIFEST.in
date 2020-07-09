@@ -1,3 +1,2 @@
 include cwl_airflow/git_version
-include cwl_airflow/scripts/macos/*.plist
-include cwl_airflow/wes/openapi/swagger_configuration.yaml
+include cwl_airflow/components/api/openapi/swagger_configuration.yaml
