@@ -9,10 +9,10 @@ Welcome to CWL-Airflow's documentation!
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
    :target: https://www.apache.org/licenses/LICENSE-2.0
 
-.. image:: https://travis-ci.org/Barski-lab/cwl-airflow.svg?branch=global_refactoring
+.. image:: https://travis-ci.org/Barski-lab/cwl-airflow.svg?branch=master
    :target: https://travis-ci.org/Barski-lab/cwl-airflow
 
-.. image:: https://coveralls.io/repos/github/Barski-lab/cwl-airflow/badge.svg?branch=global_refactoring
+.. image:: https://coveralls.io/repos/github/Barski-lab/cwl-airflow/badge.svg?branch=master
    :target: https://coveralls.io/github/Barski-lab/cwl-airflow?branch=master
 
 .. image:: https://pepy.tech/badge/cwl-airflow
