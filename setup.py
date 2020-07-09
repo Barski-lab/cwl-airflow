@@ -58,7 +58,7 @@ def get_version():
 
 setup(
     name='cwl-airflow',
-    description='Python package to extend Airflow functionality with CWL v1.0 support',
+    description='Python package to extend Airflow functionality with CWL v1.1 support',
     long_description=get_description(),
     long_description_content_type="text/markdown",
     version=get_version(),
