@@ -468,7 +468,7 @@ def fast_cwl_step_load(workflow, target_id, cwl_args=None, location=None):
                 }
 
                 # need to copy both "default" and "secondaryFiles" if present
-                for key in ["default", "secondaryFiles"]:
+                for key in ["default", "secondaryFiles"]:  # TODO: Do I need to copy format?
                     if key in workflow_input:
                         updated_workflow_input[key] = workflow_input[key]
 
@@ -513,6 +513,7 @@ def fast_cwl_step_load(workflow, target_id, cwl_args=None, location=None):
                 # No need to copy "secondaryFiles" for outputs from other steps
                 # because they should be already included into the generated json
                 # report file
+                # # TODO: Do I need to copy format to "workflow_inputs"?
 
                 # Check if we have already added input based on the same "source"
                 # from another item from "in". Skip adding the same input twice.
@@ -807,7 +808,7 @@ def convert_to_workflow(command_line_tool, location=None):
                 "id": input_id,
                 "type": remove_field_from_dict(input_data["type"], "inputBinding")       # "type" in WorkflowInputParameter cannot have "inputBinding"
             }
-            for key in ["default", "format", "label", "doc"]:
+            for key in ["secondaryFiles", "default"]:  # TODO: Do I need to copy format?
                 if key in input_data:
                     workflow_input[key] = input_data[key]
             workflow_tool["inputs"].append(workflow_input)
@@ -818,9 +819,10 @@ def convert_to_workflow(command_line_tool, location=None):
                 "type": output_data["type"],
                 "outputSource": get_rootname(command_line_tool["id"]) + "/" + output_id
             }
-            for key in ["format", "label", "doc"]:
-                if key in output_data:
-                    workflow_output[key] = output_data[key]
+            # TODO: not sure if I need format here
+            # for key in ["format"]:
+            #     if key in output_data:
+            #         workflow_output[key] = output_data[key]
             workflow_tool["outputs"].append(workflow_output)
 
         workflow_tool["steps"] = [

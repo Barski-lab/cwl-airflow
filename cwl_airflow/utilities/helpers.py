@@ -12,6 +12,20 @@ from urllib.parse import urlparse
 from typing import MutableMapping, MutableSequence
 
 
+def get_api_failure_reason(response):
+    """
+    Handy function to safely get a failure reason from
+    the "detail" field of request.response object returned
+    from our API
+    """
+
+    try:
+        reason = response.json()["detail"]
+    except (ValueError, KeyError):
+        reason = "unknown reason"
+    return reason
+
+
 def remove_field_from_dict(data, key):
     """
     Returns data with all occurences of "key" removed.
