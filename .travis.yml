@@ -1,6 +1,5 @@
 sudo: false
 language: python
-cache: pip
 
 dist: bionic
 os:
@@ -20,6 +19,11 @@ env:
 - NTEST=5
 - NTEST=6
 - NTEST=7
+- NTEST=9
+- NTEST=9
+- NTEST=10
+
+
 
 jobs:
   include:
