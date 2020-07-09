@@ -47,8 +47,12 @@ env:
 jobs:
   include:
   - name: Unit tests
+    before_install:   # to overwrite from the main config
+    - echo "Skip"
     install:
     - pip install .
+    before_script:    # to overwrite from the main config
+    - echo "Skip"
     script: ./tests/run_tests.sh
     after_success:
     - coveralls
