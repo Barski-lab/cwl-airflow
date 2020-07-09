@@ -25,7 +25,6 @@ from cwl_airflow.utilities.helpers import (
 from cwl_airflow.utilities.cwl import (
     load_job,
     embed_all_runs,
-    convert_to_workflow,
     fast_cwl_load
 )
 
@@ -148,7 +147,9 @@ def load_test_suite(args):
 
 def create_dags(suite_data, args, dags_folder=None):
     """
-    Iterates over "suite_data" and creates new DAGs. Airflow Scheduler
+    Iterates over "suite_data" and creates new DAGs. Tries to embed
+    all tools into the worfklow before sending it to the API server.
+    If loaded tool is not Workflow, send it unchanged. Airflow Scheduler
     will parse all dags at the end of the next "dag_dir_list_interval"
     from airflow.cfg
     """
@@ -161,16 +162,10 @@ def create_dags(suite_data, args, dags_folder=None):
             args.tmp,
             os.path.basename(test_data["tool"])
         )
-        if workflow_tool["class"] == "Workflow":
-            embed_all_runs(
-                workflow_tool=workflow_tool,
-                location=workflow_path
-            )
-        else:
-            convert_to_workflow(
-                command_line_tool=workflow_tool,
-                location=workflow_path
-            )
+        embed_all_runs(
+            workflow_tool=workflow_tool,
+            location=workflow_path
+        )
         with open(workflow_path, "rb") as input_stream:
             logging.info(f"Add DAG {test_data['dag_id']}")
             r = requests.post(                                         # create new DAG

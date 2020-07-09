@@ -748,14 +748,12 @@ def embed_all_runs(
     location=None
 ):
     """
-    Tries to find and load all "run" fields from the "workflow_tool".
-    "cwl_args" can be used to update default arguments used by loading
-    and runtime contexts. If "location" is provided, save resulted
-    workflow to json file. Returns workflow tool with all "run" fields
-    replaced.
+    Tries to find and load all "run" fields from the "workflow_tool"
+    if it is Workflow. If not, doesn't replace anything. "cwl_args"
+    can be used to update default arguments used by loading and runtime
+    contexts. If "location" is provided, save resulted workflow to json
+    file. Returns workflow tool with all "run" fields replaced.
     """
-
-    workflow_tool_copy = deepcopy(workflow_tool)
 
     def __embed(workflow_tool, cwl_args=None):
         if isinstance(workflow_tool, MutableSequence):
@@ -769,8 +767,12 @@ def embed_all_runs(
                     only_tool=True)
             for item in workflow_tool.values():
                 __embed(item, cwl_args)
-    
-    __embed(workflow_tool_copy, cwl_args)
+
+    if workflow_tool["class"] == "Workflow":
+        workflow_tool_copy = deepcopy(workflow_tool)
+        __embed(workflow_tool_copy, cwl_args)
+    else:
+        workflow_tool_copy = workflow_tool
 
     if location is not None:
         dump_json(workflow_tool_copy, location)
@@ -780,58 +782,61 @@ def embed_all_runs(
 
 def convert_to_workflow(command_line_tool, location=None):
     """
-    Converts CommandLineTool to Workflow trying to keep all
-    important elements. If "location" is not None, dumps
-    results to json file. Function is used mostly for cwl
-    conformance tests.
+    Converts "command_line_tool" to Workflow trying to keep all
+    important elements. If "command_line_tool" is already Workflow,
+    doesn't apply any changes. If "location" is not None, dumps
+    results to json file.
     """
 
-    workflow_tool = {
-        "class": "Workflow",
-        "cwlVersion": command_line_tool["cwlVersion"],
-        "inputs": [],
-        "outputs": []
-    }
-
-    for key in ["requirements"]:
-        if key in command_line_tool:
-            workflow_tool[key] = command_line_tool[key]
-
-    for input_id, input_data in get_items(command_line_tool["inputs"]):
-        workflow_input = {
-            "id": input_id,
-            "type": remove_field_from_dict(input_data["type"], "inputBinding")       # "type" in WorkflowInputParameter cannot have "inputBinding"
+    if command_line_tool["class"] == "Workflow":
+        workflow_tool = command_line_tool
+    else:
+        workflow_tool = {
+            "class": "Workflow",
+            "cwlVersion": command_line_tool["cwlVersion"],
+            "inputs": [],
+            "outputs": []
         }
-        for key in ["default", "format", "label", "doc"]:
-            if key in input_data:
-                workflow_input[key] = input_data[key]
-        workflow_tool["inputs"].append(workflow_input)
 
-    for output_id, output_data in get_items(command_line_tool["outputs"]):
-        workflow_output = {
-            "id": output_id,
-            "type": output_data["type"],
-            "outputSource": get_rootname(command_line_tool["id"]) + "/" + output_id
-        }
-        for key in ["format", "label", "doc"]:
-            if key in output_data:
-                workflow_output[key] = output_data[key]
-        workflow_tool["outputs"].append(workflow_output)
+        for key in ["requirements"]:
+            if key in command_line_tool:
+                workflow_tool[key] = command_line_tool[key]
 
-    workflow_tool["steps"] = [
-        {
-            "id": get_rootname(command_line_tool["id"]),
-            "run": command_line_tool,
-            "in": [
-                {
-                    "id": input_id, "source": input_id
-                } for input_id, _ in get_items(workflow_tool["inputs"])
-            ],
-            "out": [
-                output_id for output_id, _ in get_items(workflow_tool["outputs"])
-            ]
-        }
-    ]
+        for input_id, input_data in get_items(command_line_tool["inputs"]):
+            workflow_input = {
+                "id": input_id,
+                "type": remove_field_from_dict(input_data["type"], "inputBinding")       # "type" in WorkflowInputParameter cannot have "inputBinding"
+            }
+            for key in ["default", "format", "label", "doc"]:
+                if key in input_data:
+                    workflow_input[key] = input_data[key]
+            workflow_tool["inputs"].append(workflow_input)
+
+        for output_id, output_data in get_items(command_line_tool["outputs"]):
+            workflow_output = {
+                "id": output_id,
+                "type": output_data["type"],
+                "outputSource": get_rootname(command_line_tool["id"]) + "/" + output_id
+            }
+            for key in ["format", "label", "doc"]:
+                if key in output_data:
+                    workflow_output[key] = output_data[key]
+            workflow_tool["outputs"].append(workflow_output)
+
+        workflow_tool["steps"] = [
+            {
+                "id": get_rootname(command_line_tool["id"]),
+                "run": command_line_tool,
+                "in": [
+                    {
+                        "id": input_id, "source": input_id
+                    } for input_id, _ in get_items(workflow_tool["inputs"])
+                ],
+                "out": [
+                    output_id for output_id, _ in get_items(workflow_tool["outputs"])
+                ]
+            }
+        ]
 
     if location is not None:
         dump_json(workflow_tool, location)

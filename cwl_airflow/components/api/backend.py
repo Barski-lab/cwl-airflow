@@ -22,7 +22,12 @@ from airflow.utils.timezone import parse as parsedate
 from airflow.api.common.experimental import trigger_dag
 
 from cwl_airflow.utilities.helpers import get_version, get_dir
-from cwl_airflow.utilities.cwl import conf_get, DAG_TEMPLATE
+from cwl_airflow.utilities.cwl import (
+    conf_get,
+    slow_cwl_load,
+    convert_to_workflow,
+    DAG_TEMPLATE
+)
 
 
 class CWLApiBackend():
@@ -197,6 +202,13 @@ class CWLApiBackend():
         cwl_path = path.join(DAGS_FOLDER, dag_id + ".cwl")
         dag_path = path.join(DAGS_FOLDER, dag_id + ".py")
         self.save_attachment("workflow", cwl_path)
+        convert_to_workflow(
+            command_line_tool=slow_cwl_load(
+                workflow=cwl_path,
+                only_tool=True
+            ),
+            location=cwl_path
+        )
         with open(dag_path, 'x') as output_stream:
             output_stream.write(DAG_TEMPLATE.format(cwl_path, dag_id))
         return {"dag_id": dag_id, "cwl_path": cwl_path, "dag_path": dag_path}
