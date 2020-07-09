@@ -3,25 +3,25 @@
 Welcome to CWL-Airflow's documentation!
 =======================================
 
-.. image:: https://ci.commonwl.org/buildStatus/icon?job=airflow-conformance
-   :target: https://ci.commonwl.org/job/airflow-conformance/
-
-.. image:: https://img.shields.io/badge/python-2.7-green.svg
-   :target: https://www.python.org/downloads/release/python-2712/
-
-.. image:: https://img.shields.io/badge/python-3.5-green.svg
-   :target: https://www.python.org/downloads/release/python-352/
-
-.. image:: https://img.shields.io/badge/python-3.6-green.svg
-   :target: https://www.python.org/downloads/release/python-365/
+.. image:: https://img.shields.io/badge/python-3.7-green.svg
+   :target: https://www.python.org/downloads/release/python-377/
 
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
    :target: https://www.apache.org/licenses/LICENSE-2.0
 
+.. image:: https://travis-ci.org/Barski-lab/cwl-airflow.svg?branch=global_refactoring
+   :target: https://travis-ci.org/Barski-lab/cwl-airflow
 
-Python package to extend `Apache-Airflow 1.10.3 <https://github.com/apache/incubator-airflow>`_ functionality with `CWL v1.1 <http://www.commonwl.org/v1.1/>`_ support.
+.. image:: https://coveralls.io/repos/github/Barski-lab/cwl-airflow/badge.svg?branch=global_refactoring
+   :target: https://coveralls.io/github/Barski-lab/cwl-airflow?branch=master
 
-Note 
+.. image:: https://pepy.tech/badge/cwl-airflow
+   :target: https://pepy.tech/project/cwl-airflow
+
+
+Python package to extend `Apache-Airflow 1.10.10 <https://airflow.apache.org>` functionality with `CWL v1.1 <https://www.commonwl.org/v1.1/>` support.
+
+Note
 ----
 
 Current documentaion is still in progress. Some of the features might not be available anymore.
@@ -29,7 +29,7 @@ Current documentaion is still in progress. Some of the features might not be ava
 Cite as
 -------
 
-Kotliar M; Kartashov AV; Barski A (2019): Supporting data for "CWL-Airflow: a lightweight pipeline manager supporting Common Workflow Language" GigaScience Database. http://dx.doi.org/10.5524/100618
+Michael Kotliar, Andrey V Kartashov, Artem Barski, CWL-Airflow: a lightweight pipeline manager supporting Common Workflow Language, GigaScience, Volume 8, Issue 7, July 2019, giz084, https://doi.org/10.1093/gigascience/giz084
 
 
 .. toctree::
