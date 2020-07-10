@@ -1,35 +1,9 @@
 # How it works
 
-## Key concepts
+The CWL-Airflow package extends Airflow’s functionality with the ability to parse and execute workflows written with the CWL v1.1 specification. We defined 4 basic components — CWLJobDispatcher, CWLStepOperator, CWLJobCleanup, and CWLDAG. The latter is a class for combining the tasks into a DAG that reflects the CWL workflow structure. Every CWLStepOperator task corresponds to a workflow step and depends on others on the basis of the workflow step inputs and outputs. CWLJobDisptacher is used to provide the pipeline with the input data. CWLJobCleanup returns the calculated results to the output folder. Every new CWL workflow results in creation of a new CWLDAG. If the new job is run with the same pipeline, it will not create a new CWLDAG, but run the old one.
 
-1. **CWL descriptor file** - *YAML* or *JSON* file to describe the workflow inputs, outputs and steps.
-   File should be compatible with CWL v1.0 specification
-2. **Job file** - *YAML* or *JSON* file to set the values for the wokrflow inputs.
-   For *cwl-airflow* to function properly the Job file should include 3 mandatory and 
-   one optional fields:
-   - *workflow* - mandatory field to specify the absolute path to the CWL descriptor file
-   - *output_folder* - mandatory field to specify the absolute path to the folder
-   where all the output files should be moved after successful workflow execution
-   - *tmp_folder* - optional field to specify the absolute path to the folder
-   for storing intermediate results. After workflow execution this folder will be deleted.
-   - *uid* - mandatory field that is used for generating DAG's unique identifier. 
-3. **DAG** - directed acyclic graph that describes the workflow structure.
-4. **Jobs folder** - folder to keep all Job files scheduled for execution or the ones that
-have already been processed. The folder's location is set as *jobs* parameter of *cwl* section
-in Airflow configuration file.  
+Previously, in order to execute CWLDAG a file describing the job should have been placed in the special jobs folder. The jobs were described by a file in JSON or YAML format and included workflow-specific input parameters. In the current version we removed the necessity for the jobs folder, as the new CWLDAGs can be easily triggered with the required input parameters through the REST API, Airflow Webserver or command line interface. In case someone needs to monitor a special folder for the new job files added, it can be easily implemented as a separate standard for Airflow DAG.
 
-## What's inside
+To add a new workflow, one should simply write a small python script and place it into the DAGs folder. Only two parameters are required to initialize a new CWLDAG: path to the workflow file and dag_id.
 
-To build a workflow *cwl-airflow* uses three basic classes:
-- *CWLStepOperator* - executes a separate workflow step 
-- *JobDispatcher* - serializes the Job file and provides the worflow with input data
-- *JobCleanup* - returns the calculated results to the output folder
-
-A set of *CWLStepOperator*s, *JobDispatcher* and *JobCleanup* are
-combined in *CWLDAG* that defines a graph to reflect the workflow steps, their relationships
-and dependencies. Automatically generated *cwl_dag.py* script is placed in the DAGs folder. When Airflow
-Scheduler loads DAGs from the DAGs folder, the *cwl_dag.py* script parses all the Job files from the Jobs folder
-and creates DAGs for each of them. Each DAG has a unique DAG ID that is formed accodring to the following scheme:
-`CWL descriptor file basename`-`Job file basename`-`uid field from the Job file`
-
-![CWL-Airflow diagram](../images/scheme.png)
+![CWL-Airflow diagram](../images/scheme.jpg)
