@@ -18,21 +18,14 @@ Common errors and ways to fix them
   
   Unfortunatelly *Apache-Airflow 1.9.0* cannot be properly installed on the latest *Python 3.7.0*.
   Consider using *Python 3.6* or *2.7* instead.
-  
-  macOS users can install Python 3.6.5 (instead of the latest Python 3.7.0) with the following command
-  (explained [here](https://stackoverflow.com/a/51125014/8808721))
-  ```bash
-    brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/f2a764ef944b1080be64bd88dca9a1d80130c558/Formula/python.rb
-  ```
 
 - ***Fails to compile ruamel.yaml***
    
   Perhaps, you should update your *setuptools*. Consider using *--user* if necessary.
   If installing on macOS brewed Python *--user* **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
   ```bash
-  pip install -U setuptools # --user
+  pip install -U setuptools --user
   ```
-  `--user` - explained in [Installation](./installation.md) section
   
 - ***Docker is unable to pull images from the Internet***
 

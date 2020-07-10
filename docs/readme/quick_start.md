@@ -1,13 +1,13 @@
 # Quick start
 
-We assume that you have already installed **python3**, latest **pip**, latest **setuptools**
+We assume that you have already installed **python 3.7**, latest **pip**, latest **setuptools**
 and **docker** that has access to pull images from the [DockerHub](https://hub.docker.com/).
 If something is missing or should be updated refer to the [How to install](./how_to_install.md)
 or [What if something doesn't work](./what_if_something_doesnt_work.md) sections.
 
 1. Install cwl-airflow
     ```sh
-    $ pip install cwl-airflow
+    $ pip3 install cwl-airflow
     ```
 
 2. Configure cwl-airflow
@@ -27,7 +27,7 @@ or [What if something doesn't work](./what_if_something_doesnt_work.md) sections
    $ cwl-airflow api
    ```
 
-4. Schedule execution of a sample workflow set with `--range`
+4. Schedule execution of a sample pipeline. Set the workflow number with `--range`
     ```sh
     $ cwl-airflow test --suite workflows/tests/conformance_tests.yaml --range 1
     ```

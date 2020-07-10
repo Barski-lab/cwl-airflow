@@ -17,22 +17,16 @@
   ```
 
 ### Both Ubuntu and macOS
-- python 3.6
-- docker (follow the [link](https://docs.docker.com/install/linux/docker-ce/ubuntu/) to install Docker on Ubuntu)
-- pip (follow the [link](https://pip.pypa.io/en/stable/installing/) to install the latest stable Pip)
+- python 3.7
+- docker (follow the [installation guides](https://docs.docker.com/engine/install/))
+- pip (follow the [installation guides](https://pip.pypa.io/en/stable/installing/))
 - setuptools
   ```bash
-  pip install -U setuptools --user
+  pip3 install -U setuptools
   ```
 
-  `--user` - optional parameter to install all the packages into your *HOME* directory instead of the system Python
-  directories. It will be helpful if you don't have enough permissions to install new Python packages.
-  You might also need to update your *PATH* variable in order to have access to the installed packages (an easy
-  way to do it is described in [Troubleshooting](./troubleshooting.md) section).
-  If installing on macOS brewed Python `--user` **should not** be used (explained [here](https://docs.brew.sh/Homebrew-and-Python))
-
-## Install cwl-airflow
+## Install CWL-airflow
 
 ```sh
-$ pip install cwl-airflow --user
+$ pip3 install cwl-airflow
 ```
