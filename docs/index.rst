@@ -36,9 +36,9 @@ Michael Kotliar, Andrey V Kartashov, Artem Barski, CWL-Airflow: a lightweight pi
    :maxdepth: 2
    :caption: Contents:
 
-   Run demo <readme/run_demo.md>
-   How It Works <readme/how_it_works.md>
+   Quick start <readme/quick_start.md>
+   How it works <readme/how_it_works.md>
    Installation <readme/installation.md>
    Using cwl-airflow <readme/using_cwl_airflow.md>
-   Troubleshooting <readme/troubleshooting.md>
    API <readme/api.md>
+   Troubleshooting <readme/troubleshooting.md>
