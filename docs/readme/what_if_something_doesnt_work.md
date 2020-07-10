@@ -18,7 +18,7 @@
 ## Docker is unable to mount directory
 
   For **macOS** Docker has a list of directories that it's allowed to mount by default. If your input files are located in the directories that are not included in this list, you are better of either changing the location of the input files and updating Docker configuration in **Preferences / Resources / File Sharing**.
-![Docker](../images/docker.png)
+![](../images/docker.png)
 
 ## Missing DAGs in Airflow Webserver
   
