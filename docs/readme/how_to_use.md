@@ -1,30 +1,43 @@
 # How to use
 
-## Configuration
+## Initial configuration
 
-Before using *cwl-airflow* it should be initialized with the default configuration by running the command
+Before using **CWL-airflow** it should be configured with `cwl-airflow init`
+
 ```sh
-$ cwl-airflow init
+$ cwl-airflow init --help
+
+usage: cwl-airflow init [-h] [--home HOME] [--config CONFIG]
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --home HOME      Set path to Airflow home directory. Default: first try
+                   AIRFLOW_HOME then '~/airflow'
+  --config CONFIG  Set path to Airflow configuration file. Default: first try
+                   AIRFLOW_CONFIG then '[airflow home]/airflow.cfg'
 ```
+The following steps will be run:
+- Call `airflow initdb` for the specified `--home` and `--config` parameters
+- Update `airflow.cfg` to hide paused DAGs, skip loading example DAGs and **do not** pause newly added DAGs 
+- Add new connection `process_report` to report DAG's execution progress and results to `http://localhost:3070` (URL is currently hardcoded)
+- Put **clean_dag_run.py** into the DAGs folder (later its functions will be moved to API)
 
-Optional parameters:
+Optionally, you can add the following configuration parameters into your **airflow.cfg** file
 
-| Flag | Description                                                        | Default           |
-|------|--------------------------------------------------------------------|-------------------|
-| -l   | number of processed jobs kept in history, int                      | 10 x *Running*    |
-|      |                                                                    | 10 x *Success*    |
-|      |                                                                    | 10 x *Failed*     |
-| -j   | path to the folder where all the new jobs will be added, str       | *~/airflow/jobs*  |
-| -t   | timeout for importing all the DAGs from the DAG folder, sec        | 30                |
-| -r   | webserver workers refresh interval, sec                            | 30                |
-| -w   | number of webserver workers to be refreshed at the same time, int  | 1                 |
-| -p   | number of threads for Airflow Scheduler, int                       | 2                 |
-
-Consider using `-r 5 -w 4` to make Airflow Webserver react faster on all newly created DAGs
-
-If you update Airflow configuration file manually (default location is *~/airflow/airflow.cfg*),
-make sure to run *cwl-airflow init* command to apply all the changes,
-especially if *core/dags_folder* or *cwl/jobs* parameters from the configuration file are changed.
+```ini
+[cwl]
+# Temp folder to keep intermediate workflow execution data. Default: AIRFLOW_HOME/cwl_tmp_folder
+tmp_folder =
+# Output folder to save workflow execution results. Default: AIRFLOW_HOME/cwl_outputs_folder
+outputs_folder = 
+# Folder to keep pickled workflows for fast workflow loading. Default: AIRFLOW_HOME/cwl_pickle_folder
+pickle_folder = 
+# Boolean parameter to force workflow step execution in docker container. Default: True
+use_container = 
+# Boolean parameter to disable passing the current uid to "docker run --user". Default: False
+no_match_user = 
+```
+Later we will explain how to overwrite some of this parameters from your CWLDAG.
   
 ## Submitting new job
 

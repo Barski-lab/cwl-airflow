@@ -150,7 +150,7 @@ def get_default_cwl_args(preset_cwl_args=None):
             ),
             "use_container": conf_get(
                 "cwl", "use_container",
-                preset_cwl_args.get("use_container", CWL_USE_CONTAINER)            # execute jobs in a docker containers
+                preset_cwl_args.get("use_container", CWL_USE_CONTAINER)            # execute jobs in docker containers
             ),
             "no_match_user": conf_get(
                 "cwl", "no_match_user",

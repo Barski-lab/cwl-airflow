@@ -22,7 +22,7 @@
 
 ## Missing DAGs in Airflow Webserver
   
-  If after adding a new DAG you don't see it in Airflow Webserver, first check if Airflow Scheduler is running, than make sure that **dag_dir_list_interval** parameter in **airflow.cfg** is not too high. By default, Airflow Scheduler will check for new DAGs every 5 minutes.
+  If after adding a new DAG you don't see it in Airflow Webserver, first check if Airflow Scheduler is running, then make sure that **dag_dir_list_interval** parameter in **airflow.cfg** is not too high. By default, Airflow Scheduler will check for new DAGs every 5 minutes.
   
 ## Workflow execution fails
 
