@@ -1,4 +1,4 @@
-# How It Works
+# How it works
 
 ## Key concepts
 

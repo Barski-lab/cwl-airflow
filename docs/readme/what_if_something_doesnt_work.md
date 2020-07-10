@@ -1,4 +1,4 @@
-# Troubleshooting
+# What if something doesn't work
 
 Most of the problems are already handled by *cwl-airflow* itself. User is provided
 with the full explanation and ways to correct them through the console output. Additional
