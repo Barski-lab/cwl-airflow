@@ -16,13 +16,13 @@ optional arguments:
   --config CONFIG  Set path to Airflow configuration file. Default: first try
                    AIRFLOW_CONFIG then '[airflow home]/airflow.cfg'
 ```
-The following steps will be run:
+**Init command will run the following steps:**
 - Call `airflow initdb` for the specified `--home` and `--config` parameters
 - Update `airflow.cfg` to hide paused DAGs, skip loading example DAGs and **do not** pause newly added DAGs 
 - Add new connection `process_report` to report DAG's execution progress and results to `http://localhost:3070` (URL is currently hardcoded)
 - Put **clean_dag_run.py** into the DAGs folder (later its functions will be moved to API)
 
-Optionally, you can add the following configuration parameters into your **airflow.cfg** file
+**Optionally**, you can add the following configuration parameters into your **airflow.cfg** file
 
 ```ini
 [cwl]
@@ -32,14 +32,24 @@ tmp_folder =
 outputs_folder = 
 # Folder to keep pickled workflows for fast workflow loading. Default: AIRFLOW_HOME/cwl_pickle_folder
 pickle_folder = 
-# Boolean parameter to force workflow step execution in docker container. Default: True
+# Boolean parameter to force using docker for workflow step execution. Default: True
 use_container = 
 # Boolean parameter to disable passing the current uid to "docker run --user". Default: False
 no_match_user = 
 ```
-Later we will explain how to overwrite some of this parameters from your CWLDAG.
   
-## Submitting new job
+## Adding a new pipeline
+
+The easiest way to add a new pipeline to CWL-Airflow is to put a simple python script into your DAGs folder.
+```python
+ #!/usr/bin/env python3
+from cwl_airflow.extensions.cwldag import CWLDAG
+dag = CWLDAG(
+    workflow="/absolute/path/to/workflow.cwl",
+    dag_id="my_dag_name"
+)
+```
+CWLDAG can be customized by providing `default_args` parameter to the constructor. Values from 
 
 To submit new CWL descriptor and Job files to *cwl-airflow* run the following command
 ```bash
