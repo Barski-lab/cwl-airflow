@@ -79,24 +79,19 @@ airflow trigger_dag --conf "{\"job\":$(cat ./bam-bedgraph-bigwig.json)}" bam-bed
 
 ## Using an API
 
-Besides built-in API, provided by Airflow Webserver, CWL-Airflow allows to run API server separately.
+Besides built-in experimental API from the Airflow Webserver, CWL-airflow provides **extended API** that supports [WES](https://github.com/ga4gh/workflow-execution-service-schemas) and can be run with `cwl-airflow api`
 
-To start API server run the following command
-```sh
-$ cwl-airflow apiserver
+```
+$ cwl-airflow api --help
+
+usage: cwl-airflow api [-h] [--port PORT] [--host HOST]
+
+optional arguments:
+  -h, --help   show this help message and exit
+  --port PORT  Set port to run API server. Default: 8081
+  --host HOST  Set host to run API server. Default: 127.0.0.1
 ```
 
-Optional parameters:
+When run **API specification** can be accessed through http://localhost:8081/api/experimental/ui/. Otherwise, the same configuration is published on [SwaggerHub](https://app.swaggerhub.com/apis/michael-kotliar/cwl_airflow_workflow_execution_service/1.0.0) 
 
-| Flag   | Description            | Default   |
-| ------ | ---------------------- | --------- |
-| --port | Port to run API server | 8080      |
-| --host | Host to run API server | 127.0.0.1 |
-
-Every API endpoint belongs to one of the following groups:
-
-- Airflow (mirrors Airflow console functionality)
-- AirflowLegacy (mirrors particular functions from the original Airflow webserver API)
-- WorkflowExecutionService (implements main functionality of [WES](https://github.com/ga4gh/workflow-execution-service-schemas))
-
-**For detailed API specification, please follow the link on [SwaggerHub](https://app.swaggerhub.com/apis/michael-kotliar/cwl_airflow_workflow_execution_service/1.0.0)**
+![](../images/api.jpg)
