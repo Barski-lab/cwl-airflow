@@ -24,7 +24,7 @@ Python package to extend `Apache-Airflow 1.10.10 <https://airflow.apache.org>`_ 
 Note
 ----
 
-Current documentaion is still in progress. Some of the features might not be available anymore.
+Current documentaion is still in progress. If you one of those who has just noticed typo in the word **documentaion**, we need your Pull Requests
 
 Cite as
 -------
