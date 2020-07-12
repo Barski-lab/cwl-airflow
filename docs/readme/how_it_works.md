@@ -8,7 +8,7 @@ Previously, in order to execute CWLDAG a file describing workflow-specific input
 
 To add a new workflow, one should simply write a small python script (see example below) and place it into the DAGs folder. Only two parameters are required to initialize a new CWLDAG: path to the **workflow** file and **dag_id**.
 ```python
- #!/usr/bin/env python3
+#!/usr/bin/env python3
 from cwl_airflow.extensions.cwldag import CWLDAG
 dag = CWLDAG(workflow="my_awesome_workflow.cwl", dag_id="my_awesome_dag")
 ```
