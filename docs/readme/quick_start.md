@@ -32,6 +32,6 @@ or [What if is doesn't work](./what_if_it_doesnt_work.md) sections.
     $ cwl-airflow test --suite workflows/tests/conformance_tests.yaml --range 1
     ```
 
-6. Open Airflow Webserver (by default [localhost:8080](http://127.0.0.1:8080/admin/)) and wait until Airflow Scheduler pick up a new DAG (by default every 5 min) and execute it. **On completion all results and temporary files will be removed**, so you can safely schedule other workflows by setting different values to `--range` parameter. Take a look at the [How to use](./how_to_use.md) section for more details.
+6. Open Airflow Webserver (by default [http://127.0.0.1:8080/admin/](http://127.0.0.1:8080/admin/)) and wait until Airflow Scheduler pick up a new DAG (by default every 5 min) and execute it. **On completion all results and temporary files will be removed**, so you can safely schedule other workflows by setting different values to `--range` parameter. Take a look at the [How to use](./how_to_use.md) section for more details.
 
 ![](../images/screen.png)

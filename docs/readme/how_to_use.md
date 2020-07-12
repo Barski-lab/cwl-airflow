@@ -92,6 +92,6 @@ optional arguments:
   --host HOST  Set host to run API server. Default: 127.0.0.1
 ```
 
-When run **API specification** can be accessed through http://localhost:8081/api/experimental/ui/. Otherwise, the same configuration is published on [SwaggerHub](https://app.swaggerhub.com/apis/michael-kotliar/cwl_airflow_workflow_execution_service/1.0.0) 
+When run **API specification** can be accessed through [http://localhost:8081/api/experimental/ui/](http://localhost:8081/api/experimental/ui/). Otherwise, the same configuration is published on [SwaggerHub](https://app.swaggerhub.com/apis/michael-kotliar/cwl_airflow_workflow_execution_service/1.0.0) 
 
 ![](../images/api.jpg)
