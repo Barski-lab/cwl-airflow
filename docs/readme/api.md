@@ -1,6 +1,6 @@
 # API
 
-Besides built-in API, provided by Airflow Webserver, CWL-Airflow allows to run API server separately.
+Besides built-in API, provided by Airflow Webserver, CWL-airflow allows to run API server separately.
 
 To start API server run the following command
 ```sh

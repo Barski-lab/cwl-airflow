@@ -51,7 +51,7 @@ no_match_user =
   
 ## Adding a pipeline
 
-The easiest way to add a new pipeline to CWL-Airflow is to put the following python script into your DAGs folder.
+The easiest way to add a new pipeline to CWL-airflow is to put the following python script into your DAGs folder.
 ```python
 #!/usr/bin/env python3
 from cwl_airflow.extensions.cwldag import CWLDAG
