@@ -66,110 +66,18 @@ As `CWLDAG` class was inherited from `DAG`, additional arguments, such as `defau
 
 ## Executing a pipeline
 
-The most convenient way to **manually trigger** DAG execution is using Airflow Webserver. Input parameters can be set in the **job** field of the running configuration as it is displayed on the pictures below.
+The most convenient way to **manually execute** DAG is to trigger it in **Airflow UI**. Input parameters can be set in the **job** field of the running configuration.
 
 ![](../images/trigger_1.jpg)
 ![](../images/trigger_2.jpg)
 
+Alternatively, DAGs can be triggered through the **Airflow CLI** with the JSON input paramerers file.
 
-To start Airflow Scheduler (**don't** run it if *cwl-airflow submit* is used with *-r* argument)
-```bash
-airflow scheduler
-```
-To start Airflow Webserver (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/))
-```bash
-airflow webserver
+```sh
+airflow trigger_dag --conf "{\"job\":$(cat ./bam-bedgraph-bigwig.json)}" bam-bedgraph-bigwig
 ```
 
-Please note that both Airflow Scheduler and Webserver can be adjusted through the configuration file
-(default location is *~/airflow/airflow.cfg*). Refer to the [official documentation](https://airflow.apache.org/howto/set-config.html) 
- 
-## Demo mode
-
-- To get the list of the available demo workflows
-    ```bash
-    $ cwl-airflow demo --list
-    ```
-- To submit the specific demo workflow from the list
-(workflow will not be run until Airflow Scheduler is started separately)
-    ```bash
-    $ cwl-airflow demo super-enhancer.cwl
-    ```
-    Depending on your Airflow configuration it may require some time for Airflow Scheduler
-    and Webserver to pick up new DAGs. Consider using `cwl-airflow init -r 5 -w 4` to make Airflow Webserver react faster on all
-    newly created DAGs.
-
-- To submit all demo workflows from the list
-(workflows will not be run until Airflow Scheduler is started separately)
-    ```bash
-    $ cwl-airflow demo --manual
-    ```
-    Before submitting demo workflows the Jobs folder will be automatically cleaned.
-    
-- To execute all available demo workflows (automatically starts Airflow Scheduler and Airflow Webserver)
-    ```bash
-    $ cwl-airflow demo --auto
-    ```
-    
-Optional parameters:
-
-| Flag | Description                                                                                            | Default           |
-|------|--------------------------------------------------------------------------------------------------------|-------------------|
-| -o   | path to the folder where all the output files should be moved after successful workflow execution, str | current directory |
-| -t   | path to the temporary folder for storing intermediate results, str                                     | */tmp/cwlairflow* |
-| -u   | ID for DAG's unique identifier generation, str. Ignored when *--list* or *--auto* is used              | random uuid       |
-
-
-## Running sample ChIP-Seq-SE workflow
-
-This [ChIP-Seq-SE workflow](https://barski-lab.github.io/ga4gh_challenge/) is a CWL version of
-a Python pipeline from [BioWardrobe](https://github.com/Barski-lab/biowardrobe/wiki).
-It starts by extracting an input FASTQ file (if it was compressed). Next step runs
-[BowTie](http://bowtie-bio.sourceforge.net/index.shtml) to perform alignment to a reference genome,
-resulting in an unsorted SAM file. The SAM file is then sorted and indexed with
-[Samtools](http://samtools.sourceforge.net/) to obtain a BAM file and a BAI index.
-Next [MACS2](https://github.com/taoliu/MACS/wiki) is used to call peaks and to estimate fragment size.
-In the last few steps, the coverage by estimated fragments is calculated from the BAM file and is
-reported in bigWig format. The pipeline also reports statistics, such as read quality, peak number
-and base frequency, as long as other troubleshooting information using tools such as
-[Fastx-toolkit](http://hannonlab.cshl.edu/fastx_toolkit/) and
-[Bamtools](https://github.com/pezmaster31/bamtools).
-
-To get sample workflow with input data
-```bash
-$ git clone --recursive https://github.com/Barski-lab/ga4gh_challenge.git --branch v0.0.5
-$ ./ga4gh_challenge/data/prepare_inputs.sh
-```
-Please, be patient it may take some time to clone submodule with input data.
-Runing the script *prepare_inputs.sh* will uncompress input FASTQ file.
-
-To submit worflow for execution
-```bash
-cwl-airflow submit ga4gh_challenge/biowardrobe_chipseq_se.cwl ga4gh_challenge/biowardrobe_chipseq_se.yaml
-```
-To start Airflow Scheduler (**don't** run it if *cwl-airflow submit* is used with *-r* argument)
-```bash
-airflow scheduler
-```
-To start Airflow web interface (by default it is accessible from your [localhost:8080](http://127.0.0.1:8080/admin/))
-```bash
-airflow webserver
-```
-
-Pipeline was tested with
-- macOS 10.13.6 (High Sierra)
-- Docker
-  * Engine: 18.06.0-ce
-  * Machine: 0.15.0
-  * Preferences
-    * CPUs: 4
-    * Memory: 2.0 GiB
-    * Swap: 1.0 GiB
-- Elapsed time: 23 min (may vary depending on you Internet connection bandwidth,
-  especially when pipeline is run for the first time and all Docker images
-  are being fetched from DockerHub)
-
-## API
+## Using a API
 
 Besides built-in API, provided by Airflow Webserver, CWL-Airflow allows to run API server separately.
 
