@@ -77,7 +77,7 @@ Alternatively, DAGs can be triggered through the **Airflow CLI** with the JSON i
 airflow trigger_dag --conf "{\"job\":$(cat ./bam-bedgraph-bigwig.json)}" bam-bedgraph-bigwig
 ```
 
-## Using a API
+## Using an API
 
 Besides built-in API, provided by Airflow Webserver, CWL-Airflow allows to run API server separately.
 
