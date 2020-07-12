@@ -40,4 +40,4 @@ Michael Kotliar, Andrey V Kartashov, Artem Barski, CWL-Airflow: a lightweight pi
    How it works <readme/how_it_works.md>
    How to install <readme/how_to_install.md>
    How to use <readme/how_to_use.md>
-   What if something doesn't work <readme/what_if_something_doesnt_work.md>
+   What if it doesn't work <readme/what_if_it_doesnt_work.md.md>

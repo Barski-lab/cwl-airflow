@@ -4,7 +4,7 @@
 
 Before using **CWL-airflow** it should be configured with `cwl-airflow init`
 
-```sh
+```
 $ cwl-airflow init --help
 
 usage: cwl-airflow init [-h] [--home HOME] [--config CONFIG]
@@ -16,31 +16,42 @@ optional arguments:
   --config CONFIG  Set path to Airflow configuration file. Default: first try
                    AIRFLOW_CONFIG then '[airflow home]/airflow.cfg'
 ```
-**Init command will run the following steps:**
-- Call `airflow initdb` for the specified `--home` and `--config` parameters
-- Update `airflow.cfg` to hide paused DAGs, skip loading example DAGs and **do not** pause newly added DAGs 
+
+**Init command will run the following steps** for the specified `--home` and `--config` parameters:
+- Call `airflow initdb`
+- Update `airflow.cfg` to hide paused DAGs, skip loading example DAGs and **do not** pause newly created DAGs 
 - Add new connection `process_report` to report DAG's execution progress and results to `http://localhost:3070` (URL is currently hardcoded)
 - Put **clean_dag_run.py** into the DAGs folder (later its functions will be moved to API)
 
-**Optionally**, you can add the following configuration parameters into your **airflow.cfg** file
+**Optionally**, you can update your **airflow.cfg** with `[cwl]` section setting the following configuration parameters:
 
 ```ini
 [cwl]
-# Temp folder to keep intermediate workflow execution data. Default: AIRFLOW_HOME/cwl_tmp_folder
+
+# Temp folder to keep intermediate workflow execution data.
+# Default: AIRFLOW_HOME/cwl_tmp_folder
 tmp_folder =
-# Output folder to save workflow execution results. Default: AIRFLOW_HOME/cwl_outputs_folder
+
+# Output folder to save workflow execution results.
+# Default: AIRFLOW_HOME/cwl_outputs_folder
 outputs_folder = 
-# Folder to keep pickled workflows for fast workflow loading. Default: AIRFLOW_HOME/cwl_pickle_folder
+
+# Folder to keep pickled workflows for fast workflow loading.
+# Default: AIRFLOW_HOME/cwl_pickle_folder
 pickle_folder = 
-# Boolean parameter to force using docker for workflow step execution. Default: True
+
+# Boolean parameter to force using docker for workflow step execution.
+# Default: True
 use_container = 
-# Boolean parameter to disable passing the current uid to "docker run --user". Default: False
+
+# Boolean parameter to disable passing the current user id to "docker run --user".
+# Default: False
 no_match_user = 
 ```
   
-## Adding a new pipeline
+## Adding a pipeline
 
-The easiest way to add a new pipeline to CWL-Airflow is to put a simple python script into your DAGs folder.
+The easiest way to add a new pipeline to CWL-Airflow is to put the following python script into your DAGs folder.
 ```python
  #!/usr/bin/env python3
 from cwl_airflow.extensions.cwldag import CWLDAG
@@ -49,38 +60,17 @@ dag = CWLDAG(
     dag_id="my_dag_name"
 )
 ```
-CWLDAG can be customized by providing `default_args` parameter to the constructor. Values from 
+As `CWLDAG` class was inherited from `DAG`, additional arguments, such as `default_args`, can be provided. The latter can include `cwl` section similar to the one from **airflow.cfg** file, but with lower priority.
 
-To submit new CWL descriptor and Job files to *cwl-airflow* run the following command
-```bash
-cwl-airflow submit WORKFLOW JOB
-```
+**After adding a new DAG**, Airflow Scheduler will load it (by default if happens **every 5 minutes**) and the DAG can be run.
 
-Optional parameters:
+## Executing a pipeline
 
-| Flag | Description                                                        | Default           |
-|------|--------------------------------------------------------------------|-------------------|
-| -o   | path to the folder where all the output files                      | current directory |
-|      | should be moved after successful workflow execution, str           |                   |
-| -t   | path to the temporary folder for storing intermediate results, str | */tmp/cwlairflow* |
-| -u   | ID for DAG's unique identifier generation, str                     | random uuid       |
-| -r   | run submitted workflow with Airflow Scheduler, bool                | False             |
+The most convenient way to **manually trigger** DAG execution is using Airflow Webserver. Input parameters can be set in the **job** field of the running configuration as it is displayed on the pictures below.
 
-Arguments `-o`, `-t` and `-u` doesn't overwrite the values from the Job file set in the fields
-*output_folder*, *tmp_folder* and *uid* correspondingly. The meaning of these fields is explaned in
-[How It Works](./how_it_works.md) section.
+![](../images/trigger_1.jpg)
+![](../images/trigger_2.jpg)
 
-The *submit* command will resolve all relative paths from Job file adding mandatory fields *workflow*, *output_folder*
-and *uid* (if not provided) and will copy Job file to the Jobs folder. The CWL descriptor file and all input files
-referenced in the Job file should not be moved or deleted while workflow is running. The *submit* command will **not** execute
-submitted workflow unless *-r* argument is provided. Otherwise, make sure that *Airflow Scheduler* (and optionally
-*Airflow Webserver*) is running. Note, that *-r* argument was added only to comply with the interface through which CWL
-community runs it's conformance tests. So it's more preferable to execute submitted workflow with
-*Airflow Scheduler*, especially if you are planning to use `LocalExecutor` instead of default `SequentialExecutor`.
-
-Depending on your Airflow configuration it may require some time for Airflow Scheduler
-and Webserver to pick up new DAGs. Consider using `cwl-airflow init -r 5 -w 4` to make Airflow Webserver react faster on all
-newly created DAGs.
 
 To start Airflow Scheduler (**don't** run it if *cwl-airflow submit* is used with *-r* argument)
 ```bash

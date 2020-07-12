@@ -4,7 +4,7 @@ The CWL-Airflow package extends Airflow’s functionality with the ability to pa
 
 Previously, in order to execute CWLDAG a file describing workflow-specific input parameters in JSON or YAML format should have been placed in the special jobs folder. In the current version we removed the necessity for the jobs folder, as the new CWLDAGs can be easily triggered with the required input parameters through the REST API, Airflow Webserver or command line interface. In case someone needs to monitor a special folder for the new job files added, it can be easily implemented as a separate standard for Airflow DAG.
 
-![CWL-Airflow diagram](../images/scheme.jpg)
+![](../images/scheme.jpg)
 
 To add a new workflow, one should simply write a small python script (see example below) and place it into the DAGs folder. Only two parameters are required to initialize a new CWLDAG: path to the **workflow** file and **dag_id**.
 ```python
