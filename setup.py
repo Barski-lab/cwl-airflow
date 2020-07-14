@@ -76,6 +76,7 @@ setup(
         "schema-salad==6.0.20200601095207",
         "apache-airflow==1.10.10",
         "cwltest==2.0.20200220223835",
+        "ruamel.yaml==0.16.5",
         "jsonmerge",
         "pyjwt",
         "connexion",
