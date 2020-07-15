@@ -5,7 +5,7 @@ import time
 from setuptools import setup, find_packages
 
 
-GIT_VERSION_FILE = os.path.join('cwl_airflow','git_version')
+GIT_VERSION_FILE = os.path.join("cwl_airflow","git_version")
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -56,6 +56,22 @@ def get_version():
     return version
 
 
+EXTRAS_REQUIRE = {
+    "celery": [
+        "celery~=4.3",
+        "flower>=0.7.3,<1.0",
+        "kombu==4.6.3;python_version<'3.0'",
+        "tornado>=4.2.0,<6.0"
+    ],
+    "mysql": [
+        "mysqlclient>=1.3.6,<1.4"
+    ],
+    "statsd": [
+        "statsd>=3.3.0,<4.0"
+    ]
+}
+
+
 setup(
     name="cwl-airflow",
     description="Python package to extend Airflow functionality with CWL v1.1 support",
@@ -71,6 +87,7 @@ setup(
     packages=find_packages(
         exclude=["docs", "tests", "dev"]
     ),
+    extras_require=EXTRAS_REQUIRE,
     install_requires=[
         "cwltool==3.0.20200530110633",
         "schema-salad==6.0.20200601095207",
