@@ -30,3 +30,7 @@
 ```sh
 $ pip3 install cwl-airflow
 ```
+Optionally, extra dependencies can be provided by adding `[mysql,celery,statsd]` at the end of the command above.
+- **mysql** - enables MySQL server support
+- **celery** - enables Celery cluster support
+- **statsd** - enables StatsD metrics support
