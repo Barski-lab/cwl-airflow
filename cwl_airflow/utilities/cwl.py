@@ -3,13 +3,16 @@ import sys
 import dill as pickle  # standard pickle doesn't handle lambdas
 import argparse
 import json
+import zlib
 import errno
 import shutil
+import binascii
 
 from uuid import uuid4
 from copy import deepcopy
 from jsonmerge import merge
 from urllib.parse import urlsplit
+from tempfile import NamedTemporaryFile
 from typing import MutableMapping, MutableSequence
 from ruamel.yaml.comments import CommentedMap
 from airflow.configuration import (
@@ -46,7 +49,8 @@ from cwl_airflow.utilities.helpers import (
     dump_json,
     get_absolute_path,
     get_rootname,
-    remove_field_from_dict
+    remove_field_from_dict,
+    get_uncompressed
 )
 
 
@@ -720,7 +724,12 @@ def slow_cwl_load(workflow, cwl_args=None, only_tool=None):
     because the whole Workflow object later fails to be unpickled).
     If "workflow" was already parsed into CommentedMap, return it
     unchanged (in a form similar to what we can get if parsed
-    "workflow" with "only_tool" set to True)
+    "workflow" with "only_tool" set to True).
+    If "workflow" was a zlib compressed content of a file, it needs
+    to be uncompressed, then written to the temp file and loaded the
+    same way as described above. After loading temp file will be
+    removed automatically. First always try to uncompress, because
+    it's faster.
     """
     
     cwl_args = {} if cwl_args is None else cwl_args
@@ -731,14 +740,26 @@ def slow_cwl_load(workflow, cwl_args=None, only_tool=None):
 
     default_cwl_args = get_default_cwl_args(cwl_args)
 
-    workflow_data = load_tool(
-        workflow,
-        setup_loadingContext(
-            LoadingContext(default_cwl_args),
-            RuntimeContext(default_cwl_args),
-            argparse.Namespace(**default_cwl_args)
+    def __load(location):
+        return load_tool(
+            location,
+            setup_loadingContext(
+                LoadingContext(default_cwl_args),
+                RuntimeContext(default_cwl_args),
+                argparse.Namespace(**default_cwl_args)
+            )
         )
-    )
+
+    try:
+        with NamedTemporaryFile(mode="w") as temp_stream:  # guarantees that temp file will be removed
+            json.dump(
+                load_yaml(get_uncompressed(workflow)),
+                temp_stream
+            )
+            temp_stream.flush()                            # otherwise it might be only partially written
+            workflow_data = __load(temp_stream.name)
+    except (zlib.error, binascii.Error):                   # file was real
+        workflow_data = __load(workflow)
 
     return workflow_data.tool if only_tool else workflow_data
 

@@ -3,13 +3,52 @@ import re
 import hashlib
 import pkg_resources
 import json
-
+import zlib
+import base64
 from copy import deepcopy
+from io import BytesIO
 from ruamel.yaml import YAML
 from tempfile import mkdtemp
 from shutil import rmtree
 from urllib.parse import urlparse
 from typing import MutableMapping, MutableSequence
+
+
+def get_compressed(data_str):
+    """
+    Converts character string "data_str" as "utf-8" into bytes ("utf-8"
+    is default encoding for Python3 string). Encoded bytes are then being
+    compressed with "zlib" and encoded again as "base64" (it uses only the
+    characters A-Z, a-z, 0-9, +, /* so it can be transmitted over channels
+    that do not preserve all 8-bits of data). At the end "base64" encoded
+    copressed bytes are converted back to standard for Python3 "utf-8" string.
+    In case we failed to encode "data_str" as string, assume it was an
+    Object that should be first dumped with json (useful for running tests). 
+    """
+    try:
+        data_str_utf = data_str.encode("utf-8")
+    except AttributeError:
+        data_str_utf = json.dumps(data_str).encode("utf-8")
+    return base64.b64encode(
+        zlib.compress(
+            data_str_utf,
+            level=9)
+    ).decode("utf-8")
+
+
+def get_uncompressed(data_str):
+    """
+    Converts character string "data_str" as "utf-8" into bytes, then
+    decodes it as "base64" and decompress with "zlib". The resulted
+    "bytes" are converted again into standard for Python3 "utf-8"
+    string. Raises zlib.error or binascii.Error if something went
+    wrong.
+    """
+    return zlib.decompress(
+        base64.b64decode(
+            data_str.encode("utf-8")
+        )
+    ).decode("utf-8")
 
 
 def get_api_failure_reason(response):
@@ -107,14 +146,28 @@ def get_version():
 
 
 def get_md5_sum(location, block_size=2**20):
-    md5_sum = hashlib.md5()
-    url_path = get_path_from_url(location)                # need to get rid of file:// if it was url
-    with open(url_path , "rb") as input_stream:  
+    """
+    Calculates md5 sum of a file. If "location" cannot be
+    opened, assumes that it was a file content in a form
+    of "utf-8" string.
+    """
+
+    def __update_md5():
         while True:
             buf = input_stream.read(block_size)
             if not buf:
                 break
             md5_sum.update(buf)
+
+    md5_sum = hashlib.md5()
+    try:
+        url_path = get_path_from_url(location)                   # need to get rid of file:// if it was url
+        with open(url_path , "rb") as input_stream:
+            __update_md5()
+    except (FileNotFoundError, OSError) as err:
+        with BytesIO(location.encode("utf-8")) as input_stream:
+            __update_md5() 
+
     return md5_sum.hexdigest()
 
 

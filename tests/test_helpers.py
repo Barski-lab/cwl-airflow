@@ -1,6 +1,8 @@
 import sys
 import pytest
 import tempfile
+import zlib
+import binascii
 
 from os import environ, path, listdir
 
@@ -10,13 +12,91 @@ from ruamel.yaml.error import YAMLError
 from cwl_airflow.utilities.helpers import (
     CleanAirflowImport,
     load_yaml,
-    remove_field_from_dict
+    remove_field_from_dict,
+    get_compressed,
+    get_uncompressed,
+    get_md5_sum
 )
 
 
 DATA_FOLDER = path.abspath(path.join(path.dirname(__file__), "data"))
 if sys.platform == "darwin":                                           # docker has troubles of mounting /var/private on macOs
     tempfile.tempdir = "/private/tmp"
+
+
+@pytest.mark.parametrize(
+    "location, control_md5sum",
+    [
+        (
+            path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
+            "7160a22c6dd7e7caa9be5de3e4978400"
+        ),
+        (
+            "content of a file",
+            "80ecb1219dd7655292e85ac40fce6781"
+        )
+    ]
+)
+def test_get_md5_sum(location, control_md5sum):
+    md5sum = get_md5_sum(location)
+    assert control_md5sum==md5sum, \
+        "Failed to calculate md5 sum"
+
+
+@pytest.mark.parametrize(
+    "raw_data, control_data",
+    [
+        (
+            "hello world",
+            "eNrLSM3JyVcozy/KSQEAGgsEXQ=="
+        ),
+        (
+            {"data": "hello world"},
+            "eNqrVkpJLElUslJQykjNyclXKM8vyklRqgUAWl0H0Q=="
+        )
+    ]
+)
+def test_get_compressed(raw_data, control_data):
+    compressed_data = get_compressed(raw_data)
+    assert control_data == compressed_data, \
+        "Failed to compress data"
+
+
+@pytest.mark.parametrize(
+    "compressed_data, control_data",
+    [
+        (
+            "eNrLSM3JyVcozy/KSQEAGgsEXQ==",
+            "hello world"
+        ),
+        (
+            "eNqrVkpJLElUslJQykjNyclXKM8vyklRqgUAWl0H0Q==",
+            '{"data": "hello world"}'
+        )
+    ]
+)
+def test_get_uncompressed(compressed_data, control_data):
+    uncompressed_data = get_uncompressed(compressed_data)
+    assert control_data == uncompressed_data, \
+        "Failed to uncompress data"
+
+
+@pytest.mark.parametrize(
+    "compressed_data, control_data",
+    [
+        (
+            "random string",
+            '{"data": "hello world"}'
+        ),
+        (
+            "~/workflows/bam-bedgraph-bigwig.cwl",
+            ""
+        )
+    ]
+)
+def test_get_uncompressed_should_fail(compressed_data, control_data):
+    with pytest.raises((zlib.error, binascii.Error)):
+        uncompressed_data = get_uncompressed(compressed_data)
 
 
 @pytest.mark.parametrize(
