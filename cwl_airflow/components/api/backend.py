@@ -243,7 +243,10 @@ class CWLApiBackend():
             workflow = path.join(DAGS_FOLDER, dag_id + ".cwl")
             self.save_attachment("workflow", workflow)
             convert_to_workflow(
-                command_line_tool=slow_cwl_load(workflow),          # safer to use slow_cwl_load, because of the possible confusions with all these renaming. TODO: make it less complicate
+                command_line_tool=slow_cwl_load(                    # safer to use slow_cwl_load, because of the possible confusions with all these renaming. TODO: make it less complicate
+                    workflow=workflow,
+                    only_tool=True
+                ),
                 location=workflow
             )
 
