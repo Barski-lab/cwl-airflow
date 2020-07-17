@@ -21,7 +21,8 @@ from cwl_airflow.utilities.helpers import (
     get_dir,
     get_absolute_path,
     get_rootname,
-    get_api_failure_reason
+    get_api_failure_reason,
+    get_compressed
 )
 from cwl_airflow.utilities.cwl import (
     load_job,
@@ -171,35 +172,48 @@ def load_test_suite(args):
 
 def create_dags(suite_data, args, dags_folder=None):
     """
-    Iterates over "suite_data" and creates new DAGs. Tries to embed
+    Iterates over "suite_data" and creates new DAGs. Tries to include
     all tools into the worfklow before sending it to the API server.
     If loaded tool is not Workflow, send it unchanged. It's safe to
     not process errors when we failed to add new DAG. Airflow Scheduler
     will parse all dags at the end of the next "dag_dir_list_interval"
-    from airflow.cfg.
+    from airflow.cfg. If args.embed was True, send base64 encoded zlib
+    compressed content of the workflow file instead of attaching it.
     """
 
     # TODO: Do we need to force scheduler to reload DAGs after all DAG added?
 
     for test_data in suite_data.values():
-        workflow_tool = fast_cwl_load(test_data["tool"])
         workflow_path = os.path.join(
             args.tmp,
             os.path.basename(test_data["tool"])
         )
-        embed_all_runs(
-            workflow_tool=workflow_tool,
+        embed_all_runs(                                                                               # will save results to "workflow_path"
+            workflow_tool=fast_cwl_load(test_data["tool"]),
             location=workflow_path
         )
         with open(workflow_path, "rb") as input_stream:
-            logging.info(f"Add DAG {test_data['dag_id']} from test case {test_data['index']}")
-            r = requests.post(                                                                  # try to create new DAG
-                url=urljoin(args.api, "/api/experimental/dags"),
-                params={
-                    "dag_id": test_data["dag_id"]
-                },
-                files={"workflow": input_stream}
-            )
+            logging.info(f"Add DAG {test_data['dag_id']} \
+                from test case {test_data['index']}")
+
+            if args.embed:                                                                            # send base64 encoded zlib compressed workflow content that will be embedded into DAG python file
+                logging.info(f"Sending base64 encoded zlib compressed content from {workflow_path}")
+                r = requests.post(
+                    url=urljoin(args.api, "/api/experimental/dags"),
+                    params={
+                        "dag_id": test_data["dag_id"]
+                    },
+                    json={"workflow_content": get_compressed(input_stream)}
+                )
+            else:                                                                                     # attach workflow as a file
+                logging.info(f"Attaching workflow file {workflow_path}")
+                r = requests.post(
+                    url=urljoin(args.api, "/api/experimental/dags"),
+                    params={
+                        "dag_id": test_data["dag_id"]
+                    },
+                    files={"workflow": input_stream}
+                )
 
             # Check if we failed to add new DAG. One reason to fail - DAG hase been
             # already added. It's safe to ignore this error. In case more serious
@@ -207,7 +221,8 @@ def create_dags(suite_data, args, dags_folder=None):
 
             if not r.ok:
                 reason = get_api_failure_reason(r)
-                logging.error(f"Failed to add DAG {test_data['dag_id']} from test case {test_data['index']} due to {reason}")
+                logging.error(f"Failed to add DAG {test_data['dag_id']} \
+                    from test case {test_data['index']} due to {reason}")
 
 
 def trigger_dags(suite_data, args):

@@ -21,9 +21,15 @@ from airflow.utils.state import State
 from airflow.utils.timezone import parse as parsedate
 from airflow.api.common.experimental import trigger_dag
 
-from cwl_airflow.utilities.helpers import get_version, get_dir
+from cwl_airflow.utilities.helpers import (
+    get_version,
+    get_dir,
+    get_uncompressed,
+    get_compressed
+)
 from cwl_airflow.utilities.cwl import (
     conf_get,
+    fast_cwl_load,
     slow_cwl_load,
     convert_to_workflow,
     DAG_TEMPLATE
@@ -193,25 +199,64 @@ class CWLApiBackend():
 
     def save_attachment(self, attachment, location, exist_ok=False):
         if path.isfile(location) and not exist_ok:
-            raise FileExistsError("[Errno 17] File exists: '" + location + "'")
+            raise FileExistsError(f"File {location} already exist")
         data = connexion.request.files[attachment]
         data.save(location)
     
 
     def export_dag(self, dag_id):
-        cwl_path = path.join(DAGS_FOLDER, dag_id + ".cwl")
+        """
+        Checks if DAG python file with the same name has been already
+        exported. If not, checks if exaclty one of "workflow" and
+        "workflow_content" parameters are present in the request. In
+        case of "workflow_content" first we need to load a tool from
+        it and try to convert it to Workflow (what if it was
+        CommandLineTool), then compress it again and write to DAG
+        python file. In case of "workflow", first we need to save
+        attachment, then try to comvert it to Workflow (the same reason
+        as above) and write it to DAG python file.
+        """
+
         dag_path = path.join(DAGS_FOLDER, dag_id + ".py")
-        self.save_attachment("workflow", cwl_path)
-        convert_to_workflow(
-            command_line_tool=slow_cwl_load(
-                workflow=cwl_path,
-                only_tool=True
-            ),
-            location=cwl_path
-        )
-        with open(dag_path, 'x') as output_stream:
-            output_stream.write(DAG_TEMPLATE.format(cwl_path, dag_id))
-        return {"dag_id": dag_id, "cwl_path": cwl_path, "dag_path": dag_path}
+
+        if path.isfile(dag_path):
+            raise FileExistsError(f"File {dag_path} already exist")
+
+        if "workflow_content" in (connexion.request.json or []) \
+            and "workflow" in connexion.request.files:
+
+            raise ValueError("Only one of the 'workflow' or \
+                'workflow_content' parameters can be set")
+
+        if "workflow_content" in (connexion.request.json or []):    # json field might be None, need to take [] as default
+
+            workflow = get_compressed(
+                convert_to_workflow(                                # to make sure we are not saving CommandLineTool instead of a Workflow
+                    command_line_tool=fast_cwl_load(                # using fast_cwl_load is safe here because we deal with the content of a file
+                        connexion.request.json["workflow_content"]
+                    )
+                )
+            )
+
+        elif "workflow" in connexion.request.files:
+
+            workflow = path.join(DAGS_FOLDER, dag_id + ".cwl")
+            self.save_attachment("workflow", workflow)
+            convert_to_workflow(
+                command_line_tool=slow_cwl_load(workflow),          # safer to use slow_cwl_load, because of the possible confusions with all these renaming. TODO: make it less complicate
+                location=workflow
+            )
+
+        else:
+
+            raise ValueError("At least one of the 'workflow' or \
+                'workflow_content' parameters should be set")
+
+        with open(dag_path, "w") as output_stream:
+            output_stream.write(DAG_TEMPLATE.format(workflow, dag_id))
+
+        return {"dag_id": dag_id, "cwl_path": workflow, "dag_path": dag_path}
+
 
 ###########################################################################
 # WES                                                                     #

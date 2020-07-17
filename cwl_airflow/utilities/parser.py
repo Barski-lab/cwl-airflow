@@ -155,6 +155,12 @@ def get_parser():
         help="Display spinner wher running. Useful for CI that tracks activity. \
             Default: do not spin"
     )
+    test_parser.add_argument(
+        "--embed",
+        action="store_true",
+        help="Embed base64 encoded zlib compressed workflow content into the DAG python file. \
+            Default: False"
+    )
 
     return general_parser
 
@@ -234,7 +240,7 @@ def parse_arguments(argsl, cwd=None):
     args, _ = get_parser().parse_known_args(argsl)
     args = get_normalized_args(
         args,
-        ["func", "port", "host", "api", "range", "spin"],
+        ["func", "port", "host", "api", "range", "spin", "embed"],
         cwd
     )
     assert_and_fix_args(args)

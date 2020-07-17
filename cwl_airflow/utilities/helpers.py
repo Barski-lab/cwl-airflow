@@ -1,5 +1,6 @@
 import os
 import re
+import io
 import hashlib
 import pkg_resources
 import json
@@ -14,7 +15,7 @@ from urllib.parse import urlparse
 from typing import MutableMapping, MutableSequence
 
 
-def get_compressed(data_str):
+def get_compressed(data_str, reset_position=None):
     """
     Converts character string "data_str" as "utf-8" into bytes ("utf-8"
     is default encoding for Python3 string). Encoded bytes are then being
@@ -23,12 +24,27 @@ def get_compressed(data_str):
     that do not preserve all 8-bits of data). At the end "base64" encoded
     copressed bytes are converted back to standard for Python3 "utf-8" string.
     In case we failed to encode "data_str" as string, assume it was an
-    Object that should be first dumped with json (useful for running tests). 
+    Object that can be dumped with json (useful for running tests). If we
+    failed to dump it with json, assume that "data_str" was a stream, from
+    where we read content either as "utf-8" or as bytes, depending on the mode
+    that the file was opened with. In this case if "reset_position" is true,
+    reset to the beginning of the file.
     """
+
+    reset_position = True if reset_position is None else reset_position
+
     try:
         data_str_utf = data_str.encode("utf-8")
     except AttributeError:
-        data_str_utf = json.dumps(data_str).encode("utf-8")
+        try:
+            data_str_utf = json.dumps(data_str).encode("utf-8")
+        except TypeError:
+            if reset_position:
+                data_str.seek(0)
+            if not isinstance(data_str, io.TextIOBase):         # file was opened in a binary mode
+                data_str_utf = data_str.read()
+            else:                                               # file was opened in a text mode and need to be "utf-8" encoded
+                data_str_utf = data_str.read().encode("utf-8")
     return base64.b64encode(
         zlib.compress(
             data_str_utf,
@@ -36,19 +52,24 @@ def get_compressed(data_str):
     ).decode("utf-8")
 
 
-def get_uncompressed(data_str):
+def get_uncompressed(data_str, parse_as_yaml=None):
     """
     Converts character string "data_str" as "utf-8" into bytes, then
     decodes it as "base64" and decompress with "zlib". The resulted
     "bytes" are converted again into standard for Python3 "utf-8"
     string. Raises zlib.error or binascii.Error if something went
-    wrong.
+    wrong. If "parse_as_yaml" is True, try to load uncompressed
+    content with "load_yaml". The latter may raise ValueError or
+    YAMLError if something went wrong
     """
-    return zlib.decompress(
+
+    parse_as_yaml = False if parse_as_yaml is None else parse_as_yaml
+    uncompressed =  zlib.decompress(
         base64.b64decode(
             data_str.encode("utf-8")
         )
     ).decode("utf-8")
+    return load_yaml(uncompressed) if parse_as_yaml else uncompressed
 
 
 def get_api_failure_reason(response):

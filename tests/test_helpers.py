@@ -63,40 +63,118 @@ def test_get_compressed(raw_data, control_data):
 
 
 @pytest.mark.parametrize(
-    "compressed_data, control_data",
+    "location, control_data, reset_position",
     [
         (
-            "eNrLSM3JyVcozy/KSQEAGgsEXQ==",
-            "hello world"
+            path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
+"eNqtjU0KwkAMhfdzipK1TFtw5QG8RojTaAfmjyaCUHr3TkdB3Jvl9728t5quHtwo4t0Hh\
+ku3NtKoCyRSEVwPdfqKkB2pz+lw1vY+ladK7+bljOMwYKRSeMKFaRJbq6F9bu8CqLEcMXB\
+66PyXUUwU+VNo9aW/c+KoTYxmMzssgkGR",
+            None
         ),
         (
-            "eNqrVkpJLElUslJQykjNyclXKM8vyklRqgUAWl0H0Q==",
-            '{"data": "hello world"}'
+            path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
+"eNqVjUsKwkAQRPdziqbXMknAVQ7gNZp2MpqB+ZFuQZDcXZMYgktrW1XvAWxBF1kEe8BLiB5P\
+BvYiFscaSl46a5uQ60OlceN0pq5tKXGtfqDJ8yD2ygnX57wB8DMriaLPdx3ptpB7eB3s/6WUO\
+fkv0OpTf3XieFV0ZjZvaoo8Og==",
+            False
         )
     ]
 )
-def test_get_uncompressed(compressed_data, control_data):
-    uncompressed_data = get_uncompressed(compressed_data)
+def test_get_compressed_from_text_stream(location, control_data, reset_position):
+    with open(location, "r") as input_stream:
+        input_stream.read(20)  # change position while reading from file
+        compressed_data = get_compressed(input_stream, reset_position)
+    assert control_data == compressed_data, \
+        "Failed to compress data"
+
+
+@pytest.mark.parametrize(
+    "location, control_data, reset_position",
+    [
+        (
+            path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
+"eNqtjU0KwkAMhfdzipK1TFtw5QG8RojTaAfmjyaCUHr3TkdB3Jvl9728t5quHtwo4t0Hh\
+ku3NtKoCyRSEVwPdfqKkB2pz+lw1vY+ladK7+bljOMwYKRSeMKFaRJbq6F9bu8CqLEcMXB\
+66PyXUUwU+VNo9aW/c+KoTYxmMzssgkGR",
+            None
+        ),
+        (
+            path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
+"eNqVjUsKwkAQRPdziqbXMknAVQ7gNZp2MpqB+ZFuQZDcXZMYgktrW1XvAWxBF1kEe8BLiB5P\
+BvYiFscaSl46a5uQ60OlceN0pq5tKXGtfqDJ8yD2ygnX57wB8DMriaLPdx3ptpB7eB3s/6WUO\
+fkv0OpTf3XieFV0ZjZvaoo8Og==",
+            False
+        )
+    ]
+)
+def test_get_compressed_from_binary_stream(location, control_data, reset_position):
+    with open(location, "rb") as input_stream:
+        input_stream.read(20)  # change position while reading from file
+        compressed_data = get_compressed(input_stream, reset_position)
+    assert control_data == compressed_data, \
+        "Failed to compress data"
+
+
+@pytest.mark.parametrize(
+    "compressed_data, control_data, parse_as_yaml",
+    [
+        (
+            "eNrLSM3JyVcozy/KSQEAGgsEXQ==",
+            "hello world",
+            None
+        ),
+        (
+            "eNqrVkpJLElUslJQykjNyclXKM8vyklRqgUAWl0H0Q==",
+            '{"data": "hello world"}',
+            None
+        ),
+        (
+            "eNqrVkpJLElUslJQykjNyclXKM8vyklRqgUAWl0H0Q==",
+            '{"data": "hello world"}',
+            False
+        ),
+        (
+            "eNqrVkpJLElUslJQykjNyclXKM8vyklRqgUAWl0H0Q==",
+            {"data": "hello world"},
+            True
+        )
+    ]
+)
+def test_get_uncompressed(compressed_data, control_data, parse_as_yaml):
+    uncompressed_data = get_uncompressed(compressed_data, parse_as_yaml)
     assert control_data == uncompressed_data, \
         "Failed to uncompress data"
 
 
 @pytest.mark.parametrize(
-    "compressed_data, control_data",
+    "compressed_data, control_data, parse_as_yaml",
     [
         (
             "random string",
-            '{"data": "hello world"}'
+            '{"data": "hello world"}',
+            None
         ),
         (
             "~/workflows/bam-bedgraph-bigwig.cwl",
-            ""
+            "",
+            None
+        ),
+        (
+            "eNrLSM3JyVcozy/KSQEAGgsEXQ==",
+            "hello world",
+            True
+        ),
+        (
+            "eNqrVk+sBQADpAGB",
+            "{'a}",
+            True
         )
     ]
 )
-def test_get_uncompressed_should_fail(compressed_data, control_data):
-    with pytest.raises((zlib.error, binascii.Error)):
-        uncompressed_data = get_uncompressed(compressed_data)
+def test_get_uncompressed_should_fail(compressed_data, control_data, parse_as_yaml):
+    with pytest.raises((zlib.error, binascii.Error, ValueError, YAMLError)):
+        uncompressed_data = get_uncompressed(compressed_data, parse_as_yaml)
 
 
 @pytest.mark.parametrize(
@@ -189,13 +267,20 @@ def test_load_yaml_from_file_should_fail():
         data = load_yaml(location)
 
 
-def test_load_yaml_from_str_should_fail():
-    location = """
-        {
-            "a"
 
-    """
-    with pytest.raises(YAMLError):
+@pytest.mark.parametrize(
+    "location",
+    [
+        (
+            '{"a"'
+        ),
+        (
+            "text"
+        )
+    ]
+)
+def test_load_yaml_from_str_should_fail(location):
+    with pytest.raises((YAMLError, ValueError)):
         data = load_yaml(location)
 
 

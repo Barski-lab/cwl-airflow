@@ -69,7 +69,10 @@ CWL_ENABLE_DEV = True      # better not to change without need
 
 DAG_TEMPLATE="""#!/usr/bin/env python3
 from cwl_airflow.extensions.cwldag import CWLDAG
-dag = CWLDAG(workflow="{0}", dag_id="{1}")
+dag = CWLDAG(
+    workflow="{0}",
+    dag_id="{1}"
+)
 """
 
 
@@ -753,7 +756,7 @@ def slow_cwl_load(workflow, cwl_args=None, only_tool=None):
     try:
         with NamedTemporaryFile(mode="w") as temp_stream:  # guarantees that temp file will be removed
             json.dump(
-                load_yaml(get_uncompressed(workflow)),
+                get_uncompressed(workflow, parse_as_yaml=True),
                 temp_stream
             )
             temp_stream.flush()                            # otherwise it might be only partially written
