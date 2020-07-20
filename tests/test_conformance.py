@@ -10,7 +10,6 @@ from cwl_airflow.components.test.conformance import (
     create_dags
 )
 from cwl_airflow.utilities.parser import parse_arguments
-from cwl_airflow.utilities.helpers import get_files
 
 
 DATA_FOLDER = path.abspath(path.join(path.dirname(__file__), "data"))
