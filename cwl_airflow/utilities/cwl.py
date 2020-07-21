@@ -91,10 +91,10 @@ def overwrite_deprecated_dag(
     it from Airflow parsing. Upgraded DAG will always include base64 encoded zlib
     compressed workflow content. In case "workflow_location" is relative path, it will
     be resolved based on the dirname of "dag_location" (useful for tests only, because
-    our old DAGs always have absolute path to the CWL file). Function doesn't backup or
-    update the original CWL file.
-    TODO: in case more coplicated DAG files that include "default_args", etc, this
-    function should be updated to the more complex one.
+    all our old DAGs always have absolute path to the CWL file). Function doesn't backup
+    or update the original CWL file.
+    TODO: in case more coplicated DAG files that include "default_args", etc, this function
+    should be updated to the more complex one.
     """
 
     with open(dag_location, "r+") as io_stream:                # open for both reading and writing

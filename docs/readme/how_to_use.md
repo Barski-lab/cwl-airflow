@@ -7,7 +7,7 @@ Before using **CWL-airflow** it should be configured with `cwl-airflow init`
 ```
 $ cwl-airflow init --help
 
-usage: cwl-airflow init [-h] [--home HOME] [--config CONFIG]
+usage: cwl-airflow init [-h] [--home HOME] [--config CONFIG] [--upgrade]
 
 optional arguments:
   -h, --help       show this help message and exit
@@ -15,12 +15,15 @@ optional arguments:
                    AIRFLOW_HOME then '~/airflow'
   --config CONFIG  Set path to Airflow configuration file. Default: first try
                    AIRFLOW_CONFIG then '[airflow home]/airflow.cfg'
+  --upgrade        Upgrade old CWLDAG files to the latest format. Default:
+                   False
 ```
 
 **Init command will run the following steps** for the specified `--home` and `--config` parameters:
 - Call `airflow initdb`
 - Update `airflow.cfg` to hide paused DAGs, skip loading example DAGs and **do not** pause newly created DAGs 
 - Add new connection `process_report` to report DAG's execution progress and results to `http://localhost:3070` (URL is currently hardcoded)
+- If run with `--upgrade`, upgrade old CWLDAGs to correspond to the latest format, save original CWLDAGs into `deprecated_dags` folder   
 - Put **clean_dag_run.py** into the DAGs folder (later its functions will be moved to API)
 
 **Optionally**, you can update your **airflow.cfg** with `[cwl]` section setting the following configuration parameters:

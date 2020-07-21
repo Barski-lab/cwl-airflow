@@ -73,7 +73,7 @@ jobs:
     - pip install .
     before_script:
     - cwl-airflow init --upgrade
-    script: airflow list_dags --report  # to check of all DAGs are correct
+    script: airflow list_dags --report  # to check if all DAGs are correct
 
 before_install:
 - git clone https://github.com/datirium/workflows.git --recursive

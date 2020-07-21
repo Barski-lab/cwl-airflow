@@ -93,10 +93,10 @@ def upgrade_dags(airflow_config):
     "conf.get" instead of "conf_get", because the fields we
     use are always set. Copies all deprecated dags into the 
     "deprecated_dags" folder, adds deprecated DAGs to the
-    ".airflowignore" file created within that folder.
-    Original DAG file is replaced with the new one (with
-    base64 encoded zlib compressed workflow content),
-    original workflow files remain unchanged.
+    ".airflowignore" file created within that folder. Original
+    DAG files are replaced with the new ones (with base64
+    encoded zlib compressed workflow content), original workflow
+    files remain unchanged.
     """
 
     conf.read(airflow_config)

@@ -110,7 +110,7 @@ def get_parser():
     init_parser.add_argument(
         "--upgrade",
         action="store_true",
-        help="Upgrade DAG files to the latest format. \
+        help="Upgrade old CWLDAG files to the latest format. \
             Default: False"
     )
 
