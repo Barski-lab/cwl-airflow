@@ -65,7 +65,15 @@ jobs:
         tags: true
   - name: DAG with embedded workflow (just one test)
     script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --embed
-
+  - name: Test if old formatted DAGs are upgraded by --upgrade
+    before_install:                     # copy old formatted and normal DAGs into the dags folder
+    - mkdir -p ~/airflow/dags
+    - cp ./cwl-airflow/tests/data/dags/* ~/airflow/dags
+    install:
+    - pip install .
+    before_script:
+    - cwl-airflow init --upgrade
+    script: airflow list_dags --report  # to check of all DAGs are correct
 
 before_install:
 - git clone https://github.com/datirium/workflows.git --recursive
