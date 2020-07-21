@@ -107,6 +107,12 @@ def get_parser():
         help="Set path to Airflow configuration file. \
             Default: first try AIRFLOW_CONFIG then '[airflow home]/airflow.cfg'"
     )
+    init_parser.add_argument(
+        "--upgrade",
+        action="store_true",
+        help="Upgrade DAG files to the latest format. \
+            Default: False"
+    )
 
     # Test (for running conformance tests)
     test_parser = subparsers.add_parser(
@@ -240,7 +246,7 @@ def parse_arguments(argsl, cwd=None):
     args, _ = get_parser().parse_known_args(argsl)
     args = get_normalized_args(
         args,
-        ["func", "port", "host", "api", "range", "spin", "embed"],
+        ["func", "port", "host", "api", "range", "spin", "embed", "upgrade"],
         cwd
     )
     assert_and_fix_args(args)

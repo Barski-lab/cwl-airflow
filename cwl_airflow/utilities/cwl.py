@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import dill as pickle  # standard pickle doesn't handle lambdas
 import argparse
@@ -50,7 +51,8 @@ from cwl_airflow.utilities.helpers import (
     get_absolute_path,
     get_rootname,
     remove_field_from_dict,
-    get_uncompressed
+    get_uncompressed,
+    get_compressed
 )
 
 
@@ -74,6 +76,70 @@ dag = CWLDAG(
     dag_id="{1}"
 )
 """
+
+
+def overwrite_deprecated_dag(
+    dag_location,
+    deprecated_dags_folder=None
+):
+    """
+    Loads DAG content from "dag_location" file. Searches for "dag.create()" command.
+    If not found, we don't need to upgrade this DAG (it's either not from CWL-Airflow,
+    or already in a new format). If "deprecated_dags_folder" is not None, copies original
+    DAG file there before DAG upgrading. After copying deprecated DAG to the
+    "deprecated_dags_folder" updates ".airflowignore" with DAG file basename to exclude
+    it from Airflow parsing. Upgraded DAG will always include base64 encoded zlib
+    compressed workflow content. In case "workflow_location" is relative path, it will
+    be resolved based on the dirname of "dag_location" (useful for tests only, because
+    our old DAGs always have absolute path to the CWL file). Function doesn't backup or
+    update the original CWL file.
+    TODO: in case more coplicated DAG files that include "default_args", etc, this
+    function should be updated to the more complex one.
+    """
+
+    with open(dag_location, "r+") as io_stream:                # open for both reading and writing
+
+        dag_content = io_stream.read()
+
+        if not re.search("dag\\.create\\(\\)", dag_content):   # do nothing if it wasn't old-style DAG
+            return
+
+        workflow_location = get_absolute_path(                 # resolve relative to dirname of "dag_location" (good for tests)
+            re.search(
+                "(cwl_workflow\\s*=\\s*[\"|'])(.+?)([\"|'])",
+                dag_content
+            ).group(2),
+            os.path.dirname(dag_location)
+        )
+
+        dag_id = re.search(
+            "(dag_id\\s*=\\s*[\"|'])(.+?)([\"|'])",
+            dag_content
+        ).group(2)
+
+        compressed_workflow_content = get_compressed(
+            fast_cwl_load(workflow_location)                   # no "run" embedding or convertion to Workflow. If DAG worked, cwl should be ok too
+        )
+
+        if deprecated_dags_folder is not None:                 # copy old DAG to the folder with deprecated DAGs, add ".airflowignore"
+            get_dir(deprecated_dags_folder)                    # try to create "deprecated_dags_folder" if it doesn't exist
+            shutil.copy(dag_location, deprecated_dags_folder)  # copy DAG file
+            ignore = os.path.join(
+                deprecated_dags_folder,
+                ".airflowignore"
+            )
+            with open(ignore, "a") as output_stream:           # add deprecated DAG to ".airflowignore"
+                output_stream.write(
+                    os.path.basename(dag_location) + "\n"
+                )
+
+        io_stream.seek(0)                                      # rewind "dag_location" file to the beginning
+        io_stream.write(
+            DAG_TEMPLATE.format(
+                compressed_workflow_content, dag_id
+            )
+        )
+        io_stream.truncate()                                   # remove old data at the end of a file if anything became shorter than original
 
 
 def conf_get(

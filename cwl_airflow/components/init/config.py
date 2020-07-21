@@ -14,8 +14,11 @@ from cwl_airflow.utilities.helpers import (
 
 with CleanAirflowImport():
     from airflow import models
+    from airflow.configuration import conf
     from airflow.utils.db import merge_conn
-    
+    from airflow.utils.dag_processing import list_py_file_paths
+    from cwl_airflow.utilities.cwl import overwrite_deprecated_dag
+
 
 def run_init_config(args):
     """
@@ -26,6 +29,8 @@ def run_init_config(args):
     init_airflow_db(args)
     patch_airflow_config(args.config)
     add_connections(args)
+    if args.upgrade:
+        upgrade_dags(args.config)
     copy_dags(args.home)
 
 
@@ -79,6 +84,35 @@ def patch_airflow_config(airflow_config):
     except (CalledProcessError, FileNotFoundError) as err:
         logging.error(f"""Failed to patch Airflow configuration file. Exiting.\n{err}""")
         sys.exit(1)
+
+
+def upgrade_dags(airflow_config):
+    """
+    Corrects old style DAG python files into the new format.
+    Reads configuration from "airflow_config". Uses standard
+    "conf.get" instead of "conf_get", because the fields we
+    use are always set. Copies all deprecated dags into the 
+    "deprecated_dags" folder, adds deprecated DAGs to the
+    ".airflowignore" file created within that folder.
+    Original DAG file is replaced with the new one (with
+    base64 encoded zlib compressed workflow content),
+    original workflow files remain unchanged.
+    """
+
+    conf.read(airflow_config)
+    dags_folder = conf.get("core", "dags_folder")
+    for dag_location in list_py_file_paths(                     # will skip all DAGs from ".airflowignore"
+        directory=dags_folder,
+        safe_mode=conf.get("core", "dag_discovery_safe_mode"),  # use what user set in his config
+        include_examples=False
+    ):
+        overwrite_deprecated_dag(                               # upgrades only deprecated DAGs, skips others
+            dag_location=dag_location,
+            deprecated_dags_folder=os.path.join(
+                dags_folder,
+                "deprecated_dags"
+            )
+        )
 
 
 def copy_dags(airflow_home, source_folder=None):

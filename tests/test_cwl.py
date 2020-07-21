@@ -1,10 +1,10 @@
 import os
 import sys
-import copy
+import shutil
 import pytest
 import tempfile
+import importlib
 
-from shutil import rmtree, copy
 from ruamel.yaml.comments import CommentedMap
 from cwltool.workflow import Workflow
 from cwltool.command_line_tool import CommandLineTool
@@ -16,7 +16,8 @@ from cwl_airflow.utilities.helpers import (
     dump_json,
     get_rootname,
     get_compressed,
-    load_yaml
+    load_yaml,
+    get_dir
 )
 from cwl_airflow.utilities.cwl import (
     fast_cwl_load,
@@ -29,6 +30,7 @@ from cwl_airflow.utilities.cwl import (
     embed_all_runs,
     convert_to_workflow,
     get_default_cwl_args,
+    overwrite_deprecated_dag,
     CWL_TMP_FOLDER,
     CWL_OUTPUTS_FOLDER,
     CWL_PICKLE_FOLDER,
@@ -45,6 +47,83 @@ from cwl_airflow.utilities.cwl import (
 DATA_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
 if sys.platform == "darwin":                                                    # docker has troubles of mounting /var/private on macOs
     tempfile.tempdir = "/private/tmp"
+
+
+@pytest.mark.parametrize(
+    "dag_location, workflow_location, control_deprecated_files",
+    [
+        (
+            os.path.join(DATA_FOLDER, "dags", "bam_bedgraph_bigwig_single_old_format.py"),
+            os.path.join(DATA_FOLDER, "workflows", "bam-bedgraph-bigwig-single.cwl"),  # need it only to run test
+            ["bam_bedgraph_bigwig_single_old_format.py", ".airflowignore"]
+        )
+    ]
+)
+def test_overwrite_deprecated_dag(
+    dag_location,
+    workflow_location,
+    control_deprecated_files,
+    monkeypatch
+):
+    temp_home = tempfile.mkdtemp()
+    monkeypatch.delenv("AIRFLOW_HOME", raising=False)
+    monkeypatch.delenv("AIRFLOW_CONFIG", raising=False)
+    monkeypatch.setattr(
+        os.path,
+        "expanduser",
+        lambda x: x.replace("~", temp_home)
+    )
+
+    dags_folder = get_dir(
+        os.path.join(temp_home, "airflow", "dags")
+    )
+    dag_location = shutil.copy(
+        dag_location,
+        os.path.join(
+            dags_folder,
+            os.path.basename(dag_location)
+        )
+    )
+    workflow_location = shutil.copy(
+        workflow_location,
+        os.path.join(
+            dags_folder,
+            os.path.basename(workflow_location)
+        )
+    )
+    deprecated_dags_folder = os.path.join(dags_folder, "deprecated_dags")
+
+    try:
+
+        overwrite_deprecated_dag(
+            dag_location=dag_location,
+            deprecated_dags_folder=deprecated_dags_folder
+        )
+        os.remove(workflow_location)                                         # remove workflow file to make sure we are loading compressed workflow content
+        spec = importlib.util.spec_from_file_location(
+            get_rootname(dag_location),
+            dag_location
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        deprecated_dags_folder_content = os.listdir(deprecated_dags_folder)
+        with open(
+            os.path.join(deprecated_dags_folder, ".airflowignore")
+        ) as input_stream:
+            airflowignore_content = input_stream.read()
+
+    except (BaseException, Exception) as err:
+        assert False, f"Failed to run test. \n {err}"
+    finally:
+        shutil.rmtree(temp_home)
+
+    assert all(
+        deprecated_file in deprecated_dags_folder_content
+        for deprecated_file in control_deprecated_files
+    ), "Failed to backup DAGs"
+    assert control_deprecated_files[0] in airflowignore_content, \
+        "Failed to update .airflowignore"
 
 
 @pytest.mark.parametrize(
@@ -92,7 +171,7 @@ def test_convert_to_workflow(workflow, job):
     except BaseException as err:
         assert False, f"Failed either to run test or execute workflow. \n {err}"
     finally:
-        rmtree(pickle_folder)
+        shutil.rmtree(pickle_folder)
 
 
 @pytest.mark.parametrize(
@@ -129,7 +208,7 @@ def test_get_default_cwl_args(monkeypatch, control_defaults):
     except (BaseException, Exception) as err:
         assert False, f"Failed to run test. \n {err}"
     finally:
-        rmtree(temp_home)
+        shutil.rmtree(temp_home)
 
     assert all(
         required_cwl_args[key] == contol_value
@@ -183,7 +262,7 @@ def test_embed_all_runs(workflow, job, task_id):
     except BaseException as err:
         assert False, f"Failed either to run test or execute workflow. \n {err}"
     finally:
-        rmtree(pickle_folder)
+        shutil.rmtree(pickle_folder)
 
 
 @pytest.mark.parametrize(
@@ -493,7 +572,7 @@ def test_execute_workflow_step(workflow, job, task_id):
     except BaseException as err:
         assert False, f"Failed either to run test or execute workflow. \n {err}"
     finally:
-        rmtree(pickle_folder)
+        shutil.rmtree(pickle_folder)
 
 
 @pytest.mark.parametrize(
@@ -630,7 +709,7 @@ def test_load_job_from_file(job, workflow):
     except BaseException as err:
         assert False, f"Failed to load job from file"
     finally:
-        rmtree(pickle_folder)
+        shutil.rmtree(pickle_folder)
 
 
 @pytest.mark.parametrize(
@@ -940,7 +1019,7 @@ def test_load_job_from_object(job, workflow, cwd):
     except BaseException as err:
         assert False, f"Failed to load job from parsed object"
     finally:
-        rmtree(pickle_folder)
+        shutil.rmtree(pickle_folder)
 
 
 @pytest.mark.parametrize(
@@ -1175,7 +1254,7 @@ def test_fast_cwl_load_workflow_from_cwl(workflow):
     except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
     finally:
-        rmtree(pickle_folder)
+        shutil.rmtree(pickle_folder)
 
     assert isinstance(workflow_tool, CommentedMap), \
            "Failed to parse CWL file"
@@ -1210,7 +1289,7 @@ def test_fast_cwl_load_workflow_from_parsed(workflow):
     except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
     finally:
-        rmtree(pickle_folder)
+        shutil.rmtree(pickle_folder)
 
     assert isinstance(workflow_tool, CommentedMap), \
            "Failed to parse CWL file"
@@ -1231,7 +1310,7 @@ def test_fast_cwl_load_workflow_from_pickle(workflow):
     pickle_folder = tempfile.mkdtemp()
     workflow_path = os.path.join(DATA_FOLDER, *workflow)
     duplicate_workflow_path = os.path.join(pickle_folder, workflow[-1])  # will fail if parsed directly
-    copy(workflow_path, duplicate_workflow_path)
+    shutil.copy(workflow_path, duplicate_workflow_path)
     try:
         workflow_tool = fast_cwl_load(                                   # should result in creating pickled file
             workflow=workflow_path,
@@ -1244,7 +1323,7 @@ def test_fast_cwl_load_workflow_from_pickle(workflow):
     except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
     finally:
-        rmtree(pickle_folder)
+        shutil.rmtree(pickle_folder)
 
     assert isinstance(workflow_tool, CommentedMap), \
            "Failed to load pickled CWL file"
@@ -1374,7 +1453,7 @@ def test_fast_cwl_load_workflow_from_compressed_cwl(workflow):
     except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
     finally:
-        rmtree(pickle_folder)
+        shutil.rmtree(pickle_folder)
 
     assert isinstance(workflow_tool, CommentedMap), \
            "Failed to parse CWL file"
@@ -1402,7 +1481,7 @@ def test_fast_cwl_load_workflow_from_cwl_should_fail(workflow):
         except (FileNotFoundError, SchemaSaladException) as err:
             assert False, f"Should raise because workflow wasn't found. \n {err}"
         finally:
-            rmtree(pickle_folder)
+            shutil.rmtree(pickle_folder)
 
 
 @pytest.mark.parametrize(
@@ -1465,7 +1544,7 @@ def test_fast_cwl_load_workflow_from_compressed_cwl_should_fail(workflow):
             assert False, \
                 f"Should raise because workflow didn't include runs or didn't exist. \n {err}"
         finally:
-            rmtree(pickle_folder)
+            shutil.rmtree(pickle_folder)
 
 
 @pytest.mark.parametrize(
