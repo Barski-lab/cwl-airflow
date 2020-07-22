@@ -74,6 +74,7 @@ jobs:
     - pip install .
     before_script:
     - cwl-airflow init --upgrade
+    - rm -f ~/airflow/dags/bam-bedgraph-bigwig-single.cwl
     script: airflow list_dags --report  # to check if all DAGs are correct
 
 before_install:
