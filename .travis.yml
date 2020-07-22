@@ -11,58 +11,58 @@ services:
 python:
 - 3.7
 
-# env:
-# - NTEST=1
-# - NTEST=2
-# - NTEST=3
-# - NTEST=4
-# - NTEST=5
-# - NTEST=6
-# - NTEST=7
-# - NTEST=8
-# - NTEST=9
-# - NTEST=10
-# - NTEST=11
-# - NTEST=12
-# - NTEST=13
-# - NTEST=14
-# - NTEST=15
-# - NTEST=16
-# - NTEST=17
-# - NTEST=18
-# - NTEST=19
-# - NTEST=20
-# - NTEST=21
-# - NTEST=22
-# - NTEST=23
-# - NTEST=24
-# - NTEST=25
-# - NTEST=26
-# - NTEST=27
-# - NTEST=28
-# - NTEST=29
-# - NTEST=30
-# - NTEST=31
+env:
+- NTEST=1
+- NTEST=2
+- NTEST=3
+- NTEST=4
+- NTEST=5
+- NTEST=6
+- NTEST=7
+- NTEST=8
+- NTEST=9
+- NTEST=10
+- NTEST=11
+- NTEST=12
+- NTEST=13
+- NTEST=14
+- NTEST=15
+- NTEST=16
+- NTEST=17
+- NTEST=18
+- NTEST=19
+- NTEST=20
+- NTEST=21
+- NTEST=22
+- NTEST=23
+- NTEST=24
+- NTEST=25
+- NTEST=26
+- NTEST=27
+- NTEST=28
+- NTEST=29
+- NTEST=30
+- NTEST=31
 
 jobs:
   include:
-  # - name: Unit tests
-  #   before_install:   # to overwrite from the main config
-  #   - echo "Skip"
-  #   install:
-  #   - pip install .
-  #   before_script:    # to overwrite from the main config
-  #   - echo "Skip"
-  #   script: ./tests/run_tests.sh
-  #   after_success:
-  #   - coveralls
-  #   deploy:
-  #     provider: pypi
-  #     user: michael_kotliar
-  #     password:
-  #       secure: Mji1koR4nyt/KgoycpuvgIp9toFVNYaSxUmNY6EVt0pmIpRb/GKbw6TdyfAdtnSAwH3BcSUC/R1hCwyaXfv1GDPFYqv9Yg1MaNHR1clvo8E8KIIPt1JDqPM47lgPQQFFbwB+Cc6uSV0Nn9oDBkhWEPQqV3kI/GJkSUzSs/yjZqR4C+aZxsJzE+VX2ZzeGCD3x4mzhAAWan4MLrdgANaXQVTHhyHIhTp3l109FblYimMvx8HqKotMiM+32mVFxgwf/pMw/N8gDOFXd4VrtlaOqqHpn4VJko+jSNYuAdKn62N2KFKqExyU39ycvU9ngYaU38nmCjJdibRgNyxfdH6LfndS9xzu3KPY64ACLG1i8Ym+57Q7wSJZAb2WF/b8av1RnkKMUGHHYXBzVIGk7Abvuhde0DsV0lr9XsapQn7XySmhdBWYazZTr+AtgIdsx7AmHV1ug6nPp3tIQzW1+YAOf295Puwqbrn+SF3jYw6167jAl5M1a81kxqli1UTsLgpcaTbTD1ofwLn4gP3VuU1f4fKGzhrxl6ybHW+LpO/wkcN2wJDdBbqz5OQIYfshMQEooIODOw1OonmwbY3vcMATuvi7Hz3mIElqpu3TVxH9aoBzcvL1148wPhZF8u87T8nDgsHeUT66I56ILGcZszASolt2Cb6oPZmxg2jgajTREwk=
-  #     on:
-  #       tags: true
+  - name: Unit tests
+    before_install:   # to overwrite from the main config
+    - echo "Skip"
+    install:
+    - pip install .
+    before_script:    # to overwrite from the main config
+    - echo "Skip"
+    script: ./tests/run_tests.sh
+    after_success:
+    - coveralls
+    deploy:
+      provider: pypi
+      user: michael_kotliar
+      password:
+        secure: Mji1koR4nyt/KgoycpuvgIp9toFVNYaSxUmNY6EVt0pmIpRb/GKbw6TdyfAdtnSAwH3BcSUC/R1hCwyaXfv1GDPFYqv9Yg1MaNHR1clvo8E8KIIPt1JDqPM47lgPQQFFbwB+Cc6uSV0Nn9oDBkhWEPQqV3kI/GJkSUzSs/yjZqR4C+aZxsJzE+VX2ZzeGCD3x4mzhAAWan4MLrdgANaXQVTHhyHIhTp3l109FblYimMvx8HqKotMiM+32mVFxgwf/pMw/N8gDOFXd4VrtlaOqqHpn4VJko+jSNYuAdKn62N2KFKqExyU39ycvU9ngYaU38nmCjJdibRgNyxfdH6LfndS9xzu3KPY64ACLG1i8Ym+57Q7wSJZAb2WF/b8av1RnkKMUGHHYXBzVIGk7Abvuhde0DsV0lr9XsapQn7XySmhdBWYazZTr+AtgIdsx7AmHV1ug6nPp3tIQzW1+YAOf295Puwqbrn+SF3jYw6167jAl5M1a81kxqli1UTsLgpcaTbTD1ofwLn4gP3VuU1f4fKGzhrxl6ybHW+LpO/wkcN2wJDdBbqz5OQIYfshMQEooIODOw1OonmwbY3vcMATuvi7Hz3mIElqpu3TVxH9aoBzcvL1148wPhZF8u87T8nDgsHeUT66I56ILGcZszASolt2Cb6oPZmxg2jgajTREwk=
+      on:
+        tags: true
   - name: DAG with embedded workflow (just one test)
     script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --embed
   - name: Test of `init --upgrade`
@@ -77,23 +77,23 @@ jobs:
     - rm -f ~/airflow/dags/bam-bedgraph-bigwig-single.cwl
     script: airflow list_dags --report  # to check if all DAGs are correct
 
-# before_install:
-# - git clone https://github.com/datirium/workflows.git --recursive
-# - docker pull mysql/mysql-server:5.7
-# - docker run -v ~/database:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=airflow -e MYSQL_DATABASE=airflow -e MYSQL_USER=airflow -e MYSQL_PASSWORD=airflow -p 6603:3306 -d mysql/mysql-server:5.7 --explicit-defaults-for-timestamp=1
-# install:
-# - pip install .
-# - pip install mysqlclient
-# before_script:
-# - airflow --help             # to generate airflow.cfg
-# - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
-# - sed -i'.backup' -e 's/^dag_dir_list_interval =.*/dag_dir_list_interval = 60/g' ~/airflow/airflow.cfg
-# - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
-# - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
-# - cwl-airflow init           # to init database and add process_report connection
-# - airflow scheduler > /dev/null 2>&1 &
-# - cwl-airflow api > /dev/null 2>&1 &
-# script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range $NTEST
+before_install:
+- git clone https://github.com/datirium/workflows.git --recursive
+- docker pull mysql/mysql-server:5.7
+- docker run -v ~/database:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=airflow -e MYSQL_DATABASE=airflow -e MYSQL_USER=airflow -e MYSQL_PASSWORD=airflow -p 6603:3306 -d mysql/mysql-server:5.7 --explicit-defaults-for-timestamp=1
+install:
+- pip install .
+- pip install mysqlclient
+before_script:
+- airflow --help             # to generate airflow.cfg
+- sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
+- sed -i'.backup' -e 's/^dag_dir_list_interval =.*/dag_dir_list_interval = 60/g' ~/airflow/airflow.cfg
+- sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
+- sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
+- cwl-airflow init           # to init database and add process_report connection
+- airflow scheduler > /dev/null 2>&1 &
+- cwl-airflow api > /dev/null 2>&1 &
+script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range $NTEST
 
 branches:
   only:
