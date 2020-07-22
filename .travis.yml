@@ -65,10 +65,11 @@ jobs:
         tags: true
   - name: DAG with embedded workflow (just one test)
     script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --embed
-  - name: Test if old formatted DAGs are upgraded by --upgrade
-    before_install:                     # copy old formatted and normal DAGs into the dags folder
+  - name: Test of `init --upgrade`
+    before_install:                     # copy old formatted and normal DAGs into the dags folder, as well as workflow
     - mkdir -p ~/airflow/dags
-    - cp ./cwl-airflow/tests/data/dags/* ~/airflow/dags
+    - cp ./cwl-airflow/tests/data/dags/bam_bedgraph_bigwig_single_old_format.py ~/airflow/dags
+    - cp ./cwl-airflow/tests/data/workflows/bam-bedgraph-bigwig-single.cwl ~/airflow/dags
     install:
     - pip install .
     before_script:
