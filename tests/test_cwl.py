@@ -31,6 +31,7 @@ from cwl_airflow.utilities.cwl import (
     convert_to_workflow,
     get_default_cwl_args,
     overwrite_deprecated_dag,
+    get_containers,
     CWL_TMP_FOLDER,
     CWL_OUTPUTS_FOLDER,
     CWL_PICKLE_FOLDER,
@@ -47,6 +48,66 @@ from cwl_airflow.utilities.cwl import (
 DATA_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
 if sys.platform == "darwin":                                                    # docker has troubles of mounting /var/private on macOs
     tempfile.tempdir = "/private/tmp"
+
+
+@pytest.mark.parametrize(
+    "task_id, cidfiles, control_containers",
+    [
+        (
+            "bam_to_bedgraph",
+            [
+                "dummy_1.cid",
+                "dummy_2.cid"
+            ],
+            {
+                "43dd79ede44946a1954d27327000d1c013cb39196c096ce70bc158ee7531a557": "dummy_1.cid",
+                "000d1c013cb39196c096ce70bc158ee7531a55743dd79ede44946a1954d27327": "dummy_2.cid"
+            }
+        ),
+        (
+            "bam_to_bedgraph",
+            [
+                "dummy_1.cid"
+            ],
+            {
+                "43dd79ede44946a1954d27327000d1c013cb39196c096ce70bc158ee7531a557": "dummy_1.cid"
+            }
+        ),
+        (
+            "bam_to_bedgraph",
+            [],
+            {}
+        )
+    ]
+)
+def test_get_containers(task_id, cidfiles, control_containers, monkeypatch):
+    temp_home = tempfile.mkdtemp()
+    monkeypatch.delenv("AIRFLOW_HOME", raising=False)
+    monkeypatch.delenv("AIRFLOW_CONFIG", raising=False)
+    monkeypatch.setattr(
+        os.path,
+        "expanduser",
+        lambda x: x.replace("~", temp_home)
+    )
+
+    for cidfile in cidfiles:
+        shutil.copy(
+            os.path.join(DATA_FOLDER, "cid", cidfile),
+            get_dir(os.path.join(temp_home, task_id))
+        )
+
+    try:
+        containers = get_containers({"tmp_folder": temp_home}, task_id)
+        control_containers = {
+            cid: os.path.join(temp_home, task_id, filename) 
+            for cid, filename in control_containers.items()
+        }
+    except (BaseException, Exception) as err:
+        assert False, f"Failed to run test. \n {err}"
+    finally:
+        shutil.rmtree(temp_home)
+    assert control_containers == containers, \
+        "Failed to find cidfiles"
 
 
 @pytest.mark.parametrize(

@@ -98,6 +98,7 @@ setup(
         "pyjwt",
         "connexion",
         "tornado",
+        "docker",
         "swagger-ui-bundle"
     ],
     zip_safe=False,

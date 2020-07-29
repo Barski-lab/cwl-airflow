@@ -4,6 +4,8 @@ from airflow.utils.decorators import apply_defaults
 
 from cwl_airflow.utilities.cwl import (
     execute_workflow_step,
+    get_containers,
+    kill_containers,
     collect_reports
 )
 from cwl_airflow.utilities.report import post_status
@@ -30,34 +32,29 @@ class CWLStepOperator(BaseOperator):
 
         post_status(context)
 
+        self.job_data = collect_reports(context)         # we need it also in "on_kill"
         _, step_report = execute_workflow_step(
             workflow=context["dag"].workflow,
             task_id=self.task_id,
-            job_data=collect_reports(context),
+            job_data=self.job_data,
             cwl_args=context["dag"].default_args["cwl"]
         )
 
         return step_report
 
 
-    # def on_kill(self):
-    #     _logger.info("Stop docker containers")
-    #     for cidfile in glob.glob(os.path.join(self.dag.default_args["cidfile_dir"], self.task_id + "*.cid")):  # make this better, doesn't look good to read from self.dag.default_args
-    #         try:
-    #             with open(cidfile, "r") as inp_stream:
-    #                 _logger.debug(f"""Read container id from {cidfile}""")
-    #                 command = ["docker", "kill", inp_stream.read()]
-    #                 _logger.debug(f"""Call {" ".join(command)}""")
-    #                 p = subprocess.Popen(command, shell=False)
-    #                 try:
-    #                     p.wait(timeout=10)
-    #                 except subprocess.TimeoutExpired:
-    #                     p.kill()
-    #         except Exception as ex:
-    #             _logger.error(f"""Failed to stop docker container with ID from {cidfile}\n {ex}""")
+    def on_kill(self):
+        """
+        Function is called only if task is manually stopped, for example, from UI.
+        First, we need to find all cidfiles that correspond to the current step.
+        We can have more than one cidfile, if previous run of this step has failed.
+        We search for cidfiles in the subfolder "task_id" of the "tmp_folder" read
+        from "job_data". For all found cidfile we check if cointainer is still
+        running and try to stop it. If container was not running, was not found or
+        had been already successfully killed, we remove the correspondent cidfile.
+        If container was running but we failed to kill it do not remove cidfile.
+        """
 
-    #     # _logger.info(f"""Delete temporary output directory {self.outdir}""")
-    #     # try:
-    #     #     shutil.rmtree(self.outdir)
-    #     # except Exception as ex:
-    #     #     _logger.error(f"""Failed to delete temporary output directory {self.outdir}\n {ex}""")
+        kill_containers(
+            get_containers(self.job_data, self.task_id)
+        )

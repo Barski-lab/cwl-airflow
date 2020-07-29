@@ -7,6 +7,8 @@ import json
 import zlib
 import errno
 import shutil
+import docker
+import logging
 import binascii
 
 from uuid import uuid4
@@ -52,7 +54,8 @@ from cwl_airflow.utilities.helpers import (
     get_rootname,
     remove_field_from_dict,
     get_uncompressed,
-    get_compressed
+    get_compressed,
+    get_files
 )
 
 
@@ -320,6 +323,53 @@ def relocate_outputs(
         shutil.rmtree(job_data_copy["tmp_folder"], ignore_errors=False)
 
     return relocated_job_data, workflow_report
+
+
+def get_containers(job_data, task_id):
+    """
+    Searches for cidfiles in the "step_tmp_folder", loads
+    container IDs from the found files, adds them to dict
+    in a form of {cid: location}. If nothing found,
+    returns {}.
+    """
+
+    containers = {}
+
+    step_tmp_folder, _, _, _ = get_temp_folders(
+        task_id=task_id,
+        job_data=job_data
+    )
+
+    for location in get_files(step_tmp_folder, ".*\\.cid$").values():
+        try:
+            with open(location, "r") as input_stream:
+                containers[input_stream.read()] = location
+        except OSError as err:
+            logging.error(f"Failed to read container ID \
+                from {location} due to \n{err}")
+
+    return containers
+
+
+def kill_containers(containers):
+    """
+    Iterates over "containers" dictionary received from "get_containers"
+    and tries to kill all running containers based on cid. If killed
+    container was not in "running" state, was successfully killed or not
+    found at all, removes correspondent cidfile.
+    """
+
+    docker_client = docker.from_env()
+    for cid, location in containers.items():
+        try:
+            container = docker_client.containers.get(cid)
+            if container.status == "running":
+                container.kill()
+            os.remove(location)
+        except docker.errors.NotFound as err:
+            os.remove(location)
+        except docker.errors.APIError as err:
+            logging.error(f"Failed to kill container. \n {err}")
 
 
 def execute_workflow_step(
