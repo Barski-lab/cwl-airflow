@@ -1,0 +1,19 @@
+version: "3"
+
+
+services:
+
+    scheduler:
+        build: ./cwl_airflow
+        container_name: scheduler
+        restart: always
+
+    webserver:
+        build: ./cwl_airflow
+        container_name: webserver
+        restart: always
+            
+    apiserver:
+        build: ./cwl_airflow
+        container_name: apiserver
+        restart: always
