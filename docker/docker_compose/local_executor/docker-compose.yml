@@ -15,6 +15,7 @@ services:
         privileged: true
         restart: always
         environment:
+            - AIRFLOW_HOME=/opt/airflow
             - AIRFLOW__CORE__EXECUTOR=LocalExecutor
             - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
             - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
@@ -22,9 +23,7 @@ services:
             - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
             - AIRFLOW__CORE__PLUGINS_FOLDER=/opt/airflow/plugins
             - AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=/opt/airflow/logs/scheduler
-        command:
-            - cwl-airflow init
-            - airflow scheduler
+        command: bash -c "cwl-airflow init && airflow scheduler"
         depends_on:
             - mysql
 
@@ -40,6 +39,9 @@ services:
             - ${CWL_PICKLE_FOLDER}:/opt/cwl_pickle_folder
         restart: always
         environment:
+            - AIRFLOW_HOME=/opt/airflow
+            - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
             - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
             - AIRFLOW__CORE__BASE_LOG_FOLDER=/opt/airflow/logs
             - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
@@ -62,6 +64,9 @@ services:
             - ${CWL_PICKLE_FOLDER}:/opt/cwl_pickle_folder
         restart: always
         environment:
+            - AIRFLOW_HOME=/opt/airflow
+            - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
             - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
             - AIRFLOW__CORE__BASE_LOG_FOLDER=/opt/airflow/logs
             - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
@@ -79,10 +84,11 @@ services:
             - ${MYSQL_PORT}:3306
         volumes:
             - ${MYSQL_DATA}:/var/lib/mysql
-            - /dev/urandom:/dev/random                    # Not sure if I need it
+            - /dev/urandom:/dev/random                    # Not sure if I need it at all
         restart: always
         environment:
             - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
             - MYSQL_DATABASE=${MYSQL_DATABASE}
             - MYSQL_USER=${MYSQL_USER}
             - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+        command: --explicit-defaults-for-timestamp=1
