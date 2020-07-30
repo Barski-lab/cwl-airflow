@@ -6,14 +6,83 @@ services:
     scheduler:
         build: ./cwl_airflow
         container_name: scheduler
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - ${AIRFLOW_HOME}:/opt/airflow
+            - ${CWL_TMP_FOLDER}:/opt/cwl_tmp_folder
+            - ${CWL_OUTPUTS_FOLDER}:/opt/cwl_outputs_folder
+            - ${CWL_PICKLE_FOLDER}:/opt/cwl_pickle_folder
+        privileged: true
         restart: always
+        environment:
+            - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+            - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
+            - AIRFLOW__CORE__BASE_LOG_FOLDER=/opt/airflow/logs
+            - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
+            - AIRFLOW__CORE__PLUGINS_FOLDER=/opt/airflow/plugins
+            - AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=/opt/airflow/logs/scheduler
+        command:
+            - cwl-airflow init
+            - airflow scheduler
+        depends_on:
+            - mysql
 
     webserver:
         build: ./cwl_airflow
         container_name: webserver
+        ports:
+            - ${AIRFLOW_WEBSERVER_PORT}:8080
+        volumes:
+            - ${AIRFLOW_HOME}:/opt/airflow
+            - ${CWL_TMP_FOLDER}:/opt/cwl_tmp_folder
+            - ${CWL_OUTPUTS_FOLDER}:/opt/cwl_outputs_folder
+            - ${CWL_PICKLE_FOLDER}:/opt/cwl_pickle_folder
         restart: always
-            
+        environment:
+            - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
+            - AIRFLOW__CORE__BASE_LOG_FOLDER=/opt/airflow/logs
+            - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
+            - AIRFLOW__CORE__PLUGINS_FOLDER=/opt/airflow/plugins
+            - AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=/opt/airflow/logs/scheduler
+        command: airflow webserver
+        depends_on:
+            - mysql
+            - scheduler
+
     apiserver:
         build: ./cwl_airflow
         container_name: apiserver
+        ports:
+            - ${CWL_AIRFLOW_API_PORT}:8081
+        volumes:
+            - ${AIRFLOW_HOME}:/opt/airflow
+            - ${CWL_TMP_FOLDER}:/opt/cwl_tmp_folder
+            - ${CWL_OUTPUTS_FOLDER}:/opt/cwl_outputs_folder
+            - ${CWL_PICKLE_FOLDER}:/opt/cwl_pickle_folder
         restart: always
+        environment:
+            - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
+            - AIRFLOW__CORE__BASE_LOG_FOLDER=/opt/airflow/logs
+            - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
+            - AIRFLOW__CORE__PLUGINS_FOLDER=/opt/airflow/plugins
+            - AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=/opt/airflow/logs/scheduler
+        command: cwl-airflow api
+        depends_on:
+            - mysql
+            - scheduler
+
+    mysql:
+        image: mysql:5.7
+        container_name: mysql
+        ports:
+            - ${MYSQL_PORT}:3306
+        volumes:
+            - ${MYSQL_DATA}:/var/lib/mysql
+            - /dev/urandom:/dev/random                    # Not sure if I need it
+        restart: always
+        environment:
+            - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
