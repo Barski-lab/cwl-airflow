@@ -20,10 +20,10 @@ WORKDIR /tmp
 ENV CWL_AIRFLOW_VERSION "1.2.2"
 
 RUN apt-get update && \
-    apt-get install -y python3-dev libmysqlclient-dev python3-pip gcc git wget curl && \
-    pip3 install -U pip                                                             && \
-    pip3 install cwl-airflow[mysql]==${CWL_AIRFLOW_VERSION}                         && \
-    apt-get clean                                                                   && \
-    apt-get purge                                                                   && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*                  && \
+    apt-get install -y nodejs python3-dev libmysqlclient-dev python3-pip gcc git wget curl && \
+    pip3 install -U pip                                                                    && \
+    pip3 install cwl-airflow[mysql]==${CWL_AIRFLOW_VERSION}                                && \
+    apt-get clean                                                                          && \
+    apt-get purge                                                                          && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*                         && \
     strip /usr/local/bin/*; true

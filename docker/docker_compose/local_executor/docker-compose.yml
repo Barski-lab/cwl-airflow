@@ -72,7 +72,7 @@ services:
             - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
             - AIRFLOW__CORE__PLUGINS_FOLDER=/opt/airflow/plugins
             - AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=/opt/airflow/logs/scheduler
-        command: cwl-airflow api
+        command: cwl-airflow api --host 0.0.0.0  # default --host 127.0.0.1 won't work from inside the docker container
         depends_on:
             - mysql
             - scheduler
