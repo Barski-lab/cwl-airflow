@@ -43,7 +43,7 @@ class CWLJobDispatcher(BaseOperator):
         run_id = context["run_id"].replace(":", "_").replace("+", "_")  # to make it dumpable by json
         cwl_args = context["dag"].default_args["cwl"]
 
-        # Loads job from dag_run configuration. Sets defaults from "workflow". Doesn't fail if input files are missing
+        # Loads job from dag_run configuration. Sets defaults from "workflow". Fails on missing input files
         job_data = load_job(
             workflow=workflow,
             job=context["dag_run"].conf["job"],

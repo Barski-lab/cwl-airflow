@@ -39,6 +39,11 @@ tmp_folder =
 # Default: AIRFLOW_HOME/cwl_outputs_folder
 outputs_folder = 
 
+# Folder to keep input files. In case job has relative
+# paths they will be resolved based on this location
+# Default: AIRFLOW_HOME/cwl_inputs_folder
+inputs_folder =
+
 # Folder to keep pickled workflows for fast workflow loading.
 # Default: AIRFLOW_HOME/cwl_pickle_folder
 pickle_folder = 

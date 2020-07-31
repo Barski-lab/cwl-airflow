@@ -61,6 +61,7 @@ from cwl_airflow.utilities.helpers import (
 
 CWL_TMP_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_tmp_folder")
 CWL_OUTPUTS_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_outputs_folder")
+CWL_INPUTS_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_inputs_folder")
 CWL_PICKLE_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_pickle_folder")
 CWL_USE_CONTAINER = True
 CWL_NO_MATCH_USER = False
@@ -216,6 +217,12 @@ def get_default_cwl_args(preset_cwl_args=None):
                 conf_get(
                     "cwl", "outputs_folder",
                     preset_cwl_args.get("outputs_folder", CWL_OUTPUTS_FOLDER)
+                )
+            ),
+            "inputs_folder": get_dir(                                             # for CWL-Airflow to resolve relative locations for input files if job was loaded from parsed object
+                conf_get(
+                    "cwl", "inputs_folder",
+                    preset_cwl_args.get("inputs_folder", CWL_INPUTS_FOLDER)
                 )
             ),
             "pickle_folder": get_dir(                                              # for CWL-Airflow to store pickled workflows
@@ -487,13 +494,11 @@ def load_job(
     inputs; never fails). "cwl_args" can be used to update parameters for
     loading and runtime contexts.
 
-    If "job" was file, resolves relative paths based on the job file
-    location. If "job" was already parsed Object and "cwd" is not None,
-    then relative paths will be resolved based on "cwd". Otherwise, relative
-    paths will not be resolved.
-
-    Checks links only when relative paths are resolved, failing on
-    missing input files.
+    If "job" was file, resolves relative paths based on the job file location.
+    If "job" was already parsed into Object, resolves relative paths based on
+    "cwd". If "cwd" was None uses "inputs_folder" value from "cwl_args" or
+    its default value returned from "get_default_cwl_args" function. Checks
+    links after relative paths are resolved, failing on missing input files.
     
     Always returns CommentedMap
     """
@@ -501,6 +506,7 @@ def load_job(
     cwl_args = {} if cwl_args is None else cwl_args
     
     default_cwl_args = get_default_cwl_args(cwl_args)
+    cwd = default_cwl_args["inputs_folder"] if cwd is None else cwd
 
     loading_context = setup_loadingContext(
         LoadingContext(default_cwl_args),
@@ -514,13 +520,12 @@ def load_job(
         job_data, _ = loading_context.loader.resolve_ref(job_copy, checklinks=True)
     except (FileNotFoundError, SchemaSaladException) as err:
         job_data = load_yaml(json.dumps(job_copy))
-        if cwd is not None:
-            job_data["id"] = file_uri(cwd) + "/"
-            job_data, metadata = loading_context.loader.resolve_all(
-                job_data,
-                job_data["id"],
-                checklinks=True
-            )
+        job_data["id"] = file_uri(cwd) + "/"
+        job_data, metadata = loading_context.loader.resolve_all(
+            job_data,
+            job_data["id"],
+            checklinks=True
+        )
 
     initialized_job_data = init_job_order(
         job_order_object=job_data,
