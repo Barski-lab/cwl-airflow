@@ -7,7 +7,8 @@ from airflow.utils.decorators import apply_defaults
 
 from cwl_airflow.utilities.helpers import (
     get_dir,
-    dump_json
+    dump_json,
+    get_absolute_path
 )
 from cwl_airflow.utilities.cwl import (
     load_job,
@@ -31,8 +32,11 @@ class CWLJobDispatcher(BaseOperator):
     def execute(self, context):
         """
         Loads job Object from the context. Sets "tmp_folder" and "output_folder"
-        if they have not been set before in the job. Dumps step outputs as a json
-        file into "tmp_folder". Writes to X-Com report file location.
+        if they have not been set before in the job. In case "tmp_folder" and/or
+        "output_folder" were read from the job and are relative, resolves paths
+        relative to the "tmp_folder" and/or "outputs_folder" from "cwl_args".
+        Dumps step outputs as a json file into "tmp_folder". Writes to X-Com report
+        file location.
         """
 
         post_status(context)
@@ -51,19 +55,20 @@ class CWLJobDispatcher(BaseOperator):
         )
 
         job_data["tmp_folder"] = get_dir(
-            os.path.abspath(
+            get_absolute_path(
                 job_data.get(
                     "tmp_folder",
                     mkdtemp(
                         dir=cwl_args["tmp_folder"],
                         prefix=dag_id+"_"+run_id+"_"
                     )
-                )
+                ),
+                cwl_args["tmp_folder"]
             )
         )
 
         job_data["outputs_folder"] = get_dir(
-            os.path.abspath(
+            get_absolute_path(
                 job_data.get(
                     "outputs_folder",
                     os.path.join(
@@ -71,7 +76,8 @@ class CWLJobDispatcher(BaseOperator):
                         dag_id,
                         run_id
                     )
-                )
+                ),
+                cwl_args["outputs_folder"]
             )
         )
 

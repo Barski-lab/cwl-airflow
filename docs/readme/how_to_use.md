@@ -32,15 +32,20 @@ optional arguments:
 [cwl]
 
 # Temp folder to keep intermediate workflow execution data.
+# If job has tmp_folder set as a relative path, it will be
+# resolved based on this location
 # Default: AIRFLOW_HOME/cwl_tmp_folder
 tmp_folder =
 
-# Output folder to save workflow execution results.
+# Output folder to save workflow execution results. If
+# job has outputs_folder set as a relative path, it will
+# be resolved based on this location
 # Default: AIRFLOW_HOME/cwl_outputs_folder
 outputs_folder = 
 
-# Folder to keep input files. In case job has relative
-# paths they will be resolved based on this location
+# Folder to keep input files. If job has relative paths
+# for input files they will be resolved based on this
+# location
 # Default: AIRFLOW_HOME/cwl_inputs_folder
 inputs_folder =
 
