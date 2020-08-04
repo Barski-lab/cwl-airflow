@@ -79,8 +79,8 @@ jobs:
   - name: Test packaging for Ubuntu 18.04, Python 3.6
     install:
     - ./packaging/portable/ubuntu/pack.sh 18.04 3.6 $TRAVIS_BRANCH
-    - tar xzf ./packaging/portable/ubuntu/build/python_3.6_with_cwl_airflow_$TRAVIS_BRANCH_ubuntu_18.04.tar.gz
-    - rm -f ./packaging/portable/ubuntu/build/python_3.6_with_cwl_airflow_$TRAVIS_BRANCH_ubuntu_18.04.tar.gz
+    - tar xzf ./packaging/portable/ubuntu/build/python_3.6_with_cwl_airflow_${TRAVIS_BRANCH}_ubuntu_18.04.tar.gz
+    - rm -f ./packaging/portable/ubuntu/build/python_3.6_with_cwl_airflow_${TRAVIS_BRANCH}_ubuntu_18.04.tar.gz
     before_script:
     - ./python3/bin_portable/airflow --help             # to generate airflow.cfg
     - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
