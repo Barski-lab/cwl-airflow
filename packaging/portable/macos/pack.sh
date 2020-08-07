@@ -33,8 +33,10 @@ cd cwl-airflow
 echo "Switch to ${CWL_AIRFLOW_VERSION} branch/tag"
 git checkout --quiet $CWL_AIRFLOW_VERSION
 
-echo "Install CWL-Airflow"
+echo "Install CWL-Airflow, compile lxml"
 ../bin/pip3 install --prefix="../" --no-warn-script-location -qq ".[mysql]"
+../bin/pip3 uninstall -y -qq lxml
+../bin/pip3 install --prefix="../" --no-warn-script-location --no-binary lxml -qq lxml  # otherwise cannot be properly signed
 cd ..
 rm -rf cwl-airflow
 
