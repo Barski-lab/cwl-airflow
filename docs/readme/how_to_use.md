@@ -93,7 +93,15 @@ The most convenient way to **manually execute** DAG is to trigger it in **Airflo
 Alternatively, DAGs can be triggered through the **Airflow CLI** with the JSON input paramerers file.
 
 ```sh
-airflow trigger_dag --conf "{\"job\":$(cat ./bam-bedgraph-bigwig.json)}" bam-bedgraph-bigwig
+$ airflow trigger_dag --conf "{\"job\":$(cat ./bam-bedgraph-bigwig.json)}" bam-bedgraph-bigwig
+```
+
+## Posting pipeline execution progress and results
+
+To make CWL-Airflow **post workflow executions progress and results** `process_report` connection should be added. Parameters can be adjusted based on the current needs.
+
+```sh
+$ airflow connections --add --conn_id process_report --conn_type http --conn_host localhost --conn_port 3070 --conn_extra "{\"endpoint\":\"/airflow/\"}"
 ```
 
 ## Using an API
