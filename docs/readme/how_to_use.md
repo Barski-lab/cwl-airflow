@@ -22,7 +22,6 @@ optional arguments:
 **Init command will run the following steps** for the specified `--home` and `--config` parameters:
 - Call `airflow initdb`
 - Update `airflow.cfg` to hide paused DAGs, skip loading example DAGs and **do not** pause newly created DAGs 
-- Add new connection `process_report` to report DAG's execution progress and results to `http://localhost:3070` (URL is currently hardcoded)
 - If run with `--upgrade`, upgrade old CWLDAGs to correspond to the latest format, save original CWLDAGs into `deprecated_dags` folder   
 - Put **clean_dag_run.py** into the DAGs folder (later its functions will be moved to API)
 

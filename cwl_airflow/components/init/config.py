@@ -28,7 +28,7 @@ def run_init_config(args):
 
     init_airflow_db(args)
     patch_airflow_config(args.config)
-    add_connections(args)
+    # add_connections(args)
     if args.upgrade:
         upgrade_dags(args.config)
     copy_dags(args.home)
@@ -138,7 +138,7 @@ def copy_dags(airflow_home, source_folder=None):
                 if not os.path.isfile(os.path.join(target_folder, filename)):
                     shutil.copy(os.path.join(root, filename), target_folder)
 
-
+# not used anymore
 def add_connections(args):
     """
     Sets AIRFLOW_HOME and AIRFLOW_CONFIG from args.
