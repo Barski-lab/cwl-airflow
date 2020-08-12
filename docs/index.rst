@@ -19,7 +19,7 @@ Welcome to CWL-Airflow's documentation!
    :target: https://pepy.tech/project/cwl-airflow
 
 
-Python package to extend `Apache-Airflow 1.10.10 <https://airflow.apache.org>`_ functionality with `CWL v1.1 <https://www.commonwl.org/v1.1/>`_ support.
+Python package to extend `Apache-Airflow 1.10.11 <https://airflow.apache.org>`_ functionality with `CWL v1.2 <https://www.commonwl.org/v1.2/>`_ support.
 
 Note
 ----
