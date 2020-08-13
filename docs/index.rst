@@ -51,6 +51,7 @@ Current documentaion is still in progress. If you one of those who has just noti
    How it works <readme/how_it_works.md>
    How to install <readme/how_to_install.md>
    How to use <readme/how_to_use.md>
+   What if it doesn't work <readme/what_if_it_doesnt_work.md>
 .. API <readme/api.rst>
    
-   What if it doesn't work <readme/what_if_it_doesnt_work.md>
+   
