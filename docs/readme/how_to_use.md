@@ -25,7 +25,12 @@ optional arguments:
 - If run with `--upgrade`, upgrade old CWLDAGs to correspond to the latest format, save original CWLDAGs into `deprecated_dags` folder   
 - Put **clean_dag_run.py** into the DAGs folder (later its functions will be moved to API)
 
-**Optionally**, you can update your **airflow.cfg** with `[cwl]` section setting the following configuration parameters:
+## Updating **airflow.cfg**
+
+
+For precise configuration the `[cwl]` section can be added to **airflow.cfg**. All of the **parameters below are optional** and will take their default values if not provided.
+
+Depending on situation, for example when running CWL-Airflow from Docker container, one may need to set the exact locations for **tmp**, **outputs**, **inputs** and **pickle** folders to allow their proper mounting. For additional details refer to [Running CWL-Airflow with docker-compose](#Running-CWL-Airflow-with-docker-compose) section.
 
 ```ini
 [cwl]
@@ -122,3 +127,7 @@ optional arguments:
 When run **API specification** can be accessed through [http://localhost:8081/api/experimental/ui/](http://localhost:8081/api/experimental/ui/). Otherwise, the same configuration is published on [SwaggerHub](https://app.swaggerhub.com/apis/michael-kotliar/cwl_airflow_workflow_execution_service/1.0.0) 
 
 ![](../images/api.jpg)
+
+## Running CWL-Airflow with docker-compose
+
+Work in progress. Coming soon!
