@@ -51,8 +51,8 @@ paths:
       tags:
         - Airflow
     post:
-      summary: Creates new dag with dag_id from the attached workflow.cwl file.
-      description: Creates new dag with dag_id from the attached workflow.cwl file.
+      summary: Creates new dag with dag_id from the attached workflow.cwl file or its compressed content.
+      description: Creates new dag with dag_id from the attached workflow.cwl file or its compressed content.
       operationId: post_dag
       responses:
         "200":
