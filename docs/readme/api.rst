@@ -1,3 +1,3 @@
 .. API
 
-.. openapi:: components/api/openapi/swagger_configuration.yaml
+.. openapi:: ../../cwl_airflow/components/api/openapi/swagger_configuration.yaml
