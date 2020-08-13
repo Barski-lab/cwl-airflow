@@ -55,4 +55,4 @@ Current documentaion is still in progress. If you one of those who has just noti
 
 .. toctree::
    :maxdepth: 3
-   readme/api
+   API <readme/api.rst>
