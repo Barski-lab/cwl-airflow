@@ -10,7 +10,7 @@ or [What if is doesn't work](./what_if_it_doesnt_work.md) sections.
     $ pip3 install cwl-airflow
     ```
 
-2. Configure CWL-airflow
+2. Configure CWL-airflow (refer to [Initial configuration](./how_to_use.md#initial-configuration) section for additional details)
     ```sh
     $ cwl-airflow init
     ```
