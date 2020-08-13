@@ -30,17 +30,17 @@ Python package to extend `Apache-Airflow 1.10.11 <https://airflow.apache.org>`_ 
    <script src="https://player.vimeo.com/api/player.js">
    </script>
 
-
-
-Note
-----
-
-Current documentaion is still in progress. If you one of those who has just noticed typo in the word **documentaion**, we need your Pull Requests
+|
 
 Cite as
 -------
 
 Michael Kotliar, Andrey V Kartashov, Artem Barski, CWL-Airflow: a lightweight pipeline manager supporting Common Workflow Language, GigaScience, Volume 8, Issue 7, July 2019, giz084, https://doi.org/10.1093/gigascience/giz084
+
+Note
+----
+
+Current documentaion is still in progress. If you one of those who has just noticed typo in the word **documentaion**, we need your Pull Requests
 
 
 .. toctree::
