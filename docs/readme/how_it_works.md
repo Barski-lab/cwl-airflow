@@ -7,7 +7,7 @@
    - **tmp_folder** - folder to keep temporary data that will be removed after successful workflow execution
    - **outputs_folder** - folder to move generated results after successful workflow execution
    
-   If any of the abovementioned parameters was not set the default value will be read from **airflow.cfg**. For additional details refer to [Updating airflow.cfg](./how_to_use.md) section.
+   If any of the abovementioned parameters was not set the default value will be derived from `[cwl]` section of **airflow.cfg**. For additional details refer to [Updating airflow.cfg](./how_to_use.md) section.
 3. **DAG** - directed acyclic graph that describes workflow structure.
 
 

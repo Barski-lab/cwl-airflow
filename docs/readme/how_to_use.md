@@ -25,31 +25,34 @@ optional arguments:
 - If run with `--upgrade`, upgrade old CWLDAGs to correspond to the latest format, save original CWLDAGs into `deprecated_dags` folder   
 - Put **clean_dag_run.py** into the DAGs folder (later its functions will be moved to API)
 
-## Updating **airflow.cfg**
+## Updating airflow.cfg
 
 
-For precise configuration the `[cwl]` section can be added to **airflow.cfg**. All of the **parameters below are optional** and will take their default values if not provided.
+For precise configuration the `[cwl]` section can be added to **airflow.cfg**. All of the parameters descibed below are **optional** and will take their default values if not provided.
 
-Depending on situation, for example when running CWL-Airflow from Docker container, one may need to set the exact locations for **tmp**, **outputs**, **inputs** and **pickle** folders to allow their proper mounting. For additional details refer to [Running CWL-Airflow with docker-compose](#Running-CWL-Airflow-with-docker-compose) section.
+If job already included absolute paths for **tmp_folder** and **outputs_folder** the corresponent parameters from **airflow.cfg** will be ignored.
+
+In other situation, for example when running CWL-Airflow with `docker-compose`, one may need to set the exact locations for **tmp**, **outputs**, **inputs** and **pickle** folders to allow their proper mounting to Docker container.
+
+Also, following the abovementioned scenario, all input files required for workflow execution might be placed into **inputs_folder**. At the same time, when using relative locations in the job file, all paths will be resolved based on the same **inputs_folder**. For additional details refer to [Running CWL-Airflow with docker-compose](#running-cwl-airflow-with-docker-compose) section.
 
 ```ini
 [cwl]
 
 # Temp folder to keep intermediate workflow execution data.
-# If job has tmp_folder set as a relative path, it will be
-# resolved based on this location
+# Ignored if job already has tmp_folder set as absolute path.
+# If job has tmp_folder set as a relative path, it will be resolved based on this location.
 # Default: AIRFLOW_HOME/cwl_tmp_folder
 tmp_folder =
 
-# Output folder to save workflow execution results. If
-# job has outputs_folder set as a relative path, it will
-# be resolved based on this location
+# Output folder to save workflow execution results.
+# Ignored if job already has outputs_folder set as absolute path.
+# If job has outputs_folder set as a relative path, it will be resolved based on this location.
 # Default: AIRFLOW_HOME/cwl_outputs_folder
 outputs_folder = 
 
-# Folder to keep input files. If job has relative paths
-# for input files they will be resolved based on this
-# location
+# Folder to keep input files.
+# If job has relative paths for input files they will be resolved based on this location.
 # Default: AIRFLOW_HOME/cwl_inputs_folder
 inputs_folder =
 
