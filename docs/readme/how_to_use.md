@@ -142,7 +142,7 @@ optional arguments:
   --host HOST  Set host to run API server. Default: 127.0.0.1
 ```
 
-Although, **detailed API specification** available on [SwaggerHub](https://app.swaggerhub.com/apis/michael-kotliar/cwl_airflow_workflow_execution_service/1.0.0), here we provide the most commonly used endpoints.
+Although, **detailed API specification** available on [SwaggerHub](https://app.swaggerhub.com/apis/michael-kotliar/cwl_airflow_workflow_execution_service/1.0.0), here we provide the **most commonly used endpoints**.
 
 ### **1. Get list of dags**
 
