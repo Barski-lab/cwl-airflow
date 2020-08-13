@@ -44,7 +44,7 @@ Current documentaion is still in progress. If you one of those who has just noti
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    Quick start <readme/quick_start.md>

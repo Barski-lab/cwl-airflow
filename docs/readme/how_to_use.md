@@ -102,9 +102,9 @@ A new pipeline can be run after Airflow Scheduler loads new DAG (by default if h
 
 ## Executing a pipeline
 
-### **Using Airflow web-interface**
+### **Using Airflow UI**
 
-The most convenient way to **manually execute** DAG is to trigger it in **Airflow UI**. Input parameters can be set in the **job** field of the running configuration.
+The most convenient way to **manually execute** DAG is to trigger it from **Airflow UI**. Input parameters can be set in the **job** section of the DAG run configuration as in the example below.
 
 ![](../images/trigger_1.jpg)
 ![](../images/trigger_2.jpg)
