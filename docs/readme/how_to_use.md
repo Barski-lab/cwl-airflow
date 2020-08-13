@@ -142,9 +142,122 @@ optional arguments:
   --host HOST  Set host to run API server. Default: 127.0.0.1
 ```
 
-When run **API specification** can be accessed through [http://localhost:8081/api/experimental/ui/](http://localhost:8081/api/experimental/ui/). Otherwise, the same configuration is published on [SwaggerHub](https://app.swaggerhub.com/apis/michael-kotliar/cwl_airflow_workflow_execution_service/1.0.0) 
+Although, **detailed API specification** available on [SwaggerHub](https://app.swaggerhub.com/apis/michael-kotliar/cwl_airflow_workflow_execution_service/1.0.0), here we provide the most commonly used endpoints.
 
-![](../images/api.jpg)
+### **1. Get list of dags**
+
+`GET /dags`
+
+Parameters:
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|dag_ids|query|array[string]|false|Dag identifiers|
+
+Response example:
+
+```json
+{
+  "dags": [
+    {
+      "dag_id": "string",
+      "tasks": [
+        "string"
+      ]
+    }
+  ]
+}
+```
+
+### **2. Create new dag**
+
+`POST /dags`
+
+Parameters:
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|dag_id|query|string|false|Dag identifier|
+|body|body|object|false|none|
+|workflow|body|string(binary)|false|CWL workflow file with embedded tools and all other dependencies|
+|workflow_content|body|string|false|base64 encoded zlib compressed workflow content|
+
+Response example:
+
+```json
+{
+  "dag_id": "string",
+  "dag_path": "string",
+  "cwl_path": "string"
+}
+```
+
+### **3. Get list of dag_runs**
+
+`GET /dag_runs`
+
+Parameters:
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|dag_id|query|string|false|Dag identifier|
+|run_id|query|string|false|Run identifier|
+|execution_date|query|string(date-time)|false|Execution date|
+|state|query|string|false|Dag run state|
+
+Enumerated values:
+
+|Parameter|Value|
+|---|---|
+|state|running|
+|state|success|
+|state|failed|
+
+Response example:
+
+```json
+{
+  "dag_runs": [
+    {
+      "dag_id": "string",
+      "run_id": "string",
+      "execution_date": "2019-08-24T14:15:22Z",
+      "start_date": "2019-08-24T14:15:22Z",
+      "state": "running",
+      "tasks": [
+        {
+          "id": "string",
+          "state": "scheduled"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### **4. Trigger dag**
+
+`POST /dag_runs`
+
+Parameters:
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|dag_id|query|string|true|Dag identifier|
+|run_id|query|string|false|Run identifier|
+|conf|query|string|false|Run configuration (JSON-formatted string)|
+
+Response example:
+
+```json
+{
+  "dag_id": "string",
+  "run_id": "string",
+  "execution_date": "2019-08-24T14:15:22Z",
+  "start_date": "2019-08-24T14:15:22Z",
+  "state": "running"
+}
+```
 
 ## Running CWL-Airflow with docker-compose
 
