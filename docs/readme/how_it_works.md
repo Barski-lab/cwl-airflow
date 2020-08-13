@@ -10,6 +10,8 @@
    If any of the abovementioned parameters was not set the default value will be derived from `[cwl]` section of **airflow.cfg**. For additional details refer to [Updating airflow.cfg](./how_to_use.md) section.
 3. **DAG** - directed acyclic graph that describes workflow structure.
 
+**Note**, for better understanding of CWL specification and its basic principles, please, refer to the official [CWL User Guide](http://www.commonwl.org/user_guide/).
+
 
 ## Concepts
 
