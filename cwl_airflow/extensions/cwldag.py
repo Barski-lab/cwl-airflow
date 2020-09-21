@@ -136,7 +136,10 @@ class CWLDAG(DAG):
 
         for _, output_data in get_items(self.workflow_tool["outputs"]):
             for output_source_id, _ in get_items(output_data["outputSource"]):            # in case "outputSource" is a list
-                self.gatherer.set_upstream(task_by_out_id[output_source_id])              # connected to gatherer
+                try:
+                    self.gatherer.set_upstream(task_by_out_id[output_source_id])          # connected to another step
+                except KeyError:
+                    self.gatherer.set_upstream(self.dispatcher)                           # connected to dispatcher
 
         # safety measure in case of very specific workflows
         # if gatherer happened to be not connected to anything, connect it to all "leaves"
