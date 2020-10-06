@@ -8,7 +8,7 @@
 
 # **CWL-Airflow**
 
-Python package to extend **[Apache-Airflow 1.10.11](https://airflow.apache.org)**
+Python package to extend **[Apache-Airflow 1.10.12](https://airflow.apache.org)**
 functionality with **[CWL v1.2](https://www.commonwl.org/v1.2/)** support
 
 ## **Cite as**
