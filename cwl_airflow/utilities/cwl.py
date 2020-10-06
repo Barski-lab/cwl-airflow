@@ -420,8 +420,6 @@ def execute_workflow_step(
         location=workflow_step_path
     )
 
-    _stderr = sys.stderr                               # to trick the logger
-    sys.stderr = sys.__stderr__
     step_outputs, step_status = executor(
         slow_cwl_load(
             workflow=workflow_step_path,
@@ -429,7 +427,6 @@ def execute_workflow_step(
         job_data,
         RuntimeContext(default_cwl_args)
     )
-    sys.stderr = _stderr
 
     if step_status != "success":
         raise ValueError
