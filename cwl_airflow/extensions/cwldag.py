@@ -2,7 +2,6 @@
 import os
 
 from copy import deepcopy
-from cwltool.argparser import get_default_args
 from airflow.models import DAG
 from airflow.utils.dates import days_ago
 

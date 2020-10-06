@@ -5,13 +5,11 @@ import dill as pickle  # standard pickle doesn't handle lambdas
 import argparse
 import json
 import zlib
-import errno
 import shutil
 import docker
 import logging
 import binascii
 
-from uuid import uuid4
 from copy import deepcopy
 from jsonmerge import merge
 from urllib.parse import urlsplit
@@ -47,7 +45,6 @@ from schema_salad.ref_resolver import file_uri
 from cwl_airflow.utilities.helpers import (
     get_md5_sum,
     get_dir,
-    get_path_from_url,
     load_yaml,
     dump_json,
     get_absolute_path,
