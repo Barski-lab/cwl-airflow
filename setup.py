@@ -68,6 +68,9 @@ EXTRAS_REQUIRE = {
     ],
     "statsd": [
         "statsd>=3.3.0,<4.0"
+    ],
+    "rabbitmq": [
+        "amqp"
     ]
 }
 
@@ -91,7 +94,7 @@ setup(
     install_requires=[
         "cwltool==3.0.20200530110633",
         "schema-salad==6.0.20200601095207",
-        "apache-airflow==1.10.11",
+        "apache-airflow==1.10.12",
         "cwltest==2.0.20200220223835",
         "ruamel.yaml==0.16.5",
         "jsonmerge",
