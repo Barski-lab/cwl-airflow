@@ -21,7 +21,8 @@ optional arguments:
 
 **Init command will run the following steps** for the specified `--home` and `--config` parameters:
 - Call `airflow initdb`
-- Update `airflow.cfg` to hide paused DAGs, skip loading example DAGs and **do not** pause newly created DAGs 
+- Update `airflow.cfg` to hide paused DAGs, skip loading example DAGs and **do not** pause newly created DAGs. Also, we set our custom `logging_config_class`
+  to split Airflow and CWL related logs into the separate files 
 - If run with `--upgrade`, upgrade old CWLDAGs to correspond to the latest format, save original CWLDAGs into `deprecated_dags` folder   
 - Put **clean_dag_run.py** into the DAGs folder (later its functions will be moved to API)
 
