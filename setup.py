@@ -92,10 +92,10 @@ setup(
     ),
     extras_require=EXTRAS_REQUIRE,
     install_requires=[
-        "cwltool==3.0.20200530110633",
-        "schema-salad==6.0.20200601095207",
+        "cwltool==3.0.20200807132242",
+        "schema-salad==7.0.20200811075006",
         "apache-airflow==1.10.12",
-        "cwltest==2.0.20200220223835",
+        "cwltest==2.0.20200626112502",
         "ruamel.yaml==0.16.5",
         "jsonmerge",
         "pyjwt",
