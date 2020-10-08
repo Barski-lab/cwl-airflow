@@ -9,6 +9,7 @@ from cwl_airflow.utilities.cwl import (
     collect_reports
 )
 from cwl_airflow.utilities.report import post_status
+from cwl_airflow.utilities.loggers import setup_cwl_logger
 
 
 class CWLStepOperator(BaseOperator):
@@ -30,6 +31,7 @@ class CWLStepOperator(BaseOperator):
         report file location to X-Com.
         """
 
+        setup_cwl_logger(context["ti"])
         post_status(context)
 
         self.job_data = collect_reports(context)         # we need it also in "on_kill"

@@ -15,6 +15,7 @@ from cwl_airflow.utilities.cwl import (
     get_temp_folders
 )
 from cwl_airflow.utilities.report import post_status
+from cwl_airflow.utilities.loggers import setup_cwl_logger
 
 
 class CWLJobDispatcher(BaseOperator):
@@ -39,6 +40,7 @@ class CWLJobDispatcher(BaseOperator):
         file location.
         """
 
+        setup_cwl_logger(context["ti"])
         post_status(context)
 
         # for easy access

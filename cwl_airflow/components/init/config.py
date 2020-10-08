@@ -70,6 +70,7 @@ def patch_airflow_config(airflow_config):
     patch = f"""
     sed -i -e 's/^dags_are_paused_at_creation.*/dags_are_paused_at_creation = False/g' {airflow_config} && \
     sed -i -e 's/^load_examples.*/load_examples = False/g' {airflow_config} && \
+    sed -i -e 's/^logging_config_class.*/logging_config_class = cwl_airflow.config_templates.airflow_local_settings.DEFAULT_LOGGING_CONFIG/g' {airflow_config} && \
     sed -i -e 's/^hide_paused_dags_by_default.*/hide_paused_dags_by_default = True/g' {airflow_config}
     """
 

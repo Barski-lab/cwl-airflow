@@ -7,6 +7,7 @@ from cwl_airflow.utilities.cwl import (
     collect_reports
 )
 from cwl_airflow.utilities.report import post_status
+from cwl_airflow.utilities.loggers import setup_cwl_logger
 
 
 class CWLJobGatherer(BaseOperator):
@@ -26,6 +27,7 @@ class CWLJobGatherer(BaseOperator):
         Relocates results to the "outputs_folder", removes "tmp_folder"
         """
 
+        setup_cwl_logger(context["ti"])
         post_status(context)
 
         _, workflow_report = relocate_outputs(
