@@ -43,6 +43,7 @@ env:
 - NTEST=29
 - NTEST=30
 - NTEST=31
+- NTEST=32
 
 jobs:
   include:
