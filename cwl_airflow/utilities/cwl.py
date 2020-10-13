@@ -544,6 +544,8 @@ def fast_cwl_step_load(workflow, target_id, cwl_args=None, location=None):
     selected by "target_id" from the parsed "workflow". Other steps
     are removed. Workflow inputs and outputs are updated based on
     source fields of "in" and "out" from the selected workflow step.
+    If selected step includes "scatter" field all output types will
+    be transformed to the array of items of the same type. 
     IDs of updated workflow inputs and outputs as well as IDs of
     correspondent "source" fields also include step id separated by
     underscore. All other fields remain unchanged.
@@ -670,9 +672,18 @@ def fast_cwl_step_load(workflow, target_id, cwl_args=None, location=None):
             get_short_id(step_out, only_id=True)
         ))[0][1]
         step_out_with_step_id = step_out.replace("/", "_")  # to include both step name and id
+
+        if "scatter" in selected_step:                      # in case of scatter, wrap all outputs to arrays
+            selected_step_output_type = {
+                "type": "array",
+                "items": selected_step_output["type"]
+            }
+        else:
+            selected_step_output_type = selected_step_output["type"]
+
         workflow_outputs.append({
             "id": step_out_with_step_id,
-            "type": selected_step_output["type"],
+            "type": selected_step_output_type,
             "outputSource": step_out
         })
 
