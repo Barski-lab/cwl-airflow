@@ -108,17 +108,21 @@ def get_unfinished_runs(suite_data):
 
 
 def check_result(suite_data, results_queue):
+    previous_unfinished_count = None
     while True:
         suite_data_unfinished = get_unfinished_runs(suite_data)
         if len(suite_data_unfinished) == 0:
             break
-        logging.info(f"Waiting for {len(suite_data_unfinished)} unfinished runs:")
-        for run_id, test_data in suite_data_unfinished.items():
-            logging.info(f"   test case - {test_data['index']}, dag_id - {test_data['dag_id']}, run_id - {run_id}")
         try:
-            item = results_queue.get()
+            item = results_queue.get(False)
         except queue.Empty:
-            sleep(3)                               # sleep for 3 second before trying to fetch new results from the empty queue
+            unfinished_count = len(suite_data_unfinished)
+            if previous_unfinished_count != unfinished_count:
+                logging.info(f"Waiting for {unfinished_count} unfinished runs:")
+                for run_id, test_data in suite_data_unfinished.items():
+                    logging.info(f"   test case - {test_data['index']}, dag_id - {test_data['dag_id']}, run_id - {run_id}")   
+                previous_unfinished_count = unfinished_count
+            sleep(10)                                       # sleep for 10 second before trying to fetch new results from the empty queue
             continue
         run_id = item["run_id"]
         test_data = suite_data_unfinished[run_id]  # if this fails, look for a bug
