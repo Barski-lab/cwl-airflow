@@ -545,7 +545,7 @@ def fast_cwl_step_load(workflow, target_id, cwl_args=None, location=None):
     are removed. Workflow inputs and outputs are updated based on
     source fields of "in" and "out" from the selected workflow step.
     If selected step includes "scatter" field all output types will
-    be transformed to the array of items of the same type. 
+    be transformed to the nested/flat array of items of the same type. 
     IDs of updated workflow inputs and outputs as well as IDs of
     correspondent "source" fields also include step id separated by
     underscore. All other fields remain unchanged.
