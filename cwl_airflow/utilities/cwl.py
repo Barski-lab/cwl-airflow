@@ -673,17 +673,23 @@ def fast_cwl_step_load(workflow, target_id, cwl_args=None, location=None):
         ))[0][1]
         step_out_with_step_id = step_out.replace("/", "_")  # to include both step name and id
 
-        if "scatter" in selected_step:                      # in case of scatter, wrap all outputs to arrays
-            selected_step_output_type = {
-                "type": "array",
-                "items": selected_step_output["type"]
-            }
-        else:
-            selected_step_output_type = selected_step_output["type"]
+        # update output type in case of scatter
+        if "scatter" in selected_step:
+            selected_step_output = deepcopy(selected_step_output)                  # need to deepcopy, otherwise we change embedded tool's output
+            if isinstance(selected_step["scatter"], MutableSequence) \
+                and selected_step.get("scatterMethod") == "nested_crossproduct":
+                nesting = len(selected_step["scatter"])
+            else:
+                nesting = 1
+            for _ in range(0, nesting):
+                selected_step_output["type"] = {
+                    "type": "array",
+                    "items": selected_step_output["type"]
+                }
 
         workflow_outputs.append({
             "id": step_out_with_step_id,
-            "type": selected_step_output_type,
+            "type": selected_step_output["type"],
             "outputSource": step_out
         })
 
