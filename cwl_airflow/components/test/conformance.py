@@ -148,6 +148,8 @@ def load_test_suite(args):
         test_data = suite_data[i]
         run_id = str(uuid.uuid4())
         tool_location = get_absolute_path(test_data["tool"], suite_dir)
+        logging.info(f"Read test case {i+1} to run {tool_location}")
+
         job_location = None
         job_data = {}
 
@@ -167,7 +169,7 @@ def load_test_suite(args):
             "index": i+1,                                                     # to know test case number, 1-based to correspond to --range
             "finished": False                                                 # to indicate whether the test was finished or not
         })
-        logging.info(f"Load test case {i+1} to run {tool_location} with {job_location} as {run_id}")
+        logging.info(f"Successfully loaded test case {i+1} to run {tool_location} with {job_location} as {run_id}")
         suite_data_filtered[run_id] = test_data                               # use "run_id" as a key for fast access when checking results
     return suite_data_filtered
 
