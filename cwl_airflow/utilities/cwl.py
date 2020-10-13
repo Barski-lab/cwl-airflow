@@ -786,16 +786,16 @@ def get_short_id(long_id, only_step_name=None, only_id=None):
     If # is not present, use long_id. If only_step_name is True,
     return a short step name. If only_id is True, return a short
     id without step name. If part after symbol # includes three
-    sections separated by "/", discard the middle one. If part
-    after symbol # includes only one section separated by "/",
-    reset "only_step_name" and "only_id" to False as we don't
+    or more sections separated by "/", discard the middle ones.
+    If part after symbol # includes only one section separated by
+    "/", reset "only_step_name" and "only_id" to False as we don't
     know whether it was step name of "id"
     """
     fragment = urlsplit(long_id).fragment
     part = fragment if fragment != "" else long_id
 
-    if len(part.split("/")) == 3:                                  # if "id" has weird uid between step name and id
-        part = "/".join([part.split("/")[0], part.split("/")[2]])
+    if len(part.split("/")) > 2:                                  # if "id" has weird stuff between step name and id
+        part = "/".join([part.split("/")[0], part.split("/")[-1]])
 
     if len(part.split("/")) == 1:                                  # if fragment is only one word (based on "/")
         only_step_name, only_id = False, False

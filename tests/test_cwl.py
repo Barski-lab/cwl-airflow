@@ -428,6 +428,54 @@ def test_embed_all_runs(workflow, job, task_id):
             ""
         ),
         (
+            "bam_to_bedgraph/run/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            None,
+            None,
+            "bam_to_bedgraph/genome_coverage_file"
+        ),
+        (
+            "bam_to_bedgraph/run/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            True,
+            None,
+            "bam_to_bedgraph"
+        ),
+        (
+            "bam_to_bedgraph/run/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            None,
+            True,
+            "genome_coverage_file"
+        ),
+        (
+            "bam_to_bedgraph/run/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            True,
+            True,
+            ""
+        ),
+        (
+            "bam_to_bedgraph/run/command/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            None,
+            None,
+            "bam_to_bedgraph/genome_coverage_file"
+        ),
+        (
+            "bam_to_bedgraph/run/command/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            True,
+            None,
+            "bam_to_bedgraph"
+        ),
+        (
+            "bam_to_bedgraph/run/command/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            None,
+            True,
+            "genome_coverage_file"
+        ),
+        (
+            "bam_to_bedgraph/run/command/9d930026-6d03-4cef-aa56-d07616e1e739/genome_coverage_file",
+            True,
+            True,
+            ""
+        ),
+        (
             "output_filename",
             None,
             None,
