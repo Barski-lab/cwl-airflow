@@ -112,6 +112,9 @@ def check_result(suite_data, results_queue):
         suite_data_unfinished = get_unfinished_runs(suite_data)
         if len(suite_data_unfinished) == 0:
             break
+        logging.info(f"Waiting for {len(suite_data_unfinished)} unfinished runs:")
+        for run_id, test_data in suite_data_unfinished.items():
+            logging.info(f"   test case - {test_data['index']}, dag_id - {test_data['dag_id']}, run_id - {run_id}")
         try:
             item = results_queue.get()
         except queue.Empty:
