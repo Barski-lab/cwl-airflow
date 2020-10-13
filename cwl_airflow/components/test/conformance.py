@@ -63,6 +63,9 @@ def get_checker_thread(                                        # is not thread s
 
 class CustomHandler(SimpleHTTPRequestHandler):
 
+    def log_message(self, format, *args):  # to suppress logging on each POST 200 response sent
+        pass
+
     def do_POST(self):
         self.send_response(200)
         self.end_headers()
@@ -198,8 +201,7 @@ def create_dags(suite_data, args, dags_folder=None):
             location=workflow_path
         )
         with open(workflow_path, "rb") as input_stream:
-            logging.info(f"Add DAG {test_data['dag_id']} \
-                from test case {test_data['index']}")
+            logging.info(f"Add DAG {test_data['dag_id']} from test case {test_data['index']}")
 
             if args.embed:                                                                            # send base64 encoded zlib compressed workflow content that will be embedded into DAG python file
                 logging.info(f"Sending base64 encoded zlib compressed content from {workflow_path}")
