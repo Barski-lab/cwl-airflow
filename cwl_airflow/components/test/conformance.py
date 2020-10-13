@@ -119,8 +119,9 @@ def check_result(suite_data, results_queue):
         logging.info(f"Check results from the test case {test_data['index']} that runs DAG {test_data['dag_id']} as {run_id}")
         try:
             compare(test_data["output"], item["results"])
-        except CompareFail as ex:
-            test_data["error"] = str(ex)
+        except (CompareFail, KeyError) as ex:               # catch KeyError in case output field is missing for tool that should fail
+            if not test_data.get("should_fail", None):      # do not report error if tool should fail
+                test_data["error"] = str(ex)
         finally:
             test_data["finished"] = True
             rmtree(test_data["job"]["outputs_folder"])
