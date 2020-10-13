@@ -228,8 +228,7 @@ def create_dags(suite_data, args, dags_folder=None):
 
             if not r.ok:
                 reason = get_api_failure_reason(r)
-                logging.error(f"Failed to add DAG {test_data['dag_id']} \
-                    from test case {test_data['index']} due to {reason}")
+                logging.error(f"Failed to add DAG {test_data['dag_id']} from test case {test_data['index']} due to {reason}")
 
 
 def trigger_dags(suite_data, args):
