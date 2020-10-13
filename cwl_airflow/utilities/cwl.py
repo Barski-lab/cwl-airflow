@@ -150,13 +150,17 @@ def conf_get(
 ):
     """
     Return value from AirflowConfigParser object.
-    If section or key is absent, return default
+    If section or key is absent, return default.
+    Suppresses annoying warning messages
     """
 
     try:
+        logging.disable(logging.WARNING)
         return conf.get(section, key)
     except AirflowConfigException:
         return default
+    finally:
+        logging.disable(logging.NOTSET)  # is guaranteed to be executed before any return
 
 
 def collect_reports(
