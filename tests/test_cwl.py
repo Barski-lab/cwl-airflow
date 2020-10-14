@@ -1253,167 +1253,168 @@ def test_load_job_from_object_with_default_inputs_folder(job, workflow, cwd):
         shutil.rmtree(inputs_folder)
 
 
-@pytest.mark.parametrize(
-    "job, workflow, cwd",
-    [
-        (
-            {
-                "bam_file": {
-                    "class": "File",
-                    "location": "../inputs/chr4_100_mapped_reads.bam"
-                },
-                "chrom_length_file": {
-                    "class": "File",
-                    "location": "../inputs/chr_name_length.txt"
-                },
-                "scale": 1
-            },
-            ["workflows", "bam-bedgraph-bigwig.cwl"],
-            None
-        ),
-        (
-            {
-                "bam_file": {
-                    "class": "File",
-                    "location": "../inputs/dummy.txt"
-                },
-                "chrom_length_file": {
-                    "class": "File",
-                    "location": "../inputs/dummy.txt"
-                },
-                "scale": 1
-            },
-            ["workflows", "bam-bedgraph-bigwig.cwl"],
-            None
-        ),
-        (
-            {
-                "bam_file": {
-                    "class": "File",
-                    "location": "../inputs/dummy.txt"
-                },
-                "chrom_length_file": {
-                    "class": "File",
-                    "location": "../inputs/dummy.txt"
-                },
-                "scale": 1
-            },
-            ["workflows", "bam-bedgraph-bigwig.cwl"],
-            os.path.join(DATA_FOLDER, "jobs")
-        ),
-        (
-            {
-                "bam_file": {
-                    "class": "File",
-                    "location": "../inputs/dummy.txt"
-                },
-                "chrom_length_file": {
-                    "class": "File",
-                    "location": "../inputs/dummy.txt"
-                },
-                "scale": 1
-            },
-            #  bam-bedgraph-bigwig.cwl
-            "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\
-             m3vwGItZCP",
-            os.path.join(DATA_FOLDER, "jobs")
-        ),
-        (
-            {
-                "bam_file": {
-                    "class": "File",
-                    "location": get_absolute_path(
-                        "../inputs/dummy.txt",
-                        os.path.join(DATA_FOLDER, "jobs")
-                    )
-                },
-                "chrom_length_file": {
-                    "class": "File",
-                    "location": get_absolute_path(
-                        "../inputs/dummy.txt",
-                        os.path.join(DATA_FOLDER, "jobs")
-                    )
-                },
-                "scale": 1
-            },
-            ["workflows", "bam-bedgraph-bigwig.cwl"],
-            None
-        ),
-        (
-            {
-                "bam_file": {
-                    "class": "File",
-                    "location": get_absolute_path(
-                        "../inputs/dummy.txt",
-                        os.path.join(DATA_FOLDER, "jobs")
-                    )
-                },
-                "chrom_length_file": {
-                    "class": "File",
-                    "location": get_absolute_path(
-                        "../inputs/dummy.txt",
-                        os.path.join(DATA_FOLDER, "jobs")
-                    )
-                },
-                "scale": 1
-            },
-            ["workflows", "bam-bedgraph-bigwig.cwl"],
-            os.path.join(DATA_FOLDER, "jobs")
-        ),
-        (
-            {
-                "bam_file": {
-                    "class": "File",
-                    "location": "../inputs/dummy.txt"
-                },
-                "chrom_length_file": {
-                    "class": "File",
-                    "location": "../inputs/dummy.txt"
-                },
-                "scale": 1
-            },
-            ["workflows", "dummy.cwl"],
-            None
-        )
-    ]
-)
-def test_load_job_from_object_should_fail(job, workflow, cwd):
-    with pytest.raises(AssertionError):
-        test_load_job_from_object(job, workflow, cwd)
+# As we don't check links when loading job anymore, this test is not relevant anymore
+# @pytest.mark.parametrize(
+#     "job, workflow, cwd",
+#     [
+#         (
+#             {
+#                 "bam_file": {
+#                     "class": "File",
+#                     "location": "../inputs/chr4_100_mapped_reads.bam"
+#                 },
+#                 "chrom_length_file": {
+#                     "class": "File",
+#                     "location": "../inputs/chr_name_length.txt"
+#                 },
+#                 "scale": 1
+#             },
+#             ["workflows", "bam-bedgraph-bigwig.cwl"],
+#             None
+#         ),
+#         (
+#             {
+#                 "bam_file": {
+#                     "class": "File",
+#                     "location": "../inputs/dummy.txt"
+#                 },
+#                 "chrom_length_file": {
+#                     "class": "File",
+#                     "location": "../inputs/dummy.txt"
+#                 },
+#                 "scale": 1
+#             },
+#             ["workflows", "bam-bedgraph-bigwig.cwl"],
+#             None
+#         ),
+#         (
+#             {
+#                 "bam_file": {
+#                     "class": "File",
+#                     "location": "../inputs/dummy.txt"
+#                 },
+#                 "chrom_length_file": {
+#                     "class": "File",
+#                     "location": "../inputs/dummy.txt"
+#                 },
+#                 "scale": 1
+#             },
+#             ["workflows", "bam-bedgraph-bigwig.cwl"],
+#             os.path.join(DATA_FOLDER, "jobs")
+#         ),
+#         (
+#             {
+#                 "bam_file": {
+#                     "class": "File",
+#                     "location": "../inputs/dummy.txt"
+#                 },
+#                 "chrom_length_file": {
+#                     "class": "File",
+#                     "location": "../inputs/dummy.txt"
+#                 },
+#                 "scale": 1
+#             },
+#             #  bam-bedgraph-bigwig.cwl
+#             "eNqtV21z1DYQ/iuaGzqBac5OwsvAFWhDgJKWtyFQPpBOTrb3bE1kyZXkOwLDf++uZPtsxy\
+#              HttGGY8UmrfVbPvmj36yzdyD/AWKHVbMFm6/1ob7bLZqnk1tLCR23OV1JvaNHAX7UwUIJy\
+#              tPfp61bsxEF1rKraPftcGbCk7t1WevZtl/WEj5UUCn7ja25TIyo3kPwTgQRpItGvs4SXZy\
+#              shwf9wFxV9zJ7TAsplOg36UJw9OXzFSHKXWW0cZCy5YKnWJhOKO7BkwywtjC7PJKjcFdeq\
+#              fc8TloEUpSBt/qi2ugQWznuwBXvoN17zEh4/fH/45HH4fSK+wGMPaVM+gkE6ufu5B3SkYb\
+#              USqcD7M6eZP8FcASwHRXipXoPhOdCNOP5S1nEUXfHUaeNBSl5VkJ0Z4Jk9U3WZgBlACjUA\
+#              fMsN2uvAEByipbVEihpgbtn+nv+LJ9RG7DhX2gR6E8ic1tLOg6FoZ4ThxIQ6VeQ3p89QIj\
+#              e8KpjFAGFi1WAIyyqj1yKD7FT5G1RcmLQQ1cDsBJUDV33TnymeoAISh2wOKrtEUnsfimjS\
+#              vMJVCq0ziz75HisngJyKz3i19gijI2ylzbUg1hmusoF2XBIqH/i5Y3qsTq+QNPTHmkuL6L\
+#              pEP9sKUoFhwRrdBJOIfCNyH7kKPXgN3pvaUWK00u1FENKnh8g/ijyobbz0PymG7FfSFoip\
+#              pHDXOfVqYkgz8LRAhxtHNFFaeJ1Nhu+83mHIDtt5usMoTj1ohvZdi1lwhQCBXMaD5pJsID\
+#              VURFiiMct98KNBdE1yjDeALt26hQC1J6SpWFsfTVaXIHuia5MGen216jLFZ41XEfc1XSI/\
+#              uM/74LIP/zFwBxs3ZrRgkicgPXWNN5neOn3CmlYq2BNSAqptDe/VAr9mav/eRFHsK0g8XU\
+#              pm/jHwB/yb0F5u+yyQJVC5oDSDFa8lhdtsnuSj+LPbi/s13MR0q+E5epVWb3w9VYxK1E0L\
+#              csUePWKqlvKWX2UYBq42ijlTw0+08o2BtMCGu3Qw7J6qb01hC7T1M2si3YYFcPs9Ub5GC7\
+#              0Xpvm48jmYXO7XrvbLZxD99nnUXIIe/FlwzlmbnsEFf3qe+8E06WF88+vPc5IbebZW/dhr\
+#              nNuLl3gSFc+fw8XI7Z9m+7v7tHWwe6DQsL7tfZDO5MnEmzS/Tm06b2WdDpKjm4xz8PspNt\
+#              WMTCxeEUOjl6B/037dCBzcIBlb8RRCRvo2rHCuWsSxTQsoeaRNHnstN8KC7/C8jB0KrUO3\
+#              GFO9tq7dMdlqRq2bXXQW8rLja94Q6wUyvVHYAmUfjGzNIAjDN1EuXFEntQWDXY7DII+w8M\
+#              ZPuLHnYo4lKd407ajF3gQLjGmrx2Ws1jV2keoM3kGlrcB26aIPGeCuxAjHpUhBWegxttls\
+#              Io5kFuAJaQRs/PL46Nnrk2fzg9BD24Ww2Gm5NyvPedf+2sURpqATa6DmejYg7UiXpVas7b\
+#              rZS3ykaoz5IFVvGUMzUi+7kVvX4V1Jszaj7twu3picK/ElNCzhWpBz+bqFFSoVCvtkwY4K\
+#              ITMDaseyF9pWwnHJXkEmsLawI6AmpTmv06BtDPVWY3sqD7OM5oAgy8OPI10rFzzw4eRwsP\
+#              UStWFRvhgaMxB5B3kzpLx5ETYqj3SE7qXVO3cPDh6EDaxjAK41Afdu4x97giUaW7zDdcOm\
+#              AwlVoZU//eP+zbv7t2/du31vfudgby/MIXTLXPcjhlyfdvalDVfWu2Ael8gTj7f7PxzsdS\
+#              JxLnXCJS7ZgmPvGnc7cwKZK9hElWpTBKjf8QPRv/TkoZRg8gvfEx2XZa00ar/4r1pDdrB3\
+#              YIHjy4RhmQSpEprHZRQDWCNaRW1ov0K6OEj2u3ZS8CaKsHQIGd4mIZ1elALZic6DyC85rV\
+#              J6Nm5FTYfN5CmyXiZok4rM+4DGljn+P5jfu3P/3vz2/Qf30ZXtv23b0iUY1hksaM4yMRgi\
+#              qR3XbY9FXA4aHBud4ogzHDuZLXQtSXB6/mQ3m/HZbyxHb9zSD0i3gt4VW/oWZdkYhdOS0q\
+#              6bmBjWR9+IkKLm7YvY0/DB0N04M+ARUVbSz9R4Qii27JqdJdoLaKnucE5VA6QsAlxhHM2K\
+#              fK1FxjDvrKApLKlzUo2Vlsow22A5xR7IORwXWsOYh7W+kW8La7hWIHHpm5YlK3DsLERe4E\
+#              xaGaEN1gJG773vt5cTncsyYu9xC2MO5wLlR0rkJRtOtMt5o77qJl40BFHbdpN17eYS+z66\
+#              5aXL30L18oLuibM3R+o3BajGM631Iw9FDNOw8wSyO3BFw/Fkw7sMpIxe9yWxKRTSSGw0jb\
+#              ifvLxpU3Odj8nIwwx7zSt1narpMS5EN+VAyuneK/SnSgl6GtTbRVHRcXX5OmO+6NJE2ShC\
+#              PGozW7FMqx2HcbJG8tBSHNXaQO4CMyzjYSwZFdayRNCbwsAYbWywZYsQ4uVUYeDZOmnXo9\
+#              m3vwGItZCP",
+#             os.path.join(DATA_FOLDER, "jobs")
+#         ),
+#         (
+#             {
+#                 "bam_file": {
+#                     "class": "File",
+#                     "location": get_absolute_path(
+#                         "../inputs/dummy.txt",
+#                         os.path.join(DATA_FOLDER, "jobs")
+#                     )
+#                 },
+#                 "chrom_length_file": {
+#                     "class": "File",
+#                     "location": get_absolute_path(
+#                         "../inputs/dummy.txt",
+#                         os.path.join(DATA_FOLDER, "jobs")
+#                     )
+#                 },
+#                 "scale": 1
+#             },
+#             ["workflows", "bam-bedgraph-bigwig.cwl"],
+#             None
+#         ),
+#         (
+#             {
+#                 "bam_file": {
+#                     "class": "File",
+#                     "location": get_absolute_path(
+#                         "../inputs/dummy.txt",
+#                         os.path.join(DATA_FOLDER, "jobs")
+#                     )
+#                 },
+#                 "chrom_length_file": {
+#                     "class": "File",
+#                     "location": get_absolute_path(
+#                         "../inputs/dummy.txt",
+#                         os.path.join(DATA_FOLDER, "jobs")
+#                     )
+#                 },
+#                 "scale": 1
+#             },
+#             ["workflows", "bam-bedgraph-bigwig.cwl"],
+#             os.path.join(DATA_FOLDER, "jobs")
+#         ),
+#         (
+#             {
+#                 "bam_file": {
+#                     "class": "File",
+#                     "location": "../inputs/dummy.txt"
+#                 },
+#                 "chrom_length_file": {
+#                     "class": "File",
+#                     "location": "../inputs/dummy.txt"
+#                 },
+#                 "scale": 1
+#             },
+#             ["workflows", "dummy.cwl"],
+#             None
+#         )
+#     ]
+# )
+# def test_load_job_from_object_should_fail(job, workflow, cwd):
+#     with pytest.raises(AssertionError):
+#         test_load_job_from_object(job, workflow, cwd)
 
 
 def test_slow_cwl_load_workflow():

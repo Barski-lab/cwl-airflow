@@ -498,8 +498,12 @@ def load_job(
     If "job" was file, resolves relative paths based on the job file location.
     If "job" was already parsed into Object, resolves relative paths based on
     "cwd". If "cwd" was None uses "inputs_folder" value from "cwl_args" or
-    its default value returned from "get_default_cwl_args" function. Checks
-    links after relative paths are resolved, failing on missing input files.
+    its default value returned from "get_default_cwl_args" function.
+
+    Checking links after relative paths are resolved is disabled (checklinks
+    is set to False in both places). This will prevent rasing an exception by
+    schema salad in those cases when an input file will be created from the
+    provided content during workflow execution.
     
     Always returns CommentedMap
     """
@@ -518,14 +522,14 @@ def load_job(
     job_copy = deepcopy(job)
 
     try:
-        job_data, _ = loading_context.loader.resolve_ref(job_copy, checklinks=True)
+        job_data, _ = loading_context.loader.resolve_ref(job_copy, checklinks=False)
     except (FileNotFoundError, SchemaSaladException) as err:
         job_data = load_yaml(json.dumps(job_copy))
         job_data["id"] = file_uri(cwd) + "/"
         job_data, metadata = loading_context.loader.resolve_all(
             job_data,
             job_data["id"],
-            checklinks=True
+            checklinks=False
         )
 
     initialized_job_data = init_job_order(
