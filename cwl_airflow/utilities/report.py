@@ -82,7 +82,7 @@ def post_results(context):
     try:
         http_hook, session, url = prepare_connection(CONN_ID, ROUTES["results"])
         dag_run = context["dag_run"]
-        results = ""
+        results = {}
         try:
             results_location = context["ti"].xcom_pull(task_ids="CWLJobGatherer")
             with open(results_location, "r") as input_stream:
