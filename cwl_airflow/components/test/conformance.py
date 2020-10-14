@@ -36,7 +36,7 @@ def get_listener_thread(                                       # safe to kill wh
     port,
     daemon
 ):
-    httpd = socketserver.TCPServer(("", port), CustomHandler)
+    httpd = socketserver.TCPServer(("127.0.0.1", port), CustomHandler)
     httpd.results_queue = results_queue                        # to have access to results_queue from CustomHandler through self.server.results_queue
     return threading.Thread(
         target=httpd.serve_forever,
