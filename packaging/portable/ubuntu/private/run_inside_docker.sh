@@ -16,11 +16,11 @@ echo "Create build folder"
 mkdir -p $WORKING_DIR/build
 cd $WORKING_DIR/build
 
-echo "Download and extract Python ${PYTHON_VERSION}"
+echo "Download and extract Python ${PYTHON_VERSION} with --no-same-owner option"
 mkdir python3
 cd python3
 wget -q --show-progress $PYTHON_URL
-tar xzf Python-${PYTHON_VERSION}-linux-x86_64-support.b1.tar.gz
+tar xzf Python-${PYTHON_VERSION}-linux-x86_64-support.b1.tar.gz --no-same-owner
 rm Python-${PYTHON_VERSION}-linux-x86_64-support.b1.tar.gz
 
 echo "Download and install latest pip"
