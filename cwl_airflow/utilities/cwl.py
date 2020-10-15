@@ -602,9 +602,10 @@ def fast_cwl_step_load(workflow, target_id, cwl_args=None, location=None):
                     "type": workflow_input["type"]
                 }
 
-                # need to copy original inputBinding because it can include loadContents
-                # section and loadContents itself if present outside of inputBinding.
-                # Also, need to copy both "default" and "secondaryFiles" if present
+                # need to copy:
+                #  original inputBinding because it can include loadContents section
+                #  loadContents itself if present outside of inputBinding
+                #  both "default" and "secondaryFiles" if present
                 # TODO: Do I need to copy format?
                 for key in ["default", "secondaryFiles", "inputBinding", "loadContents"]:
                     if key in workflow_input:
