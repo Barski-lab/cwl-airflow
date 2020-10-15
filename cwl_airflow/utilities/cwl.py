@@ -640,9 +640,17 @@ def fast_cwl_step_load(workflow, target_id, cwl_args=None, location=None):
 
                 step_in_source_with_step_id = step_in_source.replace("/", "_")  # to include both step name and id
 
+                # Check if it should be assumed optional (default field is present)
+                # NOTE: consider also checking if upstream step had scatter, so the
+                # output type should become array based on the scatter parameters
+                if "default" in step_in:
+                    upstream_step_output_type = ["null", upstream_step_output["type"]]
+                else:
+                    upstream_step_output_type = upstream_step_output["type"]
+
                 updated_workflow_input = {
                     "id": step_in_source_with_step_id,  
-                    "type": upstream_step_output["type"]
+                    "type": upstream_step_output_type
                 }
 
                 # No need to copy "secondaryFiles" for outputs from other steps
