@@ -98,6 +98,8 @@ setup(
         "cwltest==2.0.20200626112502",
         "apache-airflow==1.10.12",
         "ruamel.yaml==0.16.5",
+        "marshmallow-sqlalchemy==0.23.1",
+        "marshmallow==2.21.0",
         "jsonmerge",
         "pyjwt",
         "connexion",
