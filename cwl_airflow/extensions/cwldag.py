@@ -132,6 +132,9 @@ class CWLDAG(DAG):
                         task_by_id[step_id].set_upstream(task_by_out_id[step_in_source])  # connected to another step
                     except KeyError:
                         task_by_id[step_id].set_upstream(self.dispatcher)                 # connected to dispatcher
+            if not step_data.get("in", []):                                               # safety measure in case "in" was empty
+                task_by_id[step_id].set_upstream(self.dispatcher)                         # connected to dispatcher
+
 
         for _, output_data in get_items(self.workflow_tool["outputs"]):
             for output_source_id, _ in get_items(output_data["outputSource"]):            # in case "outputSource" is a list
