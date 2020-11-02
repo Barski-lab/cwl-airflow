@@ -7,8 +7,10 @@ or [What if is doesn't work](./what_if_it_doesnt_work.md) sections.
 
 1. Install CWL-airflow
     ```sh
-    $ pip3 install cwl-airflow
+    $ pip3 install cwl-airflow \
+    --constraint "https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/packaging/constraints/constraints-3.7.txt"
     ```
+    When using optional `--constraint` parameter you can limit dependencies to those versions that were tested with your Python.
 
 2. Configure CWL-airflow (for details refer to [Initial configuration](./how_to_use.md) section)
     ```sh

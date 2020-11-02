@@ -28,8 +28,11 @@
 ## Install CWL-airflow
 
 ```sh
-$ pip3 install cwl-airflow
+$ pip3 install cwl-airflow \
+--constraint "https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/packaging/constraints/constraints-3.7.txt"
 ```
+When using optional `--constraint` parameter you can limit dependencies to those versions that were tested with your Python.
+
 Optionally, extra dependencies can be provided by adding `[mysql,celery,statsd]` at the end of the command above.
 - **mysql** - enables MySQL server support
 - **celery** - enables Celery cluster support

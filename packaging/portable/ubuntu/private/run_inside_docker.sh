@@ -34,8 +34,8 @@ cd cwl-airflow
 echo "Switch to ${CWL_AIRFLOW_VERSION} branch/tag"
 git checkout --quiet $CWL_AIRFLOW_VERSION
 
-echo "Install CWL-Airflow"
-../bin/pip3 install --prefix="../" --no-warn-script-location -qq ".[mysql]"
+echo "Install CWL-Airflow using dependency constraints from constraints-${PYTHON_VERSION}.txt"
+../bin/pip3 install --prefix="../" --no-warn-script-location -qq ".[mysql]" --constraint ./packaging/constraints/constraints-${PYTHON_VERSION}.txt
 cd ..
 rm -rf cwl-airflow
 
