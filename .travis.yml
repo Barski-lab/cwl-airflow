@@ -51,7 +51,7 @@ jobs:
     before_install:   # to overwrite from the main config
     - echo "Skip"
     install:
-    - pip install .
+    - pip install . --constraint ./packaging/constraints/constraints-$TRAVIS_PYTHON_VERSION.txt
     before_script:    # to overwrite from the main config
     - echo "Skip"
     script: ./tests/run_tests.sh
@@ -72,7 +72,7 @@ jobs:
     - cp ./tests/data/dags/bam_bedgraph_bigwig_single_old_format.py ~/airflow/dags
     - cp ./tests/data/workflows/bam-bedgraph-bigwig-single.cwl ~/airflow/dags
     install:
-    - pip install .
+    - pip install . --constraint ./packaging/constraints/constraints-$TRAVIS_PYTHON_VERSION.txt
     before_script:
     - cwl-airflow init --upgrade
     - rm -f ~/airflow/dags/bam-bedgraph-bigwig-single.cwl
@@ -99,8 +99,7 @@ before_install:
 - docker pull mysql/mysql-server:5.7
 - docker run -v ~/database:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=airflow -e MYSQL_DATABASE=airflow -e MYSQL_USER=airflow -e MYSQL_PASSWORD=airflow -p 6603:3306 -d mysql/mysql-server:5.7 --explicit-defaults-for-timestamp=1
 install:
-- pip install .
-- pip install mysqlclient
+- pip install ".[mysql]"" --constraint ./packaging/constraints/constraints-$TRAVIS_PYTHON_VERSION.txt
 before_script:
 - airflow --help             # to generate airflow.cfg
 - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
