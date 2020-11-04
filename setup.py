@@ -71,6 +71,9 @@ EXTRAS_REQUIRE = {
     ],
     "rabbitmq": [
         "amqp"
+    ],
+    "crypto": [
+        "cryptography>=0.9.3"
     ]
 }
 
