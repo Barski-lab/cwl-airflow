@@ -13,19 +13,20 @@ from schema_salad.ref_resolver import Loader
 from time import sleep
 from werkzeug.utils import secure_filename
 from six import iterlists
-from os import path
+from os import path, environ
+from subprocess import check_call, CalledProcessError, DEVNULL
 
 from airflow.settings import DAGS_FOLDER, AIRFLOW_HOME
 from airflow.models import DagBag, TaskInstance, DagRun, DagModel
 from airflow.utils.state import State
 from airflow.utils.timezone import parse as parsedate
-from airflow.api.common.experimental import trigger_dag
+from airflow.utils.db import provide_session
 
 from cwl_airflow.utilities.helpers import (
     get_version,
     get_dir,
-    get_uncompressed,
-    get_compressed
+    get_compressed,
+    get_md5_sum
 )
 from cwl_airflow.utilities.cwl import (
     conf_get,
@@ -70,6 +71,7 @@ class CWLApiBackend():
         self.include_examples = False
         self.dag_template_with_tmp_folder = "#!/usr/bin/env python3\nfrom cwl_airflow import CWLDAG, CWLJobDispatcher, CWLJobGatherer\ndag = CWLDAG(cwl_workflow='{0}', dag_id='{1}', default_args={{'tmp_folder':'{2}'}})\ndag.create()\ndag.add(CWLJobDispatcher(dag=dag), to='top')\ndag.add(CWLJobGatherer(dag=dag), to='bottom')"
         self.wes_state_conversion = {"running": "RUNNING", "success": "COMPLETE", "failed": "EXECUTOR_ERROR"}
+        self.validated_dags = {}  # stores dags' content md5 checksums as keys and one of the statuses ["checking", "success", "error"] as values
 
 
     def get_dags(self, dag_ids=[]):
@@ -145,30 +147,66 @@ class CWLApiBackend():
         return self.post_dag_runs(dag_id, data["run_id"], data["conf"])
 
 
-    def trigger_dag(self, dag_id, run_id, conf):
-        try:
-            dag_path = DagModel.get_current(dag_id).fileloc
-        except Exception:
-            dag_path = path.join(DAGS_FOLDER, dag_id + ".py")
+    def wait_until_dag_validated(self, dag_path):
+        """
+        Reads the md5 sum of the DAG python file to see whether it
+        was updated. Searches by md5 sum if exactly the same DAG
+        python file has been already validated. If it was already
+        validated raises exception in case of "error" result
+        or does nothing if validation was successfull.
+        If validation check for the specific DAG python file is
+        still running ("checking" status), sleeps for 1 second and
+        checks status again. This approach prevents from running
+        multiple processes for exactly the same DAG python file on
+        each POST request. Instead of using "airflow list_dags -sd"
+        that never ends with exit code other than 0, we use "python3".
+        Environment is copied to the subprocess, so it should work
+        fine even in portable CWL-Airflow installation
+        """
+        dag_md5_sum = get_md5_sum(dag_path)
+        if dag_md5_sum not in self.validated_dags:
+            self.validated_dags[dag_md5_sum] = "checking"
+            try:
+                check_call(["python3", dag_path], env=environ.copy(), stdout=DEVNULL, stderr=DEVNULL)
+                self.validated_dags[dag_md5_sum] = "success"
+            except CalledProcessError:
+                self.validated_dags[dag_md5_sum] = "error"
+        while self.validated_dags[dag_md5_sum] not in ["success", "error"]:
+            sleep(1)
+        if self.validated_dags[dag_md5_sum] == "error":
+            raise ValueError(f"Failed to load DAG from {dag_path}")
 
-        dag_bag = DagBag(dag_folder=dag_path)
-        if not dag_bag.dags:
-           logging.info("Failed to import dag due to the following errors")
-           logging.info(dag_bag.import_errors)
-           logging.info("Sleep for 3 seconds and give it a second try")
-           sleep(3)
-           dag_bag = DagBag(dag_folder=dag_path)
 
-        triggers = trigger_dag._trigger_dag(
-            dag_id=dag_id,
-            dag_run=DagRun(),
-            dag_bag=dag_bag,
-            run_id=run_id,
-            conf=conf,
-            execution_date=None,
-            replace_microseconds=False
-        )
-        return triggers[0] if triggers else None
+    @provide_session
+    def create_dag_run(self, dag_id, run_id, conf, session):
+        """
+        Creates new DagRun. Shouldn't be called with not existent dag_id.
+        Raises exception if DagRun for the same DAG with the same run_id
+        was previously created
+        """
+        if session.query(DagRun).filter(DagRun.dag_id==dag_id, DagRun.run_id==run_id).one_or_none():
+            raise ValueError(f"dag_run {run_id} for dag_id {dag_id} already exists")
+        else:
+            run_conf = conf if isinstance(conf, dict) else json.loads(conf)
+            dag_run = DagRun(dag_id=dag_id, run_id=run_id, conf=run_conf)
+            session.add(dag_run)
+            session.commit()
+            return dag_run
+
+
+    @provide_session
+    def trigger_dag(self, dag_id, run_id, conf, session):
+        """
+        Checks if DAG exists (DAG python file was already parsed), then
+        creates new DagRun with that DAG.
+        If DAG doesn't exist, checks if DAG python file can be loaded,
+        waits untill it's validated and only after that creates new DagRun.
+        """
+        if session.query(DagModel).filter(DagModel.dag_id==dag_id).one_or_none():
+            return self.create_dag_run(dag_id, run_id, conf)
+        else:
+            self.wait_until_dag_validated(path.join(DAGS_FOLDER, dag_id + ".py"))
+            return self.create_dag_run(dag_id, run_id, conf)
 
 
     def list_dags(self):
@@ -269,7 +307,7 @@ class CWLApiBackend():
         tempdir = tempfile.mkdtemp(
             dir=get_dir(
                 path.abspath(
-                    conf_get("cwl", "tmp_folder", os.path.join(AIRFLOW_HOME, "cwl_tmp_folder"))
+                    conf_get("cwl", "tmp_folder", path.join(AIRFLOW_HOME, "cwl_tmp_folder"))
                 )
             ),
             prefix="run_id_"+run_id+"_"
