@@ -1,7 +1,7 @@
 import sys
 import os
 import re
-import configparser
+import uuid
 import shutil
 import logging
 
@@ -47,7 +47,7 @@ def init_airflow_db(args):
     custom_env["AIRFLOW_CONFIG"] = args.config
     try:
         run(
-            ["airflow", "initdb"],
+            ["airflow", "initdb"],  # TODO: check what's the difference initdb from updatedb
             env=custom_env,
             check=True,
             stdout=DEVNULL,
@@ -60,31 +60,40 @@ def init_airflow_db(args):
 
 def patch_airflow_config(airflow_config):
     """
-    Updates provided Airflow configuration file to include defaults for cwl-airflow
+    Updates provided Airflow configuration file to include defaults for cwl-airflow.
+    If something went wrong, restores the original airflow.cfg from the backed up copy
     """
 
     # TODO: add cwl section with the following parameters:
     # - singularity
     # - use_container
 
-    patch = f"""
-    sed -i -e 's/^dags_are_paused_at_creation.*/dags_are_paused_at_creation = False/g' {airflow_config} && \
-    sed -i -e 's/^load_examples.*/load_examples = False/g' {airflow_config} && \
-    sed -i -e 's/^logging_config_class.*/logging_config_class = cwl_airflow.config_templates.airflow_local_settings.DEFAULT_LOGGING_CONFIG/g' {airflow_config} && \
-    sed -i -e 's/^hide_paused_dags_by_default.*/hide_paused_dags_by_default = True/g' {airflow_config}
-    """
+    patches = [
+        ["sed", "-i", "-e", "s/^dags_are_paused_at_creation.*/dags_are_paused_at_creation = False/g", airflow_config],
+        ["sed", "-i", "-e", "s/^load_examples.*/load_examples = False/g", airflow_config],
+        ["sed", "-i", "-e", "s/^logging_config_class.*/logging_config_class = cwl_airflow.config_templates.airflow_local_settings.DEFAULT_LOGGING_CONFIG/g", airflow_config],
+        ["sed", "-i", "-e", "s/^hide_paused_dags_by_default.*/hide_paused_dags_by_default = True/g", airflow_config]
+    ]
 
+    airflow_config_backup = airflow_config + "_backup_" + str(uuid.uuid4())
     try:
-        run(
-            patch,
-            shell=True,
-            check=True,
-            stdout=DEVNULL,
-            stderr=DEVNULL
-        )
+        shutil.copyfile(airflow_config, airflow_config_backup)
+        for patch in patches:
+            run(
+                patch,
+                shell=False,  # for proper handling of filenames with spaces
+                check=True,
+                stdout=DEVNULL,
+                stderr=DEVNULL
+            )
     except (CalledProcessError, FileNotFoundError) as err:
-        logging.error(f"""Failed to patch Airflow configuration file. Exiting.\n{err}""")
+        logging.error(f"""Failed to patch Airflow configuration file. Restoring from the backup and exiting.\n{err}""")
+        if os.path.isfile(airflow_config_backup):
+            shutil.copyfile(airflow_config_backup, airflow_config)
         sys.exit(1)
+    finally:
+        if os.path.isfile(airflow_config_backup):
+            os.remove(airflow_config_backup)
 
 
 def upgrade_dags(airflow_config):
