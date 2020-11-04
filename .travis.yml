@@ -99,7 +99,7 @@ before_install:
 - docker pull mysql/mysql-server:5.7
 - docker run -v ~/database:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=airflow -e MYSQL_DATABASE=airflow -e MYSQL_USER=airflow -e MYSQL_PASSWORD=airflow -p 6603:3306 -d mysql/mysql-server:5.7 --explicit-defaults-for-timestamp=1
 install:
-- pip install ".[mysql]" --constraint ./packaging/constraints/constraints-$TRAVIS_PYTHON_VERSION.txt
+- pip install ".[mysql,crypto]" --constraint ./packaging/constraints/constraints-$TRAVIS_PYTHON_VERSION.txt
 before_script:
 - airflow --help             # to generate airflow.cfg
 - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
