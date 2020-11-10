@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PYTHON_VERSION=${1:-"3.7"}
+PYTHON_VERSION=${1:-"3.8"}
 CWL_AIRFLOW_VERSION=${2:-"master"}
 
 echo "Pack CWL-Airflow from $CWL_AIRFLOW_VERSION branch/tag for Python ${PYTHON_VERSION} in current macOS version"
@@ -19,8 +19,12 @@ cd python3
 wget -q --show-progress $PYTHON_URL
 tar xzf Python-${PYTHON_VERSION}-macOS-support.b1.tar.gz
 rm Python-${PYTHON_VERSION}-macOS-support.b1.tar.gz
-mv python/* .
-rm -rf python VERSIONS
+if [ -e "bin" ]; then
+  echo "No need to move extracted python"
+else
+    mv python/* .
+    rm -rf python
+fi
 
 echo "Download and install latest pip"
 curl -s https://bootstrap.pypa.io/get-pip.py -o get-pip.py
