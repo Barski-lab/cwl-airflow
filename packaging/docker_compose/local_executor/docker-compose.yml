@@ -1,6 +1,19 @@
 version: "3"
 
 
+x-aliases:               # if it starts with x- it's ignored by docker-compose
+    - &airflow_env_var
+        environment:
+            - AIRFLOW_HOME=/opt/airflow
+            - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+            - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
+            - AIRFLOW__CORE__BASE_LOG_FOLDER=/opt/airflow/logs
+            - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
+            - AIRFLOW__CORE__PLUGINS_FOLDER=/opt/airflow/plugins
+            - AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=/opt/airflow/logs/scheduler
+
+
 services:
 
     scheduler:
@@ -15,16 +28,8 @@ services:
             - ${CWL_PICKLE_FOLDER}:/opt/airflow/cwl_pickle_folder
         privileged: true
         restart: always
-        environment:
-            - AIRFLOW_HOME=/opt/airflow
-            - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
-            - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
-            - AIRFLOW__CORE__BASE_LOG_FOLDER=/opt/airflow/logs
-            - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
-            - AIRFLOW__CORE__PLUGINS_FOLDER=/opt/airflow/plugins
-            - AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=/opt/airflow/logs/scheduler
-        command: bash -c "cwl-airflow init && airflow scheduler"
+        <<: *airflow_env_var
+        command: bash -c "cwl-airflow init --upgrade && airflow scheduler"  # always run init, as it's safe
         depends_on:
             - mysql
 
@@ -40,15 +45,7 @@ services:
             - ${CWL_OUTPUTS_FOLDER}:/opt/airflow/cwl_outputs_folder       # why does webserver need it?
             - ${CWL_PICKLE_FOLDER}:/opt/airflow/cwl_pickle_folder
         restart: always
-        environment:
-            - AIRFLOW_HOME=/opt/airflow
-            - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
-            - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
-            - AIRFLOW__CORE__BASE_LOG_FOLDER=/opt/airflow/logs
-            - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
-            - AIRFLOW__CORE__PLUGINS_FOLDER=/opt/airflow/plugins
-            - AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=/opt/airflow/logs/scheduler
+        <<: *airflow_env_var
         command: airflow webserver
         depends_on:
             - mysql
@@ -66,15 +63,7 @@ services:
             - ${CWL_OUTPUTS_FOLDER}:/opt/airflow/cwl_outputs_folder       # why does apiserver need it?
             - ${CWL_PICKLE_FOLDER}:/opt/airflow/cwl_pickle_folder
         restart: always
-        environment:
-            - AIRFLOW_HOME=/opt/airflow
-            - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
-            - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
-            - AIRFLOW__CORE__BASE_LOG_FOLDER=/opt/airflow/logs
-            - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
-            - AIRFLOW__CORE__PLUGINS_FOLDER=/opt/airflow/plugins
-            - AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=/opt/airflow/logs/scheduler
+        <<: *airflow_env_var
         command: cwl-airflow api --host 0.0.0.0  # default --host 127.0.0.1 won't work from inside the docker container
         depends_on:
             - mysql
