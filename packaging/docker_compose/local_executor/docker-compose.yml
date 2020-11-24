@@ -1,7 +1,7 @@
 version: "3"
 
 
-x-aliases:               # if it starts with x- it's ignored by docker-compose
+x-aliases:  # if it starts with x- it's ignored by docker-compose
     - &airflow_env_var
         environment:
             - AIRFLOW_HOME=/opt/airflow
@@ -12,6 +12,13 @@ x-aliases:               # if it starts with x- it's ignored by docker-compose
             - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
             - AIRFLOW__CORE__PLUGINS_FOLDER=/opt/airflow/plugins
             - AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=/opt/airflow/logs/scheduler
+    - &airflow_volumes
+        volumes:
+            - ${AIRFLOW_HOME}:/opt/airflow
+            - ${CWL_TMP_FOLDER}:/opt/airflow/cwl_tmp_folder
+            - ${CWL_INPUTS_FOLDER}:/opt/airflow/cwl_inputs_folder
+            - ${CWL_OUTPUTS_FOLDER}:/opt/airflow/cwl_outputs_folder
+            - ${CWL_PICKLE_FOLDER}:/opt/airflow/cwl_pickle_folder
 
 
 services:
@@ -19,7 +26,7 @@ services:
     scheduler:
         build: ./cwl_airflow
         container_name: scheduler
-        volumes:
+        volumes:  # can't reuse *airflow_volumes as YAML doesn't suppoer sequence merging
             - /var/run/docker.sock:/var/run/docker.sock
             - ${AIRFLOW_HOME}:/opt/airflow
             - ${CWL_TMP_FOLDER}:/opt/airflow/cwl_tmp_folder
@@ -38,14 +45,9 @@ services:
         container_name: webserver
         ports:
             - ${AIRFLOW_WEBSERVER_PORT}:8080
-        volumes:
-            - ${AIRFLOW_HOME}:/opt/airflow
-            - ${CWL_TMP_FOLDER}:/opt/airflow/cwl_tmp_folder               # why does webserver need it?
-            - ${CWL_INPUTS_FOLDER}:/opt/airflow/cwl_inputs_folder         # why does webserver need it?
-            - ${CWL_OUTPUTS_FOLDER}:/opt/airflow/cwl_outputs_folder       # why does webserver need it?
-            - ${CWL_PICKLE_FOLDER}:/opt/airflow/cwl_pickle_folder
-        restart: always
+        <<: *airflow_volumes
         <<: *airflow_env_var
+        restart: always
         command: airflow webserver
         depends_on:
             - mysql
@@ -56,14 +58,9 @@ services:
         container_name: apiserver
         ports:
             - ${CWL_AIRFLOW_API_PORT}:8081
-        volumes:
-            - ${AIRFLOW_HOME}:/opt/airflow
-            - ${CWL_TMP_FOLDER}:/opt/airflow/cwl_tmp_folder               # why does apiserver need it?
-            - ${CWL_INPUTS_FOLDER}:/opt/airflow/cwl_inputs_folder         # why does apiserver need it?
-            - ${CWL_OUTPUTS_FOLDER}:/opt/airflow/cwl_outputs_folder       # why does apiserver need it?
-            - ${CWL_PICKLE_FOLDER}:/opt/airflow/cwl_pickle_folder
-        restart: always
+        <<: *airflow_volumes        
         <<: *airflow_env_var
+        restart: always
         command: cwl-airflow api --host 0.0.0.0  # default --host 127.0.0.1 won't work from inside the docker container
         depends_on:
             - mysql
@@ -76,7 +73,7 @@ services:
             - ${MYSQL_PORT}:3306
         volumes:
             - ${MYSQL_DATA}:/var/lib/mysql
-            - /dev/urandom:/dev/random                    # Not sure if I need it at all
+            - /dev/urandom:/dev/random  # Not sure if I need it at all
         restart: always
         environment:
             - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
