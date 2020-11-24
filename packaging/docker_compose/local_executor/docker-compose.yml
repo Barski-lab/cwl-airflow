@@ -11,6 +11,7 @@ services:
             - ${AIRFLOW_HOME}:/opt/airflow
             - ${CWL_TMP_FOLDER}:/opt/cwl_tmp_folder
             - ${CWL_OUTPUTS_FOLDER}:/opt/cwl_outputs_folder
+            - ${CWL_INPUTS_FOLDER}:/opt/cwl_inputs_folder
             - ${CWL_PICKLE_FOLDER}:/opt/cwl_pickle_folder
         privileged: true
         restart: always
@@ -34,8 +35,9 @@ services:
             - ${AIRFLOW_WEBSERVER_PORT}:8080
         volumes:
             - ${AIRFLOW_HOME}:/opt/airflow
-            - ${CWL_TMP_FOLDER}:/opt/cwl_tmp_folder
-            - ${CWL_OUTPUTS_FOLDER}:/opt/cwl_outputs_folder
+            - ${CWL_TMP_FOLDER}:/opt/cwl_tmp_folder               # why does webserver need it?
+            - ${CWL_INPUTS_FOLDER}:/opt/cwl_inputs_folder         # why does webserver need it?
+            - ${CWL_OUTPUTS_FOLDER}:/opt/cwl_outputs_folder       # why does webserver need it?
             - ${CWL_PICKLE_FOLDER}:/opt/cwl_pickle_folder
         restart: always
         environment:
@@ -59,8 +61,9 @@ services:
             - ${CWL_AIRFLOW_API_PORT}:8081
         volumes:
             - ${AIRFLOW_HOME}:/opt/airflow
-            - ${CWL_TMP_FOLDER}:/opt/cwl_tmp_folder
-            - ${CWL_OUTPUTS_FOLDER}:/opt/cwl_outputs_folder
+            - ${CWL_TMP_FOLDER}:/opt/cwl_tmp_folder               # why does apiserver need it?
+            - ${CWL_INPUTS_FOLDER}:/opt/cwl_inputs_folder         # why does apiserver need it?
+            - ${CWL_OUTPUTS_FOLDER}:/opt/cwl_outputs_folder       # why does apiserver need it?
             - ${CWL_PICKLE_FOLDER}:/opt/cwl_pickle_folder
         restart: always
         environment:
