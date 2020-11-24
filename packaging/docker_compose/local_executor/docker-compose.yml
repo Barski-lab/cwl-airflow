@@ -9,10 +9,10 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ${AIRFLOW_HOME}:/opt/airflow
-            - ${CWL_TMP_FOLDER}:/opt/cwl_tmp_folder
-            - ${CWL_OUTPUTS_FOLDER}:/opt/cwl_outputs_folder
-            - ${CWL_INPUTS_FOLDER}:/opt/cwl_inputs_folder
-            - ${CWL_PICKLE_FOLDER}:/opt/cwl_pickle_folder
+            - ${CWL_TMP_FOLDER}:/opt/airflow/cwl_tmp_folder
+            - ${CWL_INPUTS_FOLDER}:/opt/airflow/cwl_inputs_folder
+            - ${CWL_OUTPUTS_FOLDER}:/opt/airflow/cwl_outputs_folder
+            - ${CWL_PICKLE_FOLDER}:/opt/airflow/cwl_pickle_folder
         privileged: true
         restart: always
         environment:
@@ -35,10 +35,10 @@ services:
             - ${AIRFLOW_WEBSERVER_PORT}:8080
         volumes:
             - ${AIRFLOW_HOME}:/opt/airflow
-            - ${CWL_TMP_FOLDER}:/opt/cwl_tmp_folder               # why does webserver need it?
-            - ${CWL_INPUTS_FOLDER}:/opt/cwl_inputs_folder         # why does webserver need it?
-            - ${CWL_OUTPUTS_FOLDER}:/opt/cwl_outputs_folder       # why does webserver need it?
-            - ${CWL_PICKLE_FOLDER}:/opt/cwl_pickle_folder
+            - ${CWL_TMP_FOLDER}:/opt/airflow/cwl_tmp_folder               # why does webserver need it?
+            - ${CWL_INPUTS_FOLDER}:/opt/airflow/cwl_inputs_folder         # why does webserver need it?
+            - ${CWL_OUTPUTS_FOLDER}:/opt/airflow/cwl_outputs_folder       # why does webserver need it?
+            - ${CWL_PICKLE_FOLDER}:/opt/airflow/cwl_pickle_folder
         restart: always
         environment:
             - AIRFLOW_HOME=/opt/airflow
@@ -61,10 +61,10 @@ services:
             - ${CWL_AIRFLOW_API_PORT}:8081
         volumes:
             - ${AIRFLOW_HOME}:/opt/airflow
-            - ${CWL_TMP_FOLDER}:/opt/cwl_tmp_folder               # why does apiserver need it?
-            - ${CWL_INPUTS_FOLDER}:/opt/cwl_inputs_folder         # why does apiserver need it?
-            - ${CWL_OUTPUTS_FOLDER}:/opt/cwl_outputs_folder       # why does apiserver need it?
-            - ${CWL_PICKLE_FOLDER}:/opt/cwl_pickle_folder
+            - ${CWL_TMP_FOLDER}:/opt/airflow/cwl_tmp_folder               # why does apiserver need it?
+            - ${CWL_INPUTS_FOLDER}:/opt/airflow/cwl_inputs_folder         # why does apiserver need it?
+            - ${CWL_OUTPUTS_FOLDER}:/opt/airflow/cwl_outputs_folder       # why does apiserver need it?
+            - ${CWL_PICKLE_FOLDER}:/opt/airflow/cwl_pickle_folder
         restart: always
         environment:
             - AIRFLOW_HOME=/opt/airflow
