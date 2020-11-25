@@ -23,6 +23,8 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
 
 services:
 
+    # starts after mysql was launched, then waits until airflow gets access to the database,
+    # then runs cwl-airflow init creating all required tables in the database and starts scheduler
     scheduler:
         build: ./cwl_airflow
         container_name: scheduler
@@ -36,10 +38,12 @@ services:
         privileged: true
         restart: always
         <<: *airflow_env_var
-        command: bash -c "cwl-airflow init --upgrade && airflow scheduler"  # always run init, as it's safe
+        command: bash -c "EXIT_CODE=1 && while [ $$EXIT_CODE -ne 0 ]; do (airflow checkdb); EXIT_CODE=$$?; sleep 5; done && cwl-airflow init --upgrade && airflow scheduler"
         depends_on:
             - mysql
 
+    # starts after scheduler was launched, then waits untill all required for airflow tables have been
+    # created (we just check dag_run table) and starts webserver
     webserver:
         build: ./cwl_airflow
         container_name: webserver
@@ -48,11 +52,13 @@ services:
         <<: *airflow_volumes
         <<: *airflow_env_var
         restart: always
-        command: airflow webserver
+        command: bash -c "EXIT_CODE=1 && while [ $$EXIT_CODE -ne 0 ]; do (mysql -h mysql -u ${MYSQL_USER} -p${MYSQL_PASSWORD} -e 'select * from ${MYSQL_DATABASE}.dag_run'); EXIT_CODE=$$?; sleep 5; done && airflow webserver"
         depends_on:
-            - mysql
-            - scheduler
+            - scheduler  # need to start only after cwl-airflow init was run
 
+    # starts after scheduler was launched, then waits untill all required for airflow tables have been
+    # created (we just check dag_run table) and starts apiserver
+    # the default API --host 127.0.0.1 won't work from inside the docker container, so we used 0.0.0.0
     apiserver:
         build: ./cwl_airflow
         container_name: apiserver
@@ -61,11 +67,11 @@ services:
         <<: *airflow_volumes        
         <<: *airflow_env_var
         restart: always
-        command: cwl-airflow api --host 0.0.0.0  # default --host 127.0.0.1 won't work from inside the docker container
+        command: bash -c "EXIT_CODE=1 && while [ $$EXIT_CODE -ne 0 ]; do (mysql -h mysql -u ${MYSQL_USER} -p${MYSQL_PASSWORD} -e 'select * from ${MYSQL_DATABASE}.dag_run'); EXIT_CODE=$$?; sleep 5; done && cwl-airflow api --host 0.0.0.0"
         depends_on:
-            - mysql
-            - scheduler
+            - scheduler  # need to start only after cwl-airflow init was run
 
+    # starts MySQL server, creates empty ${MYSQL_DATABASE} with ${MYSQL_USER} and ${MYSQL_PASSWORD}
     mysql:
         image: mysql:5.7
         container_name: mysql

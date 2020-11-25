@@ -22,7 +22,7 @@ ENV CWL_AIRFLOW_VERSION "master"
 ENV CWL_AIRFLOW_URL "https://github.com/Barski-lab/cwl-airflow"
 
 RUN apt-get update && \
-    apt-get install -y python3-dev python3-pip nodejs gcc git wget curl libmysqlclient-dev  && \
+    apt-get install -y python3-dev python3-pip nodejs gcc git wget curl libmysqlclient-dev mysql-client && \
     pip3 install -U pip                                                                     && \
     git clone ${CWL_AIRFLOW_URL}                                                            && \
     cd cwl-airflow                                                                          && \
