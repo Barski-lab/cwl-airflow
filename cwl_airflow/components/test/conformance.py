@@ -199,6 +199,7 @@ def create_dags(suite_data, args, dags_folder=None):
     # TODO: Do we need to force scheduler to reload DAGs after all DAG added?
 
     for test_data in suite_data.values():
+        params = {"dag_id": test_data["dag_id"]}
         workflow_path = os.path.join(
             args.tmp,
             os.path.basename(test_data["tool"])
@@ -214,18 +215,14 @@ def create_dags(suite_data, args, dags_folder=None):
                 logging.info(f"Sending base64 encoded zlib compressed content from {workflow_path}")
                 r = requests.post(
                     url=urljoin(args.api, "/api/experimental/dags"),
-                    params={
-                        "dag_id": test_data["dag_id"]
-                    },
+                    params=params,
                     json={"workflow_content": get_compressed(input_stream)}
                 )
             else:                                                                                     # attach workflow as a file
                 logging.info(f"Attaching workflow file {workflow_path}")
                 r = requests.post(
                     url=urljoin(args.api, "/api/experimental/dags"),
-                    params={
-                        "dag_id": test_data["dag_id"]
-                    },
+                    params=params,
                     files={"workflow": input_stream}
                 )
 
@@ -241,23 +238,52 @@ def create_dags(suite_data, args, dags_folder=None):
 def trigger_dags(suite_data, args):
     """
     Triggers all DAGs from "suite_data". If failed to trigger DAG, updates
-    "suite_data" with "error" and sets "finished" to True
+    "suite_data" with "error" and sets "finished" to True. In case --combine
+    was set, we will call API that will first create the new DAG, then clean
+    all previous DAG runs based on the provided run_id and dag_id, then remove
+    outdated DAGs for the same workflow (for that dag_id should follow naming
+    rule cwlid-commitsha) and only after that trigger the workflow execution.
+    If not only --combine but also --embed was provided, send base64 encoded
+    zlib compressed content of the workflow file instead of attaching it.
     """
 
     for run_id, test_data in suite_data.items():
-        logging.info(f"Trigger DAG {test_data['dag_id']} from test case {test_data['index']} as {run_id}")
-        r = requests.post(
-            url=urljoin(args.api, "/api/experimental/dag_runs"),
-            params={
-                "run_id": run_id,
-                "dag_id": test_data["dag_id"],
-                "conf": json.dumps(
-                    {
-                        "job": test_data["job"]
-                    }
-                )
-            }
-        )
+        params = {
+            "run_id": run_id,
+            "dag_id": test_data["dag_id"],
+            "conf": json.dumps({"job": test_data["job"]})
+        }
+        if args.combine:  # use API endpoint that combines both creating, cleaning and triggerring new DAGs
+            logging.info(f"Add and trigger DAG {test_data['dag_id']} from test case {test_data['index']} as {run_id}")
+            workflow_path = os.path.join(
+                args.tmp,
+                os.path.basename(test_data["tool"])
+            )
+            embed_all_runs(                                                                               # will save results to "workflow_path"
+                workflow_tool=fast_cwl_load(test_data["tool"]),
+                location=workflow_path
+            )
+            with open(workflow_path, "rb") as input_stream:
+                if args.embed:                                                                            # send base64 encoded zlib compressed workflow content that will be embedded into DAG python file
+                    logging.info(f"Sending base64 encoded zlib compressed content from {workflow_path}")
+                    r = requests.post(
+                        url=urljoin(args.api, "/api/experimental/dags/dag_runs"),
+                        params=params,
+                        json={"workflow_content": get_compressed(input_stream)}
+                    )
+                else:                                                                                     # attach workflow as a file
+                    logging.info(f"Attaching workflow file {workflow_path}")
+                    r = requests.post(
+                        url=urljoin(args.api, "/api/experimental/dags/dag_runs"),
+                        params=params,
+                        files={"workflow": input_stream}
+                    )
+        else:
+            logging.info(f"Trigger DAG {test_data['dag_id']} from test case {test_data['index']} as {run_id}")
+            r = requests.post(
+                url=urljoin(args.api, "/api/experimental/dag_runs"),
+                params=params
+            )
         if not r.ok:
             reason = get_api_failure_reason(r)
             logging.error(f"Failed to trigger DAG {test_data['dag_id']} from test case {test_data['index']} as {run_id} due to {reason}")
@@ -287,8 +313,10 @@ def run_test_conformance(args):
     suite_data = load_test_suite(args)
     results_queue = queue.Queue(maxsize=len(suite_data))
 
-    # Create new dags
-    create_dags(suite_data, args)                           # only reads from "suite_data"
+    # Create new DAGs if --combine wasn't set and we want to use two
+    # separate API calls for creating and trigerring DAGs
+    if not args.combine:
+        create_dags(suite_data, args)                           # only reads from "suite_data"
 
     # Start thread to listen for status updates before
     # we trigger DAGs. "results_queue" is thread safe
@@ -301,7 +329,8 @@ def run_test_conformance(args):
 
     # Trigger all dags updating "suite_data" items with "error" and "finished"=True
     # for all DAG runs that we failed to trigger. Writing to "suite_data" is not
-    # thread safe!
+    # thread safe! If --combine was set, this function will also create new DAGs
+    # and clean old DAG runs
     trigger_dags(suite_data, args)
 
     # Start checker thread to evaluate received results.

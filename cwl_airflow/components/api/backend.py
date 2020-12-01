@@ -33,6 +33,7 @@ from cwl_airflow.utilities.cwl import (
     fast_cwl_load,
     slow_cwl_load,
     convert_to_workflow,
+    clean_up_dag_run,
     DAG_TEMPLATE
 )
 
@@ -85,14 +86,14 @@ class CWLApiBackend():
             return {"dags": []}
 
 
-    def post_dag(self, dag_id=None):
-        logging.debug(f"Call post_dag with dag_id={dag_id}")
+    def post_dags(self, dag_id=None):
+        logging.debug(f"Call post_dags with dag_id={dag_id}")
         try:
             res = self.export_dag(dag_id or ''.join(random.choice(string.ascii_lowercase) for i in range(32)))
             logging.debug(f"Exported DAG {res}")
             return res
         except Exception as err:
-            logging.error(f"Failed while running post_dag {err}")
+            logging.error(f"Failed while running post_dags {err}")
             return connexion.problem(500, "Failed to create dag", str(err))
 
 
@@ -139,6 +140,17 @@ class CWLApiBackend():
         except Exception as err:
             logging.error(f"Failed to call post_dag_runs {err}")
             return connexion.problem(500, "Failed to create dag_run", str(err))
+
+
+    def post_dags_dag_runs(self, dag_id, run_id, conf=None):
+        logging.debug(f"Call post_dags_dag_runs with dag_id={dag_id}, run_id={run_id}, conf={conf}")
+        self.post_dags(dag_id)
+        clean_up_dag_run(
+            dag_id=dag_id,
+            run_id=run_id,
+            kill_timeout=3  # use shorter timeout for killing runnign tasks
+        )                   # should wait untill it finish running, as we can't trigger the same DAG with the same run_id
+        return self.post_dag_runs(dag_id, run_id, conf)
 
 
     def post_dag_runs_legacy(self, dag_id):
