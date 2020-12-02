@@ -150,6 +150,18 @@ def overwrite_deprecated_dag(
 
 
 def remove_outdated_dags(cwl_id, dags_folder):
+    """
+    Iterates over DAG files from the dags_folder (excluding Airflow examples). Assuming
+    that dag_id written inside Python file is equal to its rootname and follows the naming
+    rule "cwldid-commitsha", we check if there are any files that have target cwl_id in the
+    rootname (aka in the dag_id). For all collected DAGs (based on cwl_id) we save modified
+    timestamp and location, then sort them by timestamp excluding the newest one, thus
+    forming a list of outdated DAGs for the same cwl_id (the same workflow). Then we iterate
+    over the list of outdated DAGs and check whether we can safely remove it (both from DB
+    and disk). The only condition when we don't delete outdated DAG is when there is at list
+    one DagRun for it.
+    """
+
     logging.info(f"Searching for dags based on cwl_id: {cwl_id} in order to remove the old ones")
     dags = {}
     for location in list_py_file_paths(dags_folder, include_examples=False):
@@ -182,17 +194,23 @@ def remove_outdated_dags(cwl_id, dags_folder):
 
 
 def stop_dag_run_tasks(dag_run, timeout):
+    """
+    Loads task instances (TI) for the provided dag_run. For each TI that is still running
+    tries to get process by PID and set state to "failed" thus making Airflow send sigterm
+    signal to that task. If process was found waits for it to exit with timeout.
+    """
+
     logging.info(f"Stopping running tasks for dag_id: {dag_run.dag_id}, run_id: {dag_run.run_id}")
     for ti in dag_run.get_task_instances():
         logging.info(f"Task: {ti.task_id}, execution_date: {ti.execution_date}, pid: {ti.pid}, state: {ti.state}")
         if ti.state == State.RUNNING:
             try:
-                logging.info(" - searching for process by pid")
+                logging.debug(" - searching for process by pid")
                 process = psutil.Process(ti.pid) if ti.pid else None
             except Exception:
-                logging.info(" - cannot find process by pid")
+                logging.debug(" - cannot find process by pid")
                 process = None
-            logging.info(" - setting state to failed")
+            logging.debug(" - setting state to failed")
             ti.set_state(State.FAILED)
             if process:
                 logging.info(" - waiting for process to exit")
@@ -203,16 +221,23 @@ def stop_dag_run_tasks(dag_run, timeout):
 
 
 def remove_dag_run_tmp_data(dag_run):
+    """
+    Loads task instances (TI) for the provided dag_run. For each TI tries to load
+    report file and find "tmp_folder" parameter. All collected "tmp_folder"s are
+    saved in a set to exclude duplicates. Tries to remove each of the found tmp
+    folders.
+    """
+
     logging.info(f"Searching tmp data for dag_id: {dag_run.dag_id}, run_id: {dag_run.run_id}")
     tmp_folder_set = set()
     for ti in dag_run.get_task_instances():
         logging.info(f"Task: {ti.task_id}, execution_date: {ti.execution_date}, pid: {ti.pid}, state: {ti.state}")
         try:
-            logging.info(" - searching for tmp_folder in the report file")
+            logging.debug(" - searching for tmp_folder in the report file")
             report_location = ti.xcom_pull(task_ids=ti.task_id)
             tmp_folder_set.add(load_yaml(report_location)["tmp_folder"])
         except Exception:
-            logging.info(" - report file has been already deleted or it's missing tmp_folder field")
+            logging.debug(" - report file has been already deleted or it's missing tmp_folder field")
     for tmp_folder in tmp_folder_set:
         try:
             logging.info(f"Removing tmp data from {tmp_folder}")
@@ -223,18 +248,24 @@ def remove_dag_run_tmp_data(dag_run):
 
 @provide_session
 def clean_dag_run_db(dag_run, session=None):
+    """
+    Loads task instances (TI) for the provided dag_run. For each TI clears
+    xcom data and TaskInstance table, then removes current dag_run from the
+    DagRun table
+    """
+
     logging.info(f"Cleaning DB for dag_id: {dag_run.dag_id}, run_id: {dag_run.run_id}")
     for ti in dag_run.get_task_instances():
         logging.info(f"Task: {ti.task_id}, execution_date: {ti.execution_date}, pid: {ti.pid}, state: {ti.state}")
-        logging.info(" - cleaning Xcom table")
+        logging.debug(" - cleaning Xcom table")
         ti.clear_xcom_data()
-        logging.info(" - cleaning TaskInstance table")
+        logging.debug(" - cleaning TaskInstance table")
         session.query(TaskInstance).filter(
             TaskInstance.task_id == ti.task_id,
             TaskInstance.dag_id == ti.dag_id,
             TaskInstance.execution_date == dag_run.execution_date).delete(synchronize_session="fetch")
         session.commit()
-    logging.info("cleaning DagRun table")
+    logging.debug("cleaning DagRun table")
     session.query(DagRun).filter(
         DagRun.dag_id == dag_run.dag_id,
         DagRun.run_id == dag_run.run_id,
@@ -243,6 +274,16 @@ def clean_dag_run_db(dag_run, session=None):
 
 
 def clean_up_dag_run(dag_id, run_id, dags_folder=None, kill_timeout=None):
+    """
+    For the provided dag_id and run_id fetches a list of dag_runs (should be always
+    a list of 1 item). For each dag_run stops all running tasks, removes temporary
+    data and correspondent records in DB. Then removes outdated DAGs for the same
+    workflow. For that dag_id should follow the naming rule "cwlid-commitsha". If
+    dags_folder was not provided reads dags_folder from the airflow.cfg. If
+    kill_timeout was not provided use 2 times longer intervar than the one from the
+    airflow.cfg. This function should never raise any exceptions.
+    """
+
     logging.info(f"Cleaning up dag_id: {dag_id}, run_id: {run_id}")
     dags_folder = conf.get("core", "dags_folder") if dags_folder is None else dags_folder
     kill_timeout = 2 * conf.getint("core", "KILLED_TASK_CLEANUP_TIME") if kill_timeout is None else kill_timeout
