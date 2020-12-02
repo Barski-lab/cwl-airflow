@@ -76,7 +76,7 @@ class CWLApiBackend():
 
 
     def get_dags(self, dag_ids=[]):
-        logging.debug(f"Call get_dags with dag_ids={dag_ids}")
+        logging.info(f"Call get_dags with dag_ids={dag_ids}")
         try:
             dag_ids = dag_ids or self.list_dags()
             logging.debug(f"Processing dags {dag_ids}")
@@ -87,7 +87,7 @@ class CWLApiBackend():
 
 
     def post_dags(self, dag_id=None):
-        logging.debug(f"Call post_dags with dag_id={dag_id}")
+        logging.info(f"Call post_dags with dag_id={dag_id}")
         try:
             res = self.export_dag(dag_id or ''.join(random.choice(string.ascii_lowercase) for i in range(32)))
             logging.debug(f"Exported DAG {res}")
@@ -127,7 +127,7 @@ class CWLApiBackend():
         
 
     def post_dag_runs(self, dag_id, run_id=None, conf=None):
-        logging.debug(f"Call post_dag_runs with dag_id={dag_id}, run_id={run_id}, conf={conf}")
+        logging.info(f"Call post_dag_runs with dag_id={dag_id}, run_id={run_id}, conf={conf}")
         try:
             dagrun = self.trigger_dag(dag_id, run_id, conf)
             return {"dag_id": dagrun.dag_id,
@@ -141,7 +141,7 @@ class CWLApiBackend():
 
 
     def post_dags_dag_runs(self, dag_id, run_id, conf=None):
-        logging.debug(f"Call post_dags_dag_runs with dag_id={dag_id}, run_id={run_id}, conf={conf}")
+        logging.info(f"Call post_dags_dag_runs with dag_id={dag_id}, run_id={run_id}, conf={conf}")
         self.post_dags(dag_id)
         clean_up_dag_run(
             dag_id=dag_id,
@@ -153,7 +153,7 @@ class CWLApiBackend():
 
     def post_dag_runs_legacy(self, dag_id):
         data = connexion.request.json
-        logging.debug(f"Call post_dag_runs_legacy with dag_id={dag_id}, data={data}")
+        logging.info(f"Call post_dag_runs_legacy with dag_id={dag_id}, data={data}")
         return self.post_dag_runs(dag_id, data["run_id"], data["conf"])
 
 
