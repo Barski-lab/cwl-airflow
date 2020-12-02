@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
   title: CWL-Airflow API
-  version: 1.0.0
+  version: 1.0.1
 basePath: "/api/experimental"
 schemes:
   - https
@@ -53,7 +53,7 @@ paths:
     post:
       summary: Creates new dag with dag_id from the attached workflow.cwl file or its compressed content.
       description: Creates new dag with dag_id from the attached workflow.cwl file or its compressed content.
-      operationId: post_dag
+      operationId: post_dags
       responses:
         "200":
           description: dag_id, py and cwl file locations of a created dag.
@@ -189,6 +189,70 @@ paths:
         - name: conf
           description: Run configuration (JSON-formatted string)
           in: query
+          required: false
+          type: string
+      tags:
+        - Airflow
+
+  /dags/dag_runs:
+    post:
+      summary: Combined logic from /dags and /dag_runs POSTs
+      description: >-
+        1. Creates new dag with dag_id from the attached workflow.cwl file or its compressed content.
+           Either workflow or workflow_content should be provided. 
+           dag_id should follow the naming rule "cwlid-commitsha", otherwise outdated dags won't be deleted.
+        2. Tries to delete all previous dag_runs for the provided dag_id and run_id, which also includes
+           - stopping all running tasks for the current dag_id and run_id
+           - removing correspondent temporary data
+           - cleaning up correspondent records in DB
+           - removing outdated dags for the same cwlid if no running dag_runs were found for them
+        3. Creates new dag_run for dag_id with run_id and optional conf
+      operationId: post_dags_dag_runs
+      responses:
+        "200":
+          description: Reference information about created dag and dag_run.
+          schema:
+            $ref: "#/definitions/PostDagRunsResponse"
+        "400":
+          description: The request is malformed.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "401":
+          description: The request is unauthorized.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "403":
+          description: The requester is not authorized to perform this action.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "500":
+          description: An unexpected error occurred.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+      parameters:
+        - name: dag_id
+          description: Dag identifier, follow the naming rule "cwlid-commitsha"
+          in: query
+          required: true
+          type: string
+        - name: run_id
+          description: Run identifier
+          in: query
+          required: true
+          type: string
+        - name: conf
+          description: Run configuration (JSON-formatted string)
+          in: query
+          required: false
+          type: string
+        - name: workflow
+          description: CWL workflow file with embedded tools and all other dependencies
+          in: formData
+          required: false
+          type: file
+        - name: workflow_content
+          description: base64 encoded zlib compressed workflow content
+          in: formData
           required: false
           type: string
       tags:
@@ -610,6 +674,7 @@ definitions:
      - start_date
      - state
      - tasks
+     - progress
     properties:
       dag_id:
         type: string
@@ -632,6 +697,8 @@ definitions:
               type: string
             state:
               $ref: "#/definitions/TaskState"
+      progress:
+        type: integer
     description: Dag run info
 
   DagRunState:

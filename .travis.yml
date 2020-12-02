@@ -66,6 +66,10 @@ jobs:
         tags: true
   - name: DAG with embedded workflow (just one test)
     script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --embed
+  - name: DAG with attached workflow using combined API call (just one test)
+    script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --combine
+  - name: DAG with embedded workflow using combined API call (just one test)
+    script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --embed --combine
   - name: Test of `init --upgrade`
     before_install:
     - mkdir -p ~/airflow/dags
@@ -115,7 +119,7 @@ script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin -
 branches:
   only:
   - master
-  - /*_devel/
+  - /^*_devel$/
   - /^([1-9]\d*!)?(0|[1-9]\d*)(\.(0|[1-9]\d*))*((a|b|rc)(0|[1-9]\d*))?(\.post(0|[1-9]\d*))?(\.dev(0|[1-9]\d*))?$/
 
 notifications:
