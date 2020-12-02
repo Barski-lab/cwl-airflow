@@ -98,32 +98,27 @@ class CWLApiBackend():
 
 
     def get_dag_runs(self, dag_id=None, run_id=None, execution_date=None, state=None):
-        logging.debug(f"Call get_dag_runs with dag_id={dag_id}, run_id={run_id}, execution_date={execution_date}, state={state}")
+        logging.info(f"Call get_dag_runs with dag_id={dag_id}, run_id={run_id}, execution_date={execution_date}, state={state}")
         try:
             dag_runs = []
             dag_ids = [dag_id] if dag_id else self.list_dags()
-            logging.debug(f"Processing dags {dag_ids}")
+            logging.debug(f"Found dags {dag_ids}")
             for d_id in dag_ids:
-                logging.debug(f"Process dag  {d_id}")
-                task_ids = self.list_tasks(d_id)
-                logging.debug(f"Fetched tasks {task_ids}")
-                for dag_run in self.list_dag_runs(d_id, state):
-                    logging.debug(f"Process dag run {dag_run['run_id']}, {dag_run['execution_date']}")
-                    if run_id and run_id != dag_run["run_id"] or execution_date and execution_date != dag_run["execution_date"]:
-                        logging.debug(f"Skip dag_run {dag_run['run_id']}, {dag_run['execution_date']} (run_id or execution_date doesn't match)")
+                logging.info(f"Process dag  {d_id}")
+                for dag_run in DagRun.find(dag_id=d_id, state=state):
+                    logging.info(f"Process dag_run {dag_run.run_id}, {dag_run.execution_date.isoformat()}")
+                    if run_id and run_id != dag_run.run_id or execution_date and execution_date != dag_run.execution_date.isoformat():
+                        logging.info(f"Skip dag_run {dag_run.run_id}, {dag_run.execution_date.isoformat()} (run_id or execution_date doesn't match)")
                         continue
-                    response_item = {"dag_id": d_id,
-                                     "run_id": dag_run["run_id"],
-                                     "execution_date": dag_run["execution_date"],
-                                     "start_date": dag_run["start_date"],
-                                     "state": dag_run["state"],
-                                     "tasks": []}
-                    logging.debug(f"Get statuses for tasks {task_ids}")
-                    for t_id in task_ids:
-                        response_item["tasks"].append({"id": t_id, "state": self.task_state(d_id, t_id, dag_run["execution_date"])})
-                    response_item["progress"] = int(
-                        len([t for t in response_item["tasks"] if t["state"]==State.SUCCESS]) / len(response_item["tasks"]) * 100
-                    )
+                    response_item = {
+                        "dag_id": d_id,
+                        "run_id": dag_run.run_id,
+                        "execution_date": dag_run.execution_date.isoformat(),
+                        "start_date": dag_run.start_date.isoformat(),
+                        "state": dag_run.state,
+                        "tasks": [{"id": ti.task_id, "state": ti.state} for ti in dag_run.get_task_instances()],
+                        "progress": int(len([ti for ti in dag_run.get_task_instances(State.SUCCESS)]) / len(dag_run.get_task_instances()) * 100)
+                    }
                     dag_runs.append(response_item)
             return {"dag_runs": dag_runs}
         except Exception as err:
@@ -236,18 +231,6 @@ class CWLApiBackend():
         task_state = TaskInstance(DagBag(include_examples=self.include_examples).dags[dag_id].get_task(task_id=task_id), parsedate(execution_date)).current_state()
         task_state = task_state or "none"
         return task_state
-
-
-    def list_dag_runs(self, dag_id, state):
-        dag_runs = []
-        for dag_run in DagRun.find(dag_id=dag_id, state=state):
-            dag_runs.append({
-                "run_id": dag_run.run_id,
-                "state": dag_run.state,
-                "execution_date": dag_run.execution_date.isoformat(),
-                "start_date": ((dag_run.start_date or '') and dag_run.start_date.isoformat())
-            })
-        return dag_runs
 
 
     def save_attachment(self, attachment, location, exist_ok=False):
