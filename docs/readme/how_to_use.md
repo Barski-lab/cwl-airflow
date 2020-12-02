@@ -230,7 +230,8 @@ Response example:
           "id": "string",
           "state": "scheduled"
         }
-      ]
+      ],
+      "progress": 0
     }
   ]
 }
