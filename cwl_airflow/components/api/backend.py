@@ -121,7 +121,9 @@ class CWLApiBackend():
                     logging.debug(f"Get statuses for tasks {task_ids}")
                     for t_id in task_ids:
                         response_item["tasks"].append({"id": t_id, "state": self.task_state(d_id, t_id, dag_run["execution_date"])})
-                    response_item["progress"] = int([t for t in response_item["tasks"] if t["state"]==State.SUCCESS] / len(response_item["tasks"]) * 100)
+                    response_item["progress"] = int(
+                        len([t for t in response_item["tasks"] if t["state"]==State.SUCCESS]) / len(response_item["tasks"]) * 100
+                    )
                     dag_runs.append(response_item)
             return {"dag_runs": dag_runs}
         except Exception as err:
