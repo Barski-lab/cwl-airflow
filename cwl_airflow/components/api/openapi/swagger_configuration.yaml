@@ -674,6 +674,7 @@ definitions:
      - start_date
      - state
      - tasks
+     - progress
     properties:
       dag_id:
         type: string
@@ -696,6 +697,8 @@ definitions:
               type: string
             state:
               $ref: "#/definitions/TaskState"
+      progress:
+        type: integer
     description: Dag run info
 
   DagRunState:
