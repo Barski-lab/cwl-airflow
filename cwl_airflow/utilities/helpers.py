@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 from typing import MutableMapping, MutableSequence
 
 
+# is not actually used anywhere
 def yield_file_content(location):
     """
     Yields lines from the text file.

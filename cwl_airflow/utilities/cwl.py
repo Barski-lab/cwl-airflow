@@ -587,7 +587,7 @@ def execute_workflow_step(
     sys.stderr = _stderr
 
     if step_status != "success":
-        raise ValueError
+        raise ValueError("Failed to run workflow step")
 
     # To remove "http://commonwl.org/cwltool#generation": 0 (copied from cwltool)
     visit_class(step_outputs, ("File",), MutationManager().unset_generation)

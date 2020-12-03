@@ -6,6 +6,7 @@ import logging
 from airflow.models import Variable
 from airflow.utils.state import State
 from airflow.hooks.http_hook import HttpHook
+from airflow.configuration import conf
 
 
 CONN_ID = "process_report"
@@ -32,7 +33,64 @@ def sign_with_jwt(data):
     return data
 
 
+def get_error_category(context):
+    """
+    The function should be called only from the dag_run failure callback.
+    It's higly relies on the log files, so logging level in airflow.cfg
+    shouldn't be lower than ERROR. We loads log only from the latest task
+    retry, because the get_error_category function is called when the dag_run
+    has failed, so all previous task retries didn't bring any positive results.
+    We load logs only for the actually failed task, not for upstream_failed
+    tasks. All error categories are mutullly exclusive so they are not supposed
+    to be present in the same log file. The returned value is always a string.
+    """
+
+    ERROR_MARKERS = {
+        "Docker is not available for this tool":              "Docker or Network problems. Contact support team",
+        "ERROR - Received SIGTERM. Terminating subprocesses": "Workflow was stopped. Restart with the lower threads or memory parameters",
+        "Failed to run workflow step":                        "Workflow step {} failed. Contact support team"
+    }
+
+    # docker daemon is not running; networks is unavailable to pull the docker image or it doesn't exist
+    # something took too much resources and Aiflow killed the process or something externally has stopped the task
+    # cwltool exited with error when executing workflow step
+
+    dag_run = context["dag_run"]
+    failed_tis = dag_run.get_task_instances(state=State.FAILED)
+    log_handler = next(                                              # to get access to logs
+        (
+            h for h in logging.getLogger("airflow.task").handlers
+            if h.name == conf.get("core", "task_log_reader")
+        ),
+        None
+    )
+
+    categories = set()                                               # use set to prevent duplicates
+
+    for ti in failed_tis:
+        ti.task = context["dag"].get_task(ti.task_id)                # for some reasons when retreived from DagRun we need to set "task" property from the DAG
+        try:                                                         # in case log files were deleted or unavailable
+            logs, _ = log_handler.read(ti)                           # logs is always a list
+            for line in logs[-1].split("\n"):                        # first need to take the latest log and split it by "\n"
+                for marker, category in ERROR_MARKERS.items():
+                    if marker in line:
+                        categories.add(category.format(ti.task_id))  # safe to call format even if there isn't any placeholders
+        except Exception as err:
+            logging.debug(f"Failed to define the error category for task {ti.task_id}. \n {err}")
+
+    if categories:
+        return "\n".join(categories)
+    return "Unknown error. Contact support team"
+
+
 def post_progress(context, from_task=None):
+    """
+    If dag_run failed but this function was run from the task callback,
+    error would be always "". The "error" is not "" only when this function
+    will be called from the DAG callback, thus making it the last and the only
+    message with the meaningful error description.
+    """
+
     from_task = False if from_task is None else from_task
     try:
         dag_run = context["dag_run"]
@@ -44,7 +102,7 @@ def post_progress(context, from_task=None):
                 "dag_id": dag_run.dag_id,
                 "run_id": dag_run.run_id,
                 "progress": int(len_tis_success / len_tis * 100),
-                "error": context["reason"] if dag_run.state == State.FAILED else ""
+                "error": get_error_category(context) if dag_run.state == State.FAILED and not from_task else ""
             }
         )
         http_hook.run(endpoint=ROUTES["progress"], json={"payload": data})
@@ -105,10 +163,12 @@ def task_on_success(context):
 
 
 def task_on_failure(context):
+    # no need to post progress as it hasn't been changed
     post_status(context)
 
 
 def task_on_retry(context):
+    # no need to post progress as it hasn't been changed
     post_status(context)
 
 
@@ -118,4 +178,5 @@ def dag_on_success(context):
 
 
 def dag_on_failure(context):
+    # we need to post progress, because we will also report error in it
     post_progress(context)
