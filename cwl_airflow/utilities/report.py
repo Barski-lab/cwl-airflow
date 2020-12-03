@@ -35,20 +35,23 @@ def sign_with_jwt(data):
 
 def get_error_category(context):
     """
-    The function should be called only from the dag_run failure callback.
+    This function should be called only from the dag_run failure callback.
     It's higly relies on the log files, so logging level in airflow.cfg
-    shouldn't be lower than ERROR. We loads log only from the latest task
+    shouldn't be lower than ERROR. We load log file only for the latest task
     retry, because the get_error_category function is called when the dag_run
     has failed, so all previous task retries didn't bring any positive results.
     We load logs only for the actually failed task, not for upstream_failed
-    tasks. All error categories are mutullly exclusive so they are not supposed
-    to be present in the same log file. The returned value is always a string.
+    tasks. All error categories should be mutullly exclusive so they are not
+    supposed to appear in the same log file all at once. We report only unique
+    error categories that's why we use set. The "Failed to run workflow step"
+    category additionally is filled with failed task ids. The returned value is
+    always a string.
     """
 
     ERROR_MARKERS = {
         "Docker is not available for this tool":              "Docker or Network problems. Contact support team",
         "ERROR - Received SIGTERM. Terminating subprocesses": "Workflow was stopped. Restart with the lower threads or memory parameters",
-        "Failed to run workflow step":                        "Workflow step {} failed. Contact support team"
+        "Failed to run workflow step":                        "Workflow step(s) {} failed. Contact support team"
     }
 
     # docker daemon is not running; networks is unavailable to pull the docker image or it doesn't exist
@@ -74,12 +77,12 @@ def get_error_category(context):
             for line in logs[-1].split("\n"):                        # first need to take the latest log and split it by "\n"
                 for marker, category in ERROR_MARKERS.items():
                     if marker in line:
-                        categories.add(category.format(ti.task_id))  # safe to call format even if there isn't any placeholders
+                        categories.add(category)
         except Exception as err:
             logging.debug(f"Failed to define the error category for task {ti.task_id}. \n {err}")
 
     if categories:
-        return "\n".join(categories)
+        return "\n".join(categories).format(", ".join( [ti.task_id for ti in failed_tis] ))  # mainly to fill in the placeholder with failed task ids
     return "Unknown error. Contact support team"
 
 
