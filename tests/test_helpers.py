@@ -11,6 +11,7 @@ from ruamel.yaml.error import YAMLError
 
 from cwl_airflow.utilities.helpers import (
     CleanAirflowImport,
+    yield_file_content,
     load_yaml,
     remove_field_from_dict,
     get_compressed,
@@ -22,6 +23,23 @@ from cwl_airflow.utilities.helpers import (
 DATA_FOLDER = path.abspath(path.join(path.dirname(__file__), "data"))
 if sys.platform == "darwin":                                           # docker has troubles of mounting /var/private on macOs
     tempfile.tempdir = "/private/tmp"
+
+
+@pytest.mark.parametrize(
+    "location, control_count",
+    [
+        (
+            path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
+            11
+        )
+    ]
+)
+def test_yield_file_content(location, control_count):
+    count = 0
+    for _ in yield_file_content(location):
+        count += 1
+    assert control_count==count, \
+        "Failed to read a proper number of lines from the text file"
 
 
 @pytest.mark.parametrize(

@@ -15,6 +15,20 @@ from urllib.parse import urlparse
 from typing import MutableMapping, MutableSequence
 
 
+# is not actually used anywhere
+def yield_file_content(location):
+    """
+    Yields lines from the text file.
+    \n at the end of the lines are trimmed.
+    Empty lines or with only spaces/tabs are excluded.
+    """
+
+    with open(location, "r") as input_stream:
+        for line in input_stream:
+            if line.strip():
+                yield line.strip()
+
+
 def get_compressed(data_str, reset_position=None):
     """
     Converts character string "data_str" as "utf-8" into bytes ("utf-8"
