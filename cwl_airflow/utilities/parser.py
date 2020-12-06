@@ -173,7 +173,12 @@ def get_parser():
         help="Create and trigger DAG using a single API call. \
             Default: False"
     )
-
+    test_parser.add_argument(
+        "--relative",
+        action="store_true",
+        help="Skip relative paths resolution before submitting jobs to API. \
+            Default: False"
+    )
     return general_parser
 
 
@@ -252,7 +257,18 @@ def parse_arguments(argsl, cwd=None):
     args, _ = get_parser().parse_known_args(argsl)
     args = get_normalized_args(
         args,
-        ["func", "port", "host", "api", "range", "spin", "embed", "upgrade", "combine"],
+        [
+            "func",
+            "port",
+            "host",
+            "api",
+            "range",
+            "spin",
+            "embed",
+            "upgrade",
+            "combine",
+            "relative"
+        ],
         cwd
     )
     assert_and_fix_args(args)

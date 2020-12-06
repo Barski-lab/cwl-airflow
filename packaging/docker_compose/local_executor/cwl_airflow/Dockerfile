@@ -22,7 +22,16 @@ ENV CWL_AIRFLOW_VERSION "master"
 ENV CWL_AIRFLOW_URL "https://github.com/Barski-lab/cwl-airflow"
 
 RUN apt-get update && \
-    apt-get install -y python3-dev python3-pip nodejs gcc git wget curl libmysqlclient-dev mysql-client && \
+    # installing dependencies (including docker dependencies)
+    apt-get install -y python3-dev python3-pip nodejs gcc git wget curl \
+                       libmysqlclient-dev mysql-client apt-transport-https \
+                       ca-certificates gnupg-agent software-properties-common && \
+    # installing docker-ce-cli
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
+    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
+    apt-get update && \
+    apt-get -y install docker-ce-cli && \
+    # installing cwl-airflow
     pip3 install -U pip                                                                     && \
     git clone ${CWL_AIRFLOW_URL}                                                            && \
     cd cwl-airflow                                                                          && \
@@ -30,6 +39,7 @@ RUN apt-get update && \
     pip3 install ".[mysql,crypto]" --constraint ./packaging/constraints/constraints-3.8.txt && \
     cd ..                                                                                   && \
     rm -rf cwl-airflow                                                                      && \
+    # cleaning up
     apt-get clean                                                                           && \
     apt-get purge                                                                           && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*                          && \

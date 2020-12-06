@@ -4,21 +4,21 @@ version: "3"
 x-aliases:  # if it starts with x- it's ignored by docker-compose
     - &airflow_env_var
         environment:
-            - AIRFLOW_HOME=/opt/airflow
+            - AIRFLOW_HOME=${AIRFLOW_HOME}
             - AIRFLOW__CORE__EXECUTOR=LocalExecutor
             - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
-            - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
-            - AIRFLOW__CORE__BASE_LOG_FOLDER=/opt/airflow/logs
-            - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
-            - AIRFLOW__CORE__PLUGINS_FOLDER=/opt/airflow/plugins
-            - AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=/opt/airflow/logs/scheduler
+            - AIRFLOW__CORE__DAGS_FOLDER=${AIRFLOW_HOME}/dags
+            - AIRFLOW__CORE__BASE_LOG_FOLDER=${AIRFLOW_HOME}/logs
+            - AIRFLOW__CORE__DAG_PROCESSOR_MANAGER_LOG_LOCATION=${AIRFLOW_HOME}/logs/dag_processor_manager/dag_processor_manager.log
+            - AIRFLOW__CORE__PLUGINS_FOLDER=${AIRFLOW_HOME}/plugins
+            - AIRFLOW__SCHEDULER__CHILD_PROCESS_LOG_DIRECTORY=${AIRFLOW_HOME}/logs/scheduler
     - &airflow_volumes
         volumes:
-            - ${AIRFLOW_HOME}:/opt/airflow
-            - ${CWL_TMP_FOLDER}:/opt/airflow/cwl_tmp_folder
-            - ${CWL_INPUTS_FOLDER}:/opt/airflow/cwl_inputs_folder
-            - ${CWL_OUTPUTS_FOLDER}:/opt/airflow/cwl_outputs_folder
-            - ${CWL_PICKLE_FOLDER}:/opt/airflow/cwl_pickle_folder
+            - ${AIRFLOW_HOME}:${AIRFLOW_HOME}
+            - ${CWL_TMP_FOLDER}:${CWL_TMP_FOLDER}
+            - ${CWL_INPUTS_FOLDER}:${CWL_INPUTS_FOLDER}
+            - ${CWL_OUTPUTS_FOLDER}:${CWL_OUTPUTS_FOLDER}
+            - ${CWL_PICKLE_FOLDER}:${CWL_PICKLE_FOLDER}
 
 
 services:
@@ -28,14 +28,14 @@ services:
     scheduler:
         build: ./cwl_airflow
         container_name: scheduler
-        volumes:  # can't reuse *airflow_volumes as YAML doesn't suppoer sequence merging
+        volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
             - /var/run/docker.sock:/var/run/docker.sock
-            - ${AIRFLOW_HOME}:/opt/airflow
-            - ${CWL_TMP_FOLDER}:/opt/airflow/cwl_tmp_folder
-            - ${CWL_INPUTS_FOLDER}:/opt/airflow/cwl_inputs_folder
-            - ${CWL_OUTPUTS_FOLDER}:/opt/airflow/cwl_outputs_folder
-            - ${CWL_PICKLE_FOLDER}:/opt/airflow/cwl_pickle_folder
-        privileged: true
+            - ${AIRFLOW_HOME}:${AIRFLOW_HOME}
+            - ${CWL_TMP_FOLDER}:${CWL_TMP_FOLDER}
+            - ${CWL_INPUTS_FOLDER}:${CWL_INPUTS_FOLDER}
+            - ${CWL_OUTPUTS_FOLDER}:${CWL_OUTPUTS_FOLDER}
+            - ${CWL_PICKLE_FOLDER}:${CWL_PICKLE_FOLDER}
+        privileged: true                                               # maybe I don't actully need it here
         restart: always
         <<: *airflow_env_var
         command: bash -c "EXIT_CODE=1 && while [ $$EXIT_CODE -ne 0 ]; do (airflow checkdb); EXIT_CODE=$$?; sleep 5; done && cwl-airflow init --upgrade && airflow scheduler"

@@ -142,11 +142,11 @@ def load_test_suite(args):
     Loads tests from the provided --suite file.
     Selects tests based on the indices from --range.
     
-    Updates tools locations to be absolute, loads
+    Updates tools locations to be absolute. Loads
     jobs and updates all inputs files locations to
-    be absolute too. Adds "outputs_folder" to the job,
-    as well as the "index" to indicate which test case
-    was used.
+    be absolute (unless --relative parameter was set).
+    Adds "outputs_folder" to the job, as well as the
+    "index" to indicate which test case was used.
 
     Adds run_id's as keys for easy access and proper
     test identification when receiving results.
@@ -166,10 +166,13 @@ def load_test_suite(args):
 
         if "job" in test_data:
             job_location = get_absolute_path(test_data["job"], suite_dir)
-            job_data = load_job(
-                workflow=tool_location,
-                job=job_location
-            )
+            if args.relative:                       # skips relative path resolutions as well as adding values from the workflow default inputs
+                job_data = load_yaml(job_location)
+            else:
+                job_data = load_job(
+                    workflow=tool_location,
+                    job=job_location
+                )
 
         job_data["outputs_folder"] = get_dir(os.path.join(args.tmp, run_id))
 
