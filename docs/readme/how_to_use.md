@@ -263,4 +263,11 @@ Response example:
 
 ## Running CWL-Airflow with docker-compose
 
-Work in progress. Coming soon!
+To start CWL-Airflow with LocalExecutor using docker-compose, run the following commands
+```
+cd ./packaging/docker_compose/local_executor
+docker-compose up --build
+```
+
+Default values for mount volumes, mapped ports and other configurations can be found `.env` file in the
+same folder.
