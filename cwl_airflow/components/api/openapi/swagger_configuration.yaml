@@ -208,6 +208,8 @@ paths:
            - removing outdated dags for the same cwlid if no running dag_runs were found for them
         3. Creates new dag_run for dag_id with run_id and optional conf
       operationId: post_dags_dag_runs
+      consumes:
+         - multipart/form-data
       responses:
         "200":
           description: Reference information about created dag and dag_run.
