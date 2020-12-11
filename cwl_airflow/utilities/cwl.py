@@ -4,7 +4,7 @@ import sys
 import dill as pickle  # standard pickle doesn't handle lambdas
 import argparse
 import json
-import zlib
+import gzip
 import shutil
 import psutil
 import docker
@@ -95,7 +95,7 @@ def overwrite_deprecated_dag(
     or already in a new format). If "deprecated_dags_folder" is not None, copies original
     DAG file there before DAG upgrading. After copying deprecated DAG to the
     "deprecated_dags_folder" updates ".airflowignore" with DAG file basename to exclude
-    it from Airflow parsing. Upgraded DAG will always include base64 encoded zlib
+    it from Airflow parsing. Upgraded DAG will always include base64 encoded gzip
     compressed workflow content. In case "workflow_location" is relative path, it will
     be resolved based on the dirname of "dag_location" (useful for tests only, because
     all our old DAGs always have absolute path to the CWL file). Function doesn't backup
@@ -1034,7 +1034,7 @@ def slow_cwl_load(workflow, cwl_args=None, only_tool=None):
     If "workflow" was already parsed into CommentedMap, return it
     unchanged (in a form similar to what we can get if parsed
     "workflow" with "only_tool" set to True).
-    If "workflow" was a zlib compressed content of a file, it needs
+    If "workflow" was a gzip compressed content of a file, it needs
     to be uncompressed, then written to the temp file and loaded the
     same way as described above. After loading temp file will be
     removed automatically. First always try to uncompress, because
@@ -1067,7 +1067,7 @@ def slow_cwl_load(workflow, cwl_args=None, only_tool=None):
             )
             temp_stream.flush()                            # otherwise it might be only partially written
             workflow_data = __load(temp_stream.name)
-    except (zlib.error, binascii.Error):                   # file was real
+    except (gzip.BadGzipFile, binascii.Error):             # file was real
         workflow_data = __load(workflow)
 
     return workflow_data.tool if only_tool else workflow_data

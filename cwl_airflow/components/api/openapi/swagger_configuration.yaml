@@ -89,7 +89,7 @@ paths:
           required: false
           type: file
         - name: workflow_content
-          description: base64 encoded zlib compressed workflow content
+          description: base64 encoded gzip compressed workflow content
           in: formData
           required: false
           type: string
@@ -253,7 +253,7 @@ paths:
           required: false
           type: file
         - name: workflow_content
-          description: base64 encoded zlib compressed workflow content
+          description: base64 encoded gzip compressed workflow content
           in: formData
           required: false
           type: string

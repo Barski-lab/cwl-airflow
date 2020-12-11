@@ -164,7 +164,7 @@ def get_parser():
     test_parser.add_argument(
         "--embed",
         action="store_true",
-        help="Embed base64 encoded zlib compressed workflow content into the DAG python file. \
+        help="Embed base64 encoded gzip compressed workflow content into the DAG python file. \
             Default: False"
     )
     test_parser.add_argument(

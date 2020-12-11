@@ -27,7 +27,7 @@ class CWLDAG(DAG):
     def __init__(
         self,
         dag_id,          # the id of the DAG
-        workflow,        # absolute path to the CWL workflow file or utf-8 string to include base64 encoded zlib compressed utf-8 workflow file content
+        workflow,        # absolute path to the CWL workflow file or utf-8 string to include base64 encoded gzip compressed utf-8 workflow file content
         dispatcher=None, # custom job dispatcher. Will be assigned automatically to the same DAG. Default CWLJobDispatcher
         gatherer=None,   # custom job gatherer. Will be assigned automatically to the same DAG. Default CWLJobGatherer
         *args, **kwargs  # see DAG class for additional parameters

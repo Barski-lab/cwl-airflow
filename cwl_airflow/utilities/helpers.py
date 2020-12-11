@@ -4,7 +4,7 @@ import io
 import hashlib
 import pkg_resources
 import json
-import zlib
+import gzip
 import base64
 from copy import deepcopy
 from io import BytesIO
@@ -33,7 +33,7 @@ def get_compressed(data_str, reset_position=None):
     """
     Converts character string "data_str" as "utf-8" into bytes ("utf-8"
     is default encoding for Python3 string). Encoded bytes are then being
-    compressed with "zlib" and encoded again as "base64" (it uses only the
+    compressed with "gzip" and encoded again as "base64" (it uses only the
     characters A-Z, a-z, 0-9, +, /* so it can be transmitted over channels
     that do not preserve all 8-bits of data). At the end "base64" encoded
     copressed bytes are converted back to standard for Python3 "utf-8" string.
@@ -60,25 +60,23 @@ def get_compressed(data_str, reset_position=None):
             else:                                               # file was opened in a text mode and need to be "utf-8" encoded
                 data_str_utf = data_str.read().encode("utf-8")
     return base64.b64encode(
-        zlib.compress(
-            data_str_utf,
-            level=9)
+        gzip.compress(data_str_utf)
     ).decode("utf-8")
 
 
 def get_uncompressed(data_str, parse_as_yaml=None):
     """
     Converts character string "data_str" as "utf-8" into bytes, then
-    decodes it as "base64" and decompress with "zlib". The resulted
+    decodes it as "base64" and decompress with "gzip". The resulted
     "bytes" are converted again into standard for Python3 "utf-8"
-    string. Raises zlib.error or binascii.Error if something went
+    string. Raises gzip.error or binascii.Error if something went
     wrong. If "parse_as_yaml" is True, try to load uncompressed
     content with "load_yaml". The latter may raise ValueError or
     YAMLError if something went wrong
     """
 
     parse_as_yaml = False if parse_as_yaml is None else parse_as_yaml
-    uncompressed =  zlib.decompress(
+    uncompressed =  gzip.decompress(
         base64.b64decode(
             data_str.encode("utf-8")
         )

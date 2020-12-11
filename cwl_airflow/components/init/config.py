@@ -105,7 +105,7 @@ def upgrade_dags(airflow_config):
     "deprecated_dags" folder, adds deprecated DAGs to the
     ".airflowignore" file created within that folder. Original
     DAG files are replaced with the new ones (with base64
-    encoded zlib compressed workflow content), original workflow
+    encoded gzip compressed workflow content), original workflow
     files remain unchanged.
     """
 

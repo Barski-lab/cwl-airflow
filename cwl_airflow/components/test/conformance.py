@@ -195,7 +195,7 @@ def create_dags(suite_data, args, dags_folder=None):
     If loaded tool is not Workflow, send it unchanged. It's safe to
     not process errors when we failed to add new DAG. Airflow Scheduler
     will parse all dags at the end of the next "dag_dir_list_interval"
-    from airflow.cfg. If args.embed was True, send base64 encoded zlib
+    from airflow.cfg. If args.embed was True, send base64 encoded gzip
     compressed content of the workflow file instead of attaching it.
     """
 
@@ -214,8 +214,8 @@ def create_dags(suite_data, args, dags_folder=None):
         with open(workflow_path, "rb") as input_stream:
             logging.info(f"Add DAG {test_data['dag_id']} from test case {test_data['index']}")
 
-            if args.embed:                                                                            # send base64 encoded zlib compressed workflow content that will be embedded into DAG python file
-                logging.info(f"Sending base64 encoded zlib compressed content from {workflow_path}")
+            if args.embed:                                                                            # send base64 encoded gzip compressed workflow content that will be embedded into DAG python file
+                logging.info(f"Sending base64 encoded gzip compressed content from {workflow_path}")
                 r = requests.post(
                     url=urljoin(args.api, "/api/experimental/dags"),
                     params=params,
@@ -247,7 +247,7 @@ def trigger_dags(suite_data, args):
     outdated DAGs for the same workflow (for that dag_id should follow naming
     rule cwlid-commitsha) and only after that trigger the workflow execution.
     If not only --combine but also --embed was provided, send base64 encoded
-    zlib compressed content of the workflow file instead of attaching it.
+    gzip compressed content of the workflow file instead of attaching it.
     """
 
     for run_id, test_data in suite_data.items():
@@ -267,8 +267,8 @@ def trigger_dags(suite_data, args):
                 location=workflow_path
             )
             with open(workflow_path, "rb") as input_stream:
-                if args.embed:                                                                            # send base64 encoded zlib compressed workflow content that will be embedded into DAG python file
-                    logging.info(f"Sending base64 encoded zlib compressed content from {workflow_path}")
+                if args.embed:                                                                            # send base64 encoded gzip compressed workflow content that will be embedded into DAG python file
+                    logging.info(f"Sending base64 encoded gzip compressed content from {workflow_path}")
                     r = requests.post(
                         url=urljoin(args.api, "/api/experimental/dags/dag_runs"),
                         params=params,
