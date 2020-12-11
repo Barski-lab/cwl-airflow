@@ -128,6 +128,7 @@ class CWLApiBackend():
 
     def post_dag_runs(self, dag_id, run_id=None, conf=None):
         logging.info(f"Call post_dag_runs with dag_id={dag_id}, run_id={run_id}, conf={conf}")
+        conf = "{\"job\":{}}" if conf is None else conf
         try:
             dagrun = self.trigger_dag(dag_id, run_id, conf)
             return {"dag_id": dagrun.dag_id,
@@ -142,6 +143,7 @@ class CWLApiBackend():
 
     def post_dags_dag_runs(self, dag_id, run_id, conf=None):
         logging.info(f"Call post_dags_dag_runs with dag_id={dag_id}, run_id={run_id}, conf={conf}")
+        conf = "{\"job\":{}}" if conf is None else conf
         self.post_dags(dag_id)
         clean_up_dag_run(
             dag_id=dag_id,
