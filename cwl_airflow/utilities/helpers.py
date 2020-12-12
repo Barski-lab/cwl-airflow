@@ -68,23 +68,24 @@ def get_compressed(data_str, reset_position=None):
 def get_uncompressed(data_str, parse_as_yaml=None):
     """
     Converts character string "data_str" as "utf-8" into bytes, then
-    decodes it as "base64" and decompress with zlib/gzip. The resulted
+    decodes it as "base64" and decompress with gzip/zlib. The resulted
     "bytes" are converted again into standard for Python3 "utf-8"
-    string. Raises gzip.BadGzipFile or binascii.Error if something went
+    string. Raises zlib.error or binascii.Error if something went
     wrong. If "parse_as_yaml" is True, try to load uncompressed
     content with "load_yaml". The latter may raise ValueError or
-    YAMLError if something went wrong
+    YAMLError if something went wrong. Need to use zlib to make it
+    backward compatible with the zlib compressed DAGs
     """
 
     parse_as_yaml = False if parse_as_yaml is None else parse_as_yaml
     try:
-        uncompressed =  zlib.decompress(
+        uncompressed =  gzip.decompress(
             base64.b64decode(
                 data_str.encode("utf-8")
             )
         ).decode("utf-8")
-    except zlib.error:
-        uncompressed =  gzip.decompress(
+    except Exception:
+        uncompressed =  zlib.decompress(
             base64.b64decode(
                 data_str.encode("utf-8")
             )

@@ -4,7 +4,7 @@ import sys
 import dill as pickle  # standard pickle doesn't handle lambdas
 import argparse
 import json
-import gzip
+import zlib
 import shutil
 import psutil
 import docker
@@ -1067,7 +1067,7 @@ def slow_cwl_load(workflow, cwl_args=None, only_tool=None):
             )
             temp_stream.flush()                            # otherwise it might be only partially written
             workflow_data = __load(temp_stream.name)
-    except (gzip.BadGzipFile, binascii.Error):             # file was real
+    except (zlib.error, binascii.Error):                   # file was real
         workflow_data = __load(workflow)
 
     return workflow_data.tool if only_tool else workflow_data
