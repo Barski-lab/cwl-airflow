@@ -69,7 +69,7 @@ def get_uncompressed(data_str, parse_as_yaml=None):
     Converts character string "data_str" as "utf-8" into bytes, then
     decodes it as "base64" and decompress with "gzip". The resulted
     "bytes" are converted again into standard for Python3 "utf-8"
-    string. Raises gzip.error or binascii.Error if something went
+    string. Raises gzip.BadGzipFile or binascii.Error if something went
     wrong. If "parse_as_yaml" is True, try to load uncompressed
     content with "load_yaml". The latter may raise ValueError or
     YAMLError if something went wrong
