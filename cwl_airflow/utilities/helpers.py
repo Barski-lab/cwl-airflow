@@ -79,13 +79,13 @@ def get_uncompressed(data_str, parse_as_yaml=None):
 
     parse_as_yaml = False if parse_as_yaml is None else parse_as_yaml
     try:
-        uncompressed =  gzip.decompress(
+        uncompressed = gzip.decompress(
             base64.b64decode(
                 data_str.encode("utf-8")
             )
         ).decode("utf-8")
     except Exception:
-        uncompressed =  zlib.decompress(
+        uncompressed = zlib.decompress(
             base64.b64decode(
                 data_str.encode("utf-8")
             )
