@@ -134,26 +134,47 @@ def test_get_compressed_from_binary_stream(location, control_data, reset_positio
         "Failed to compress data"
 
 
+# tests decompression for both zlib and gzip compressed data
 @pytest.mark.parametrize(
     "compressed_data, control_data, parse_as_yaml",
     [
         (
-            "eNrLSM3JyVcozy/KSQEAGgsEXQ==",
+            "eNrLSM3JyVcozy/KSQEAGgsEXQ==",                                  # zlib compressed
             "hello world",
             None
         ),
         (
-            "eNqrVkpJLElUslJQykjNyclXKM8vyklRqgUAWl0H0Q==",
+            "H4sIAJm3118C/8tIzcnJVyjPL8pJAQCFEUoNCwAAAA==",                  # gzip compressed
+            "hello world",
+            None
+        ),
+        (
+            "eNqrVkpJLElUslJQykjNyclXKM8vyklRqgUAWl0H0Q==",                  # zlib compressed
             '{"data": "hello world"}',
             None
         ),
         (
-            "eNqrVkpJLElUslJQykjNyclXKM8vyklRqgUAWl0H0Q==",
+            "H4sIALy3118C/6tWSkksSVSyUlDKSM3JyVcozy/KSVGqBQAnYva2FwAAAA==",  # gzip compressed
+            '{"data": "hello world"}',
+            None
+        ),
+        (
+            "eNqrVkpJLElUslJQykjNyclXKM8vyklRqgUAWl0H0Q==",                  # zlib compressed
             '{"data": "hello world"}',
             False
         ),
         (
-            "eNqrVkpJLElUslJQykjNyclXKM8vyklRqgUAWl0H0Q==",
+            "H4sIALy3118C/6tWSkksSVSyUlDKSM3JyVcozy/KSVGqBQAnYva2FwAAAA==",  # gzip compressed
+            '{"data": "hello world"}',
+            False
+        ),
+        (
+            "eNqrVkpJLElUslJQykjNyclXKM8vyklRqgUAWl0H0Q==",                  # zlib compressed
+            {"data": "hello world"},
+            True
+        ),
+        (
+            "H4sIADO4118C/6tWSkksSVSyUlDKSM3JyVcozy/KSVGqBQAnYva2FwAAAA==",  # gzip compressed
             {"data": "hello world"},
             True
         )
