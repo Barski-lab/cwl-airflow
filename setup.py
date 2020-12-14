@@ -74,6 +74,9 @@ EXTRAS_REQUIRE = {
     ],
     "crypto": [
         "cryptography>=0.9.3"
+    ],
+    "postgres": [
+        "psycopg2-binary>=2.7.4"
     ]
 }
 
