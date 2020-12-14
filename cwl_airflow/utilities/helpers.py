@@ -30,7 +30,7 @@ def yield_file_content(location):
                 yield line.strip()
 
 
-def get_compressed(data_str, reset_position=None):
+def get_compressed(data_str, reset_position=None, mtime=None):
     """
     Converts character string "data_str" as "utf-8" into bytes ("utf-8"
     is default encoding for Python3 string). Encoded bytes are then being
@@ -43,7 +43,10 @@ def get_compressed(data_str, reset_position=None):
     failed to dump it with json, assume that "data_str" was a stream, from
     where we read content either as "utf-8" or as bytes, depending on the mode
     that the file was opened with. In this case if "reset_position" is true,
-    reset to the beginning of the file.
+    reset to the beginning of the file. mtime is an optional numeric timestamp
+    to be written to the last modification time field in the stream when
+    compressing. If omitted or None, the current time is used. We need this
+    argument only for reproducible results in unit tests.
     """
 
     reset_position = True if reset_position is None else reset_position
@@ -61,7 +64,7 @@ def get_compressed(data_str, reset_position=None):
             else:                                               # file was opened in a text mode and need to be "utf-8" encoded
                 data_str_utf = data_str.read().encode("utf-8")
     return base64.b64encode(
-        gzip.compress(data_str_utf)
+        gzip.compress(data=data_str_utf, mtime=mtime)
     ).decode("utf-8")
 
 

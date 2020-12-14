@@ -62,74 +62,80 @@ def test_get_md5_sum(location, control_md5sum):
 
 
 @pytest.mark.parametrize(
-    "raw_data, control_data",
+    "raw_data, control_data, mtime",
     [
         (
             "hello world",
-            "eNrLSM3JyVcozy/KSQEAGgsEXQ=="
+            "H4sIAEi9118C/8tIzcnJVyjPL8pJAQCFEUoNCwAAAA==",
+            1607974216.711175
         ),
         (
             {"data": "hello world"},
-            "eNqrVkpJLElUslJQykjNyclXKM8vyklRqgUAWl0H0Q=="
+            "H4sIAEi9118C/6tWSkksSVSyUlDKSM3JyVcozy/KSVGqBQAnYva2FwAAAA==",
+            1607974216.711175
         )
     ]
 )
-def test_get_compressed(raw_data, control_data):
-    compressed_data = get_compressed(raw_data)
+def test_get_compressed(raw_data, control_data, mtime):
+    compressed_data = get_compressed(raw_data, mtime=mtime)
     assert control_data == compressed_data, \
         "Failed to compress data"
 
 
 @pytest.mark.parametrize(
-    "location, control_data, reset_position",
+    "location, control_data, reset_position, mtime",
     [
         (
             path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
-"eNqtjU0KwkAMhfdzipK1TFtw5QG8RojTaAfmjyaCUHr3TkdB3Jvl9728t5quHtwo4t0Hh\
-ku3NtKoCyRSEVwPdfqKkB2pz+lw1vY+ladK7+bljOMwYKRSeMKFaRJbq6F9bu8CqLEcMXB\
-66PyXUUwU+VNo9aW/c+KoTYxmMzssgkGR",
-            None
+"H4sIAEi9118C/62NTQrCQAyF93OKkrVMW3DlAbxGiNNoB+aPJoJQevdOR0Hcm+X3vby3mq\
+4e3Cji3QeGS7c20qgLJFIRXA91+oqQHanP6XDW9j6Vp0rv5uWM4zBgpFJ4woVpEluroX1u7\
+wKosRwxcHro/JdRTBT5U2j1pb9z4qhNjGYzO393NUbuAAAA",
+            None,
+            1607974216.711175
         ),
         (
             path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
-"eNqVjUsKwkAQRPdziqbXMknAVQ7gNZp2MpqB+ZFuQZDcXZMYgktrW1XvAWxBF1kEe8BLiB5P\
-BvYiFscaSl46a5uQ60OlceN0pq5tKXGtfqDJ8yD2ygnX57wB8DMriaLPdx3ptpB7eB3s/6WUO\
-fkv0OpTf3XieFV0ZjZvaoo8Og==",
-            False
+"H4sIAEi9118C/5WNSwrCQBBE93OKptcyScBVDuA1mnYymoH5kW5BkNxdkxiCS2tbVe8BbE\
+EXWQR7wEuIHk8G9iIWxxpKXjprm5DrQ6Vx43Smrm0pca1+oMnzIPbKCdfnvAHwMyuJos93H\
+em2kHt4Hez/pZQ5+S/Q6lN/deJ4VXRmNm9wvXwe2gAAAA==",
+            False,
+            1607974216.711175
         )
     ]
 )
-def test_get_compressed_from_text_stream(location, control_data, reset_position):
+def test_get_compressed_from_text_stream(location, control_data, reset_position, mtime):
     with open(location, "r") as input_stream:
         input_stream.read(20)  # change position while reading from file
-        compressed_data = get_compressed(input_stream, reset_position)
+        compressed_data = get_compressed(input_stream, reset_position, mtime)
     assert control_data == compressed_data, \
         "Failed to compress data"
 
 
 @pytest.mark.parametrize(
-    "location, control_data, reset_position",
+    "location, control_data, reset_position, mtime",
     [
         (
             path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
-"eNqtjU0KwkAMhfdzipK1TFtw5QG8RojTaAfmjyaCUHr3TkdB3Jvl9728t5quHtwo4t0Hh\
-ku3NtKoCyRSEVwPdfqKkB2pz+lw1vY+ladK7+bljOMwYKRSeMKFaRJbq6F9bu8CqLEcMXB\
-66PyXUUwU+VNo9aW/c+KoTYxmMzssgkGR",
-            None
+"H4sIAEi9118C/62NTQrCQAyF93OKkrVMW3DlAbxGiNNoB+aPJoJQevdOR0Hcm+X3vby3mq\
+4e3Cji3QeGS7c20qgLJFIRXA91+oqQHanP6XDW9j6Vp0rv5uWM4zBgpFJ4woVpEluroX1u7\
+wKosRwxcHro/JdRTBT5U2j1pb9z4qhNjGYzO393NUbuAAAA",
+            None,
+            1607974216.711175
         ),
         (
             path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
-"eNqVjUsKwkAQRPdziqbXMknAVQ7gNZp2MpqB+ZFuQZDcXZMYgktrW1XvAWxBF1kEe8BLiB5P\
-BvYiFscaSl46a5uQ60OlceN0pq5tKXGtfqDJ8yD2ygnX57wB8DMriaLPdx3ptpB7eB3s/6WUO\
-fkv0OpTf3XieFV0ZjZvaoo8Og==",
-            False
+"FH4sIAEi9118C/5WNSwrCQBBE93OKptcyScBVDuA1mnYymoH5kW5BkNxdkxiCS2tbVe8Bb\
+EEXWQR7wEuIHk8G9iIWxxpKXjprm5DrQ6Vx43Smrm0pca1+oMnzIPbKCdfnvAHwMyuJos93\
+Hem2kHt4Hez/pZQ5+S/Q6lN/deJ4VXRmNm9wvXwe2gAAAA==",
+            False,
+            1607974216.711175
         )
     ]
 )
-def test_get_compressed_from_binary_stream(location, control_data, reset_position):
+def test_get_compressed_from_binary_stream(location, control_data, reset_position, mtime):
     with open(location, "rb") as input_stream:
         input_stream.read(20)  # change position while reading from file
-        compressed_data = get_compressed(input_stream, reset_position)
+        compressed_data = get_compressed(input_stream, reset_position, mtime)
     assert control_data == compressed_data, \
         "Failed to compress data"
 
