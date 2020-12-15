@@ -3,6 +3,7 @@ import pytest
 import tempfile
 import zlib
 import binascii
+import time
 
 from os import environ, path, listdir
 
@@ -62,80 +63,77 @@ def test_get_md5_sum(location, control_md5sum):
 
 
 @pytest.mark.parametrize(
-    "raw_data, control_data, mtime",
+    "raw_data, control_data",
     [
         (
             "hello world",
-            "H4sIAEi9118C/8tIzcnJVyjPL8pJAQCFEUoNCwAAAA==",
-            1607974216.711175
+            "H4sIAEi9118C/8tIzcnJVyjPL8pJAQCFEUoNCwAAAA=="
         ),
         (
             {"data": "hello world"},
-            "H4sIAEi9118C/6tWSkksSVSyUlDKSM3JyVcozy/KSVGqBQAnYva2FwAAAA==",
-            1607974216.711175
+            "H4sIAEi9118C/6tWSkksSVSyUlDKSM3JyVcozy/KSVGqBQAnYva2FwAAAA=="
         )
     ]
 )
-def test_get_compressed(raw_data, control_data, mtime):
-    compressed_data = get_compressed(raw_data, mtime=mtime)
+def test_get_compressed(raw_data, control_data, monkeypatch):
+    monkeypatch.setattr(time, "time", lambda : 1607974216.711175)
+    compressed_data = get_compressed(raw_data)
     assert control_data == compressed_data, \
         "Failed to compress data"
 
 
 @pytest.mark.parametrize(
-    "location, control_data, reset_position, mtime",
+    "location, control_data, reset_position",
     [
         (
             path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
 "H4sIAEi9118C/62NTQrCQAyF93OKkrVMW3DlAbxGiNNoB+aPJoJQevdOR0Hcm+X3vby3mq\
 4e3Cji3QeGS7c20qgLJFIRXA91+oqQHanP6XDW9j6Vp0rv5uWM4zBgpFJ4woVpEluroX1u7\
 wKosRwxcHro/JdRTBT5U2j1pb9z4qhNjGYzO393NUbuAAAA",
-            None,
-            1607974216.711175
+            None
         ),
         (
             path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
 "H4sIAEi9118C/5WNSwrCQBBE93OKptcyScBVDuA1mnYymoH5kW5BkNxdkxiCS2tbVe8BbE\
 EXWQR7wEuIHk8G9iIWxxpKXjprm5DrQ6Vx43Smrm0pca1+oMnzIPbKCdfnvAHwMyuJos93H\
 em2kHt4Hez/pZQ5+S/Q6lN/deJ4VXRmNm9wvXwe2gAAAA==",
-            False,
-            1607974216.711175
+            False
         )
     ]
 )
-def test_get_compressed_from_text_stream(location, control_data, reset_position, mtime):
+def test_get_compressed_from_text_stream(location, control_data, reset_position, monkeypatch):
+    monkeypatch.setattr(time, "time", lambda : 1607974216.711175)
     with open(location, "r") as input_stream:
         input_stream.read(20)  # change position while reading from file
-        compressed_data = get_compressed(input_stream, reset_position, mtime)
+        compressed_data = get_compressed(input_stream, reset_position)
     assert control_data == compressed_data, \
         "Failed to compress data"
 
 
 @pytest.mark.parametrize(
-    "location, control_data, reset_position, mtime",
+    "location, control_data, reset_position",
     [
         (
             path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
 "H4sIAEi9118C/62NTQrCQAyF93OKkrVMW3DlAbxGiNNoB+aPJoJQevdOR0Hcm+X3vby3mq\
 4e3Cji3QeGS7c20qgLJFIRXA91+oqQHanP6XDW9j6Vp0rv5uWM4zBgpFJ4woVpEluroX1u7\
 wKosRwxcHro/JdRTBT5U2j1pb9z4qhNjGYzO393NUbuAAAA",
-            None,
-            1607974216.711175
+            None
         ),
         (
             path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
 "FH4sIAEi9118C/5WNSwrCQBBE93OKptcyScBVDuA1mnYymoH5kW5BkNxdkxiCS2tbVe8Bb\
 EEXWQR7wEuIHk8G9iIWxxpKXjprm5DrQ6Vx43Smrm0pca1+oMnzIPbKCdfnvAHwMyuJos93\
 Hem2kHt4Hez/pZQ5+S/Q6lN/deJ4VXRmNm9wvXwe2gAAAA==",
-            False,
-            1607974216.711175
+            False
         )
     ]
 )
-def test_get_compressed_from_binary_stream(location, control_data, reset_position, mtime):
+def test_get_compressed_from_binary_stream(location, control_data, reset_position, monkeypatch):
+    monkeypatch.setattr(time, "time", lambda : 1607974216.711175)
     with open(location, "rb") as input_stream:
         input_stream.read(20)  # change position while reading from file
-        compressed_data = get_compressed(input_stream, reset_position, mtime)
+        compressed_data = get_compressed(input_stream, reset_position)
     assert control_data == compressed_data, \
         "Failed to compress data"
 
