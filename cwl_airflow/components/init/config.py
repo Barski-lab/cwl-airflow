@@ -128,7 +128,8 @@ def upgrade_dags(airflow_config):
 def copy_dags(airflow_home, source_folder=None):
     """
     Copies *.py files (dags) from source_folder (default ../../extensions/dags)
-    to dags_folder, which is always {airflow_home}/dags
+    to dags_folder, which is always {airflow_home}/dags. Overwrites existent
+    files
     """
 
     if source_folder is None:
@@ -145,8 +146,9 @@ def copy_dags(airflow_home, source_folder=None):
     for root, dirs, files in os.walk(source_folder):
         for filename in files:
             if re.match(".*\\.py$", filename) and filename != "__init__.py":
-                if not os.path.isfile(os.path.join(target_folder, filename)):
-                    shutil.copy(os.path.join(root, filename), target_folder)
+                # if not os.path.isfile(os.path.join(target_folder, filename)):
+                shutil.copy(os.path.join(root, filename), target_folder)
+
 
 # not used anymore
 def add_connections(args):
