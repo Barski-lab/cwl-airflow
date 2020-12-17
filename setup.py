@@ -98,7 +98,7 @@ setup(
     ),
     extras_require=EXTRAS_REQUIRE,
     install_requires=[
-        "apache-airflow==1.10.12",
+        "apache-airflow==1.10.14",
         "cwltool==3.0.20200710214758",
         "cwltest==2.0.20200626112502",
         "jsonmerge",
