@@ -122,9 +122,9 @@ wKosRwxcHro/JdRTBT5U2j1pb9z4qhNjGYzO393NUbuAAAA",
         ),
         (
             path.join(DATA_FOLDER, "jobs", "bam-bedgraph-bigwig.json"),
-"H4sIAEi9118C/62NTQrCQAyF93OKkrVMW3DlAbxGiNNoB+aPJoJQevdOR0Hcm+X3vby3mq\
-4e3Cji3QeGS7c20qgLJFIRXA91+oqQHanP6XDW9j6Vp0rv5uWM4zBgpFJ4woVpEluroX1u7\
-wKosRwxcHro/JdRTBT5U2j1pb9z4qhNjGYzO393NUbuAAAA",
+"H4sIAEi9118C/5WNSwrCQBBE93OKptcyScBVDuA1mnYymoH5kW5BkNxdkxiCS2tbVe8BbE\
+EXWQR7wEuIHk8G9iIWxxpKXjprm5DrQ6Vx43Smrm0pca1+oMnzIPbKCdfnvAHwMyuJos93H\
+em2kHt4Hez/pZQ5+S/Q6lN/deJ4VXRmNm9wvXwe2gAAAA==",
             False
         )
     ]
