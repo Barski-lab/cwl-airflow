@@ -58,22 +58,21 @@ def get_version():
 
 EXTRAS_REQUIRE = {
     "celery": [
-        "celery~=4.3",
-        "flower>=0.7.3,<1.0",
+        "celery~=4.3;python_version>='3.0'",
+        "celery==4.3.1;python_version<'3.0'",
+        "flower>=0.7.3, <1.0",
         "kombu==4.6.3;python_version<'3.0'",
-        "tornado>=4.2.0,<6.0"
+        "tornado>=4.2.0, <6.0",
+        "vine~=1.3"
     ],
     "mysql": [
         "mysqlclient>=1.3.6,<1.4"
     ],
     "statsd": [
-        "statsd>=3.3.0,<4.0"
+        "statsd>=3.3.0, <4.0"
     ],
     "rabbitmq": [
-        "amqp"
-    ],
-    "crypto": [
-        "cryptography>=0.9.3"
+        "amqp<5.0.0"
     ],
     "postgres": [
         "psycopg2-binary>=2.7.4"
@@ -98,7 +97,7 @@ setup(
     ),
     extras_require=EXTRAS_REQUIRE,
     install_requires=[
-        "apache-airflow==1.10.12",
+        "apache-airflow==1.10.14",
         "cwltool==3.0.20200710214758",
         "cwltest==2.0.20200626112502",
         "jsonmerge",
