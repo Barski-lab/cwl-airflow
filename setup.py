@@ -58,14 +58,12 @@ def get_version():
 
 EXTRAS_REQUIRE = {
     "celery": [
-        "celery~=4.3;python_version>='3.0'",
-        "celery==4.3.1;python_version<'3.0'",
+        "celery~=4.4.2",
         "flower>=0.7.3, <1.0",
-        "kombu==4.6.3;python_version<'3.0'",
-        "tornado>=4.2.0, <6.0",
         "vine~=1.3"
     ],
     "mysql": [
+        "mysql-connector-python>=8.0.11, <=8.0.18",
         "mysqlclient>=1.3.6,<1.4"
     ],
     "statsd": [
@@ -97,7 +95,7 @@ setup(
     ),
     extras_require=EXTRAS_REQUIRE,
     install_requires=[
-        "apache-airflow==1.10.14",
+        "apache-airflow==2.0.0",
         "cwltool==3.0.20200710214758",
         "cwltest==2.0.20200626112502",
         "jsonmerge",
