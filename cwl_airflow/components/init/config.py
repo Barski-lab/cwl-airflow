@@ -218,36 +218,3 @@ def copy_dags(args, source_folder=None):
             if re.match(".*\\.py$", filename) and filename != "__init__.py":
                 # if not os.path.isfile(os.path.join(target_folder, filename)):
                 shutil.copy(os.path.join(root, filename), target_folder)
-
-
-# not used anymore
-def add_connections(args):
-    """
-    Sets AIRFLOW_HOME and AIRFLOW_CONFIG from args.
-    Call 'airflow connections --add' from subproces to make sure that
-    the only two things we should care about are AIRFLOW_HOME and
-    AIRFLOW_CONFIG. Adds "process_report" connections to the Airflow DB
-    that is used to report workflow execution progress and results.
-    """
-
-    custom_env = os.environ.copy()
-    custom_env["AIRFLOW_HOME"] = args.home
-    custom_env["AIRFLOW_CONFIG"] = args.config
-    try:
-        run(
-            [
-                "airflow", "connections", "--add",
-                "--conn_id", "process_report",
-                "--conn_type", "http",
-                "--conn_host", "localhost",
-                "--conn_port", "3070",
-                "--conn_extra", "{\"endpoint\":\"/airflow/\"}"
-            ],
-            env=custom_env,
-            check=True,
-            stdout=DEVNULL,
-            stderr=DEVNULL
-        )
-    except (CalledProcessError, FileNotFoundError) as err:
-        logging.error(f"""Failed to run 'airflow connections --add'. Exiting.\n{err}""")
-        sys.exit(1)
