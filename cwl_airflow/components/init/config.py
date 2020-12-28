@@ -13,9 +13,8 @@ from cwl_airflow.utilities.helpers import (
 )
 
 with CleanAirflowImport():
-    from airflow import models
     from airflow.configuration import conf
-    from airflow.utils.db import merge_conn
+    from airflow.exceptions import AirflowConfigException
     from airflow.utils.dag_processing import list_py_file_paths
     from cwl_airflow.utilities.cwl import overwrite_deprecated_dag
 
@@ -23,21 +22,45 @@ with CleanAirflowImport():
 def run_init_config(args):
     """
     Runs sequence of steps required to configure CWL-Airflow
-    for the first time. Safe to run several times
+    for the first time. Safe to run several times. Upgrades
+    config to correspond to Airflow 2.0.0
     """
 
+    create_airflow_config(args)          # will create default airflow.cfg if it wasn't present
+    patch_airflow_config(args)
     init_airflow_db(args)
-    patch_airflow_config(args.config)
-    # add_connections(args)
+
     if args.upgrade:
-        upgrade_dags(args.config)
-    copy_dags(args.home)
+        upgrade_dags(args)
+    copy_dags(args)
+
+
+def create_airflow_config(args):
+    """
+    Runs airflow --help command with AIRFLOW_HOME and AIRFLOW_CONFIG
+    environment variables just to create airflow.cfg file
+    """
+
+    custom_env = os.environ.copy()
+    custom_env["AIRFLOW_HOME"] = args.home
+    custom_env["AIRFLOW_CONFIG"] = args.config
+    try:
+        run(
+            ["airflow", "--help"],
+            env=custom_env,
+            check=True,
+            stdout=DEVNULL,
+            stderr=DEVNULL
+        )
+    except (FileNotFoundError, CalledProcessError) as err:
+        logging.error(f"""Failed to find or to run airflow executable'. Exiting.\n{err}""")
+        sys.exit(1)
 
 
 def init_airflow_db(args):
     """
     Sets AIRFLOW_HOME and AIRFLOW_CONFIG from args.
-    Call airflow initdb from subprocess to make sure
+    Call airflow db init from subprocess to make sure
     that the only two things we should care about
     are AIRFLOW_HOME and AIRFLOW_CONFIG
     """
@@ -47,38 +70,85 @@ def init_airflow_db(args):
     custom_env["AIRFLOW_CONFIG"] = args.config
     try:
         run(
-            ["airflow", "initdb"],  # TODO: check what's the difference initdb from updatedb
+            ["airflow", "db", "init"],  # `db init` always runs `db upgrade` internally, so it's ok to run only `db init`
             env=custom_env,
             check=True,
             stdout=DEVNULL,
             stderr=DEVNULL
         )
-    except (CalledProcessError, FileNotFoundError) as err:
-        logging.error(f"""Failed to run 'airflow initdb'. Exiting.\n{err}""")
+    except (FileNotFoundError) as err:
+        logging.error(f"""Failed to find airflow executable'. Exiting.\n{err}""")
+        sys.exit(1)
+    except (CalledProcessError) as err:
+        logging.error(f"""Failed to run 'airflow db init'. Delete airflow.db if SQLite was used. Exiting.\n{err}""")
         sys.exit(1)
 
 
-def patch_airflow_config(airflow_config):
+def patch_airflow_config(args):
     """
-    Updates provided Airflow configuration file to include defaults for cwl-airflow.
-    If something went wrong, restores the original airflow.cfg from the backed up copy
+    Updates current Airflow configuration file to include defaults for cwl-airflow.
+    If something went wrong, restores the original airflow.cfg from the backed up copy.
+    If update to Airflow 2.0.0 is required, generates new airflow.cfg with some of the
+    important parameters copied from the old airflow.cfg. Backed up copy is not deleted in
+    this case.
     """
 
     # TODO: add cwl section with the following parameters:
     # - singularity
     # - use_container
 
+    # CWL-Airflow specific settings
     patches = [
-        ["sed", "-i", "-e", "s/^dags_are_paused_at_creation.*/dags_are_paused_at_creation = False/g", airflow_config],
-        ["sed", "-i", "-e", "s/^load_examples.*/load_examples = False/g", airflow_config],
-        ["sed", "-i", "-e", "s/^logging_config_class.*/logging_config_class = cwl_airflow.config_templates.airflow_local_settings.DEFAULT_LOGGING_CONFIG/g", airflow_config],
-        ["sed", "-i", "-e", "s/^hide_paused_dags_by_default.*/hide_paused_dags_by_default = True/g", airflow_config]
+        ["sed", "-i", "-e", "s#^dags_are_paused_at_creation.*#dags_are_paused_at_creation = False#g", args.config],
+        ["sed", "-i", "-e", "s#^load_examples.*#load_examples = False#g", args.config],
+        ["sed", "-i", "-e", "s#^load_default_connections.*#load_default_connections = False#g", args.config],
+        ["sed", "-i", "-e", "s#^logging_config_class.*#logging_config_class = cwl_airflow.config_templates.airflow_local_settings.DEFAULT_LOGGING_CONFIG#g", args.config],
+        ["sed", "-i", "-e", "s#^hide_paused_dags_by_default.*#hide_paused_dags_by_default = True#g", args.config]
     ]
 
-    airflow_config_backup = airflow_config + "_backup_" + str(uuid.uuid4())
+    # Minimum amount of setting that should be enough for starting
+    # SequentialExecutor, LocalExecutor or CeleryExecutor with
+    # the same dags and metadata database after updating to Airflow 2.0.0.
+    # All other user specific settings should be manually updated from the
+    # backuped airflow.cfg as a lot of them have been refactored.
+    transferable_settings = [
+        ("core", "dags_folder"),
+        ("core", "default_timezone"),
+        ("core", "executor"),
+        ("core", "sql_alchemy_conn"),
+        ("core", "sql_engine_encoding"),   # just in case
+        ("core", "fernet_key"),            # to be able to read from the old database
+        ("celery", "broker_url"),
+        ("celery", "result_backend")
+    ]
+
+    # create a temporary backup of airflow.cfg to restore from if we failed to apply patches
+    # this backup will be deleted after all patches applied if it wasn't created right before
+    # Airflow version update to 2.0.0
+    airflow_config_backup = args.config + "_backup_" + str(uuid.uuid4())
     try:
-        shutil.copyfile(airflow_config, airflow_config_backup)
+        # reading aiflow.cfg before applying any patches and creating backup
+        conf.read(args.config)
+        shutil.copyfile(args.config, airflow_config_backup)
+
+        # check if we need to make airflow.cfg correspond to the Airflow 2.0.0
+        # we search for [logging] section as it's present only Airflow >= 2.0.0
+        airflow_version_update = not conf.has_section("logging")
+        if airflow_version_update:
+            logging.info("Airflow config will be upgraded to correspond to Airflow 2.0.0")
+            for section, key in transferable_settings:
+                try:
+                    patches.append(
+                        ["sed", "-i", "-e", f"s#^{key}.*#{key} = {conf.get(section, key)}#g", args.config]
+                    )
+                except AirflowConfigException:  # just skip missing in the config section/key
+                    pass
+            os.remove(args.config)              # remove old config
+            create_airflow_config(args)         # create new airflow.cfg with the default values
+
+        # Apply all patches
         for patch in patches:
+            logging.debug(f"Applying patch {patch}")
             run(
                 patch,
                 shell=False,  # for proper handling of filenames with spaces
@@ -89,17 +159,17 @@ def patch_airflow_config(airflow_config):
     except (CalledProcessError, FileNotFoundError) as err:
         logging.error(f"""Failed to patch Airflow configuration file. Restoring from the backup and exiting.\n{err}""")
         if os.path.isfile(airflow_config_backup):
-            shutil.copyfile(airflow_config_backup, airflow_config)
+            shutil.copyfile(airflow_config_backup, args.config)
         sys.exit(1)
     finally:
-        if os.path.isfile(airflow_config_backup):
+        if os.path.isfile(airflow_config_backup) and not airflow_version_update:
             os.remove(airflow_config_backup)
 
 
-def upgrade_dags(airflow_config):
+def upgrade_dags(args):
     """
     Corrects old style DAG python files into the new format.
-    Reads configuration from "airflow_config". Uses standard
+    Reads configuration from "args.config". Uses standard
     "conf.get" instead of "conf_get", because the fields we
     use are always set. Copies all deprecated dags into the 
     "deprecated_dags" folder, adds deprecated DAGs to the
@@ -109,7 +179,7 @@ def upgrade_dags(airflow_config):
     files remain unchanged.
     """
 
-    conf.read(airflow_config)
+    conf.read(args.config)                                      # this will read already patched airflow.cfg
     dags_folder = conf.get("core", "dags_folder")
     for dag_location in list_py_file_paths(                     # will skip all DAGs from ".airflowignore"
         directory=dags_folder,
@@ -125,10 +195,10 @@ def upgrade_dags(airflow_config):
         )
 
 
-def copy_dags(airflow_home, source_folder=None):
+def copy_dags(args, source_folder=None):
     """
     Copies *.py files (dags) from source_folder (default ../../extensions/dags)
-    to dags_folder, which is always {airflow_home}/dags. Overwrites existent
+    to dags_folder, which is always {args.home}/dags. Overwrites existent
     files
     """
 
@@ -142,7 +212,7 @@ def copy_dags(airflow_home, source_folder=None):
             "extensions/dags",
         )
 
-    target_folder = get_dir(os.path.join(airflow_home, "dags"))
+    target_folder = get_dir(os.path.join(args.home, "dags"))
     for root, dirs, files in os.walk(source_folder):
         for filename in files:
             if re.match(".*\\.py$", filename) and filename != "__init__.py":
