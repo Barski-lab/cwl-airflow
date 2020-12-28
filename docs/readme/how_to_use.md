@@ -125,7 +125,7 @@ $ airflow trigger_dag --conf "{\"job\":$(cat ./bam-bedgraph-bigwig.json)}" bam-b
 To make CWL-Airflow **post workflow executions progress and results** `process_report` connection should be added. Parameters can be adjusted based on the current needs following the example below.
 
 ```sh
-$ airflow connections --add --conn_id process_report --conn_type http --conn_host localhost --conn_port 3070 --conn_extra "{\"endpoint\":\"/airflow/\"}"
+$ airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070 --conn-extra "{\"endpoint\":\"/airflow/\"}"
 ```
 
 ## Using an API
