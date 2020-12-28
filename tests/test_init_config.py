@@ -70,7 +70,7 @@ def test_upgrade_dags(monkeypatch):
 
     try:
         init_airflow_db(argparse.Namespace(**input_args))
-        upgrade_dags(airflow_cfg)
+        upgrade_dags(argparse.Namespace(**input_args))
         dags_folder_content = listdir(dags_folder)
         deprecated_dags_folder_content = listdir(
             path.join(dags_folder, "deprecated_dags")                      # "deprecated_dags" is harcoded in "upgrade_dags" function
@@ -121,10 +121,10 @@ def test_patch_airflow_config():
     }
 
     try:
-        init_airflow_db(argparse.Namespace(**input_args))  # fails with SystemExit
-        patch_airflow_config(temp_airflow_cfg)             # fails with SystemExit
+        init_airflow_db(argparse.Namespace(**input_args))       # fails with SystemExit
+        patch_airflow_config(argparse.Namespace(**input_args))  # fails with SystemExit
         conf = ConfigParser()
-        conf.read(temp_airflow_cfg)                        # never fails
+        conf.read(temp_airflow_cfg)                             # never fails
     except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
     finally:
@@ -149,7 +149,7 @@ def test_copy_dags():
 
     try:
         init_airflow_db(argparse.Namespace(**input_args))                     # fails with SystemExit
-        copy_dags(temp_airflow_home)                                          # never fails
+        copy_dags(argparse.Namespace(**input_args))                           # never fails
         temp_airflow_dags_folder_content = listdir(temp_airflow_dags_folder)  # fails with FileNotFoundError
     except BaseException as err:
         assert False, f"Failed to run test. \n {err}"
