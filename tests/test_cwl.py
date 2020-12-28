@@ -13,16 +13,14 @@ from schema_salad.exceptions import SchemaSaladException
 from cwl_airflow.utilities.helpers import (
     get_md5_sum,
     get_absolute_path,
-    dump_json,
     get_rootname,
     get_compressed,
-    load_yaml,
     get_dir
 )
 from cwl_airflow.utilities.cwl import (
     fast_cwl_load,
     slow_cwl_load,
-    fast_cwl_step_load,
+    get_temp_folders,
     load_job,
     get_items,
     get_short_id,
@@ -508,13 +506,26 @@ def test_get_short_id(long_id, only_step_name, only_id, control):
 
 # It's also indirect testing of fast_cwl_step_load
 @pytest.mark.parametrize(
-    "workflow, job, task_id",
+    "workflow, job, task_id, remove_tmp_folder",
     [
         (
             ["workflows", "bam-bedgraph-bigwig.cwl"],
             "bam-to-bedgraph-step.json",
-            "bam_to_bedgraph"
+            "bam_to_bedgraph",
+            None
         ),
+        (
+            ["workflows", "bam-bedgraph-bigwig.cwl"],
+            "bam-to-bedgraph-step.json",
+            "bam_to_bedgraph",
+            True
+        ),
+        (
+            ["workflows", "bam-bedgraph-bigwig.cwl"],
+            "bam-to-bedgraph-step.json",
+            "bam_to_bedgraph",
+            False
+        ),        
         (
             #  bam-bedgraph-bigwig-single.cwl
             "eNrtPA1X20iSf6Wf39zDnrFkMIFJnEAWCMlwm0AukMu9i/OwLLXtXmS1Ri1BSDb//aqqu/\
@@ -623,41 +634,48 @@ def test_get_short_id(long_id, only_step_name, only_id, control):
              MfUTcj1dFSVOLV4nIW461hhCyraQgzAQL9HchoI9V9mCMds1hF zhXTfFcVnL/gosFZpps\
              /GU8SmShNS4FB6wsEIYqpbGyfu61v/weDmYiG",
             "bam-to-bedgraph-step.json",
-            "bam_to_bedgraph"
+            "bam_to_bedgraph",
+            None
         ),
         (
             ["workflows", "bam-bedgraph-bigwig.cwl"],
             "sort-bedgraph-step.json",
-            "sort_bedgraph"
+            "sort_bedgraph",
+            None
         ),
         (
             ["workflows", "bam-bedgraph-bigwig.cwl"],
             "sorted-bedgraph-to-bigwig-step.json",
-            "sorted_bedgraph_to_bigwig"
+            "sorted_bedgraph_to_bigwig",
+            None
         ),
         (
             ["workflows", "bam-bedgraph-bigwig-single.cwl"],
             "bam-to-bedgraph-step.json",
-            "bam_to_bedgraph"
+            "bam_to_bedgraph",
+            None
         ),
         (
             ["workflows", "bam-bedgraph-bigwig-single.cwl"],
             "sort-bedgraph-step.json",
-            "sort_bedgraph"
+            "sort_bedgraph",
+            None
         ),
         (
             ["workflows", "bam-bedgraph-bigwig-single.cwl"],
             "sorted-bedgraph-to-bigwig-step.json",
-            "sorted_bedgraph_to_bigwig"
+            "sorted_bedgraph_to_bigwig",
+            None
         ),
         (
             ["workflows", "bam-bedgraph-bigwig-subworkflow.cwl"],
             "bam-bedgraph-bigwig.json",
-            "subworkflow"
+            "subworkflow",
+            None
         )
     ]
 )
-def test_execute_workflow_step(workflow, job, task_id):
+def test_execute_workflow_step(workflow, job, task_id, remove_tmp_folder):
     pickle_folder = tempfile.mkdtemp()
     if (isinstance(workflow, str)):
         workflow_path = workflow
@@ -680,6 +698,14 @@ def test_execute_workflow_step(workflow, job, task_id):
             job_data=job_data,
             cwl_args=cwl_args
         )
+        _, step_cache_folder, step_outputs_folder, _ = get_temp_folders(
+            task_id=task_id,
+            job_data=job_data
+        )
+        if (remove_tmp_folder is None or remove_tmp_folder) and (                    # explicitly check for None, because the execute_workflow_step shouldd be able to process None values properly
+            os.path.isdir(step_cache_folder) or os.path.isdir(step_outputs_folder)
+        ):
+            assert False, f"Failed to remove temporary data"
     except BaseException as err:
         assert False, f"Failed either to run test or execute workflow. \n {err}"
     finally:

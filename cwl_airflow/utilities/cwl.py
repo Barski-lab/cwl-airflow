@@ -536,17 +536,20 @@ def execute_workflow_step(
     task_id,
     job_data,
     cwl_args=None,
-    executor=None
+    executor=None,
+    remove_tmp_folder=None
 ):
     """
     Constructs and executes single step workflow based on the "workflow"
     and "task_id". "cwl_args" can be used to update default parameters
     used for loading and runtime contexts. Exports json file with the
-    execution results.
+    execution results. Removes temporary data if workflow step has failed,
+    unless "remove_tmp_folder" is set to False.
     """
 
     cwl_args = {} if cwl_args is None else cwl_args
     executor = SingleJobExecutor() if executor is None else executor
+    remove_tmp_folder = True if remove_tmp_folder is None else remove_tmp_folder
 
     step_tmp_folder, step_cache_folder, step_outputs_folder, step_report = get_temp_folders(
         task_id=task_id,
@@ -587,6 +590,10 @@ def execute_workflow_step(
     sys.stderr = _stderr
 
     if step_status != "success":
+        if remove_tmp_folder:
+            logging.info(f"Removing workflow step temporary data:\n - {step_cache_folder}\n - {step_outputs_folder}")
+            shutil.rmtree(step_cache_folder, ignore_errors=False)
+            shutil.rmtree(step_outputs_folder, ignore_errors=False)
         raise ValueError("Failed to run workflow step")
 
     # To remove "http://commonwl.org/cwltool#generation": 0 (copied from cwltool)
