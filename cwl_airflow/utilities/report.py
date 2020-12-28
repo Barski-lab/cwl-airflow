@@ -49,6 +49,7 @@ def get_error_category(context):
     """
 
     ERROR_MARKERS = {
+        "docker: Error response from daemon":                 "Docker problems. Contact support team",
         "Docker is not available for this tool":              "Docker or Network problems. Contact support team",
         "ERROR - Received SIGTERM. Terminating subprocesses": "Workflow was stopped. Restart with the lower threads or memory parameters",
         "Failed to run workflow step":                        "Workflow step(s) {} failed. Contact support team"
