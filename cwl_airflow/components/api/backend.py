@@ -21,6 +21,7 @@ from airflow.models import DagBag, TaskInstance, DagRun, DagModel
 from airflow.utils.state import State
 from airflow.utils.timezone import parse as parsedate
 from airflow.utils.db import provide_session
+from airflow.utils.types import DagRunType
 
 from cwl_airflow.utilities.helpers import (
     get_version,
@@ -200,7 +201,7 @@ class CWLApiBackend():
             raise ValueError(f"dag_run {run_id} for dag_id {dag_id} already exists")
         else:
             run_conf = conf if isinstance(conf, dict) else json.loads(conf)
-            dag_run = DagRun(dag_id=dag_id, run_id=run_id, conf=run_conf)
+            dag_run = DagRun(dag_id=dag_id, run_id=run_id, conf=run_conf, run_type=DagRunType.MANUAL)
             session.add(dag_run)
             session.commit()
             return dag_run
