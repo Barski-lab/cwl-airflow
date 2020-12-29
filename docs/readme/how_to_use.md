@@ -20,11 +20,11 @@ optional arguments:
 ```
 
 **Init command will run the following steps** for the specified `--home` and `--config` parameters:
-- Call `airflow initdb`
-- Update `airflow.cfg` to hide paused DAGs, skip loading example DAGs and **do not** pause newly created DAGs. Also, we set our custom `logging_config_class`
-  to split Airflow and CWL related logs into the separate files 
-- If run with `--upgrade`, upgrade old CWLDAGs to correspond to the latest format, save original CWLDAGs into `deprecated_dags` folder   
-- Put **clean_dag_run.py** into the DAGs folder (later its functions will be moved to API)
+- Call `airflow --help` to create a default `airflow.cfg`
+- Update `airflow.cfg` to hide paused DAGs, skip loading example DAGs and connections and **do not** pause newly created DAGs. Also, we set our custom `logging_config_class` to split Airflow and CWL related logs into the separate files. In case of upgrading from the previous version of CWL-Airflow that used Airflow < 2.0.0 to the latest one, `airflow.cfg` will be backuped and upgraded to fit Airflow 2.0.0. You will have to manually make sure that all custom fields were properly copied to the new `airflow.cfg`
+- Call `airflow db init` to init/upgrade Airflow metadata database.
+- If run with `--upgrade`, upgrade old CWLDAGs to correspond to the latest format, save original CWLDAGs into `deprecated_dags` folder.
+- Put **clean_dag_run.py** and **resend_results.py** into the DAGs folder.
 
 ## Updating airflow.cfg
 
@@ -127,6 +127,7 @@ To make CWL-Airflow **post workflow executions progress and results** `process_r
 ```sh
 $ airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070 --conn-extra "{\"endpoint\":\"/airflow/\"}"
 ```
+In case CWL-Airflow failed to POST progress updates or workflow execution results, the corresponded records with the prefixes `post_progress` and `post_results` will be added to the Airflow Variables. Later, if unpaused, `resend_results` DAG will attemt to deliver them every 10 min.
 
 ## Using an API
 

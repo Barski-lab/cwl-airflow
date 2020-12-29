@@ -9,7 +9,7 @@
   sudo apt-get install python3-dev
   ```
 
-### macOS 10.15.3 (Catalina)
+### macOS 11.0.1 (Big Sur)
 
 - Apple Command Line Tools
   ```bash
@@ -17,7 +17,7 @@
   ```
 
 ### Both Ubuntu and macOS
-- python 3.7
+- python 3.6 / 3.7 / 3.8
 - docker (follow the [installation guides](https://docs.docker.com/engine/install/))
 - pip (follow the [installation guides](https://pip.pypa.io/en/stable/installing/))
 - setuptools
@@ -40,10 +40,7 @@ Optionally, extra dependencies can be provided by adding `[mysql,celery,statsd]`
 
 ## Download portable version of CWL-airflow
 
-Alternatively to installation, the relocatable standalone **Python3 with pre-installed CWL-Airfow** can be downloaded from the following links:
-
-- [python_3.6_with_cwl_airflow_1.2.2_ubuntu_18.04.tar.gz](https://github.com/Barski-lab/cwl-airflow/releases/download/1.2.2/python_3.6_with_cwl_airflow_1.2.2_ubuntu_18.04.tar.gz)
-- [python_3.7_with_cwl_airflow_1.2.2_macos_10.15.3.tar.gz](https://github.com/Barski-lab/cwl-airflow/releases/download/1.2.2/python_3.7_with_cwl_airflow_1.2.2_macos_10.15.3.tar.gz)
+Alternatively to installation, the relocatable standalone **Python3 with pre-installed CWL-Airfow** can be downloaded from the [Releases](https://github.com/Barski-lab/cwl-airflow/releases) section on GitHub.
 
 **Note**, these are **not** cross-platform packages, so the version of OS should be the same as mentioned in the name of the file.
 When extracted from archive, all executables can be found in the `python3/bin_portable` folder.
@@ -58,7 +55,7 @@ $ ./packaging/portable/ubuntu/pack.sh [UBUNTU_VERSION] [PYTHON_VERSION] [CWL_AIR
 
 # macOS
 # package is always built for current macOS version
-# defaults: Python 3.7, CWL-Airflow master branch
+# defaults: Python 3.8, CWL-Airflow master branch
 
 $ ./packaging/portable/macos/pack.sh [PYTHON_VERSION] [CWL_AIRFLOW_VERSION]
 ```
