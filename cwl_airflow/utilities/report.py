@@ -127,7 +127,10 @@ def post_progress(context, from_task=None):
             logging.debug("Save the message into the Variables")
             Variable.set(
                 key=f"post_progress__{dag_run.dag_id}__{dag_run.run_id}",
-                value=message,
+                value={
+                    "message": message,
+                    "endpoint": ROUTES["progress"]
+                },
                 serialize_json=True
             )
 
@@ -170,7 +173,10 @@ def post_results(context):
         logging.debug(f"Failed to POST results. Save the message into the Variables \n {err}")
         Variable.set(
             key=f"post_results__{dag_run.dag_id}__{dag_run.run_id}",
-            value=message,
+            value={
+                "message": message,
+                "endpoint": ROUTES["results"]
+            },
             serialize_json=True
         )
 
