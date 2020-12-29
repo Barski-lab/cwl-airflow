@@ -13,7 +13,7 @@ python:
 
 env:
 - NTEST=1
-# - NTEST=2
+- NTEST=2
 # - NTEST=3
 # - NTEST=4
 # - NTEST=5
