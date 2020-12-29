@@ -7,6 +7,7 @@ from airflow.models import Variable
 from airflow.utils.state import State
 from airflow.hooks.http_hook import HttpHook
 from airflow.configuration import conf
+from airflow.exceptions import AirflowNotFoundException
 
 
 CONN_ID = "process_report"
@@ -95,7 +96,8 @@ def post_progress(context, from_task=None):
     message with the meaningful error description. If function was called not
     from a task and we failed to send a request we need to guarantee that message
     is not getting lost so we back it up into the Variable to be able to resend
-    it later.
+    it later. We don't backup not sent messages if user didn't add the required
+    connection in Airflow.
     """
 
     from_task = False if from_task is None else from_task
@@ -117,6 +119,8 @@ def post_progress(context, from_task=None):
     }
     try:
         http_hook.run(endpoint=ROUTES["progress"], json=message)
+    except AirflowNotFoundException as err:
+        logging.debug(f"Failed to POST progress updates. Skipping \n {err}")
     except Exception as err:
         logging.debug(f"Failed to POST progress updates. \n {err}")
         if not from_task and progress != 100:                        # we don't need to resend messages with progress == 100
@@ -137,7 +141,8 @@ def post_results(context):
     might not work. We need to except missing results file as the same callback
     is used for clean_dag_run DAG. If we failed to send a request we need to
     guarantee that message is not getting lost so we back it up into the Variable
-    to be able to resend it later.
+    to be able to resend it later. We don't backup not sent messages if user didn't
+    add the required connection in Airflow.
     """
 
     dag_run = context["dag_run"]
@@ -159,6 +164,8 @@ def post_results(context):
     }
     try:
         http_hook.run(endpoint=ROUTES["results"], json=message)
+    except AirflowNotFoundException as err:
+        logging.debug(f"Failed to POST results. Skipping \n {err}")
     except Exception as err:
         logging.debug(f"Failed to POST results. Save the message into the Variables \n {err}")
         Variable.set(
