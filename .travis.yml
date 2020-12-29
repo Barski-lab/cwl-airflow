@@ -80,7 +80,7 @@ jobs:
     before_script:
     - cwl-airflow init --upgrade
     - rm -f ~/airflow/dags/bam-bedgraph-bigwig-single.cwl
-    script: airflow list_dags --report  # to check if all DAGs are correct
+    script: airflow dags list  # to check if all DAGs are correct
   - name: Test packaging for Ubuntu 18.04, Python 3.6
     install:
     - ./packaging/portable/ubuntu/pack.sh 18.04 3.6 $TRAVIS_BRANCH
@@ -93,7 +93,7 @@ jobs:
     - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
     - ./python3/bin_portable/cwl-airflow init           # to init database
-    - ./python3/bin_portable/airflow connections --add --conn_id process_report --conn_type http --conn_host localhost --conn_port 3070 --conn_extra "{\"endpoint\":\"/airflow/\"}"    # to add process_report connection
+    - ./python3/bin_portable/airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070 --conn-extra "{\"endpoint\":\"/airflow/\"}"    # to add process_report connection
     - ./python3/bin_portable/airflow scheduler > /dev/null 2>&1 &
     - ./python3/bin_portable/cwl-airflow api > /dev/null 2>&1 &
     script: ./python3/bin_portable/cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1
@@ -111,7 +111,7 @@ before_script:
 - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
 - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
 - cwl-airflow init           # to init database
-- airflow connections --add --conn_id process_report --conn_type http --conn_host localhost --conn_port 3070 --conn_extra "{\"endpoint\":\"/airflow/\"}"    # to add process_report connection
+- airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070 --conn-extra "{\"endpoint\":\"/airflow/\"}"    # to add process_report connection
 - airflow scheduler > /dev/null 2>&1 &
 - cwl-airflow api > /dev/null 2>&1 &
 script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range $NTEST
