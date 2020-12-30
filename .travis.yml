@@ -65,11 +65,11 @@ jobs:
       on:
         tags: true
   - name: DAG with embedded workflow (just one test)
-    script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --embed > /dev/null 2>&1
+    script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --embed
   - name: DAG with attached workflow using combined API call (just one test)
-    script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --combine > /dev/null 2>&1
+    script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --combine
   - name: DAG with embedded workflow using combined API call (just one test)
-    script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --embed --combine > /dev/null 2>&1
+    script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --embed --combine
   - name: Test of `init --upgrade`
     before_install:
     - mkdir -p ~/airflow/dags
@@ -90,19 +90,18 @@ jobs:
     - ./python3/bin_portable/airflow --help             # to generate airflow.cfg
     - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^parsing_processes.*/parsing_processes = 1/g' ~/airflow/airflow.cfg
-    - sed -i'.backup' -e 's/^logging_level.*/logging_level = DEBUG/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^sql_alchemy_pool_enabled.*/sql_alchemy_pool_enabled = False/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^dag_dir_list_interval =.*/dag_dir_list_interval = 60/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
-    - sleep 10                                          # just in case wait until mysql creates database
+    - sleep 5                                           # to wait a bit until mysql creates required database
     - cwl-airflow init
     - ./python3/bin_portable/airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070 --conn-extra "{\"endpoint\":\"/airflow/\"}"    # to add process_report connection
-    - ./python3/bin_portable/airflow scheduler &
+    - ./python3/bin_portable/airflow scheduler > /dev/null 2>&1 &
     - ./python3/bin_portable/cwl-airflow api > /dev/null 2>&1 &
-    - sleep 3                                           # just in case to let scheduler to parse all dags, otherwise we can't run the following command
+    - sleep 5                                           # to let scheduler to parse all dags, otherwise we can't run the following command
     - ./python3/bin_portable/airflow dags unpause resend_results
-    script: ./python3/bin_portable/cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 > /dev/null 2>&1
+    script: ./python3/bin_portable/cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1
 
 before_install:
 - git clone https://github.com/datirium/workflows.git --recursive
@@ -114,19 +113,18 @@ before_script:
 - airflow --help             # to generate airflow.cfg
 - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
 - sed -i'.backup' -e 's/^parsing_processes.*/parsing_processes = 1/g' ~/airflow/airflow.cfg
-- sed -i'.backup' -e 's/^logging_level.*/logging_level = DEBUG/g' ~/airflow/airflow.cfg
 - sed -i'.backup' -e 's/^sql_alchemy_pool_enabled.*/sql_alchemy_pool_enabled = False/g' ~/airflow/airflow.cfg
 - sed -i'.backup' -e 's/^dag_dir_list_interval =.*/dag_dir_list_interval = 60/g' ~/airflow/airflow.cfg
 - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
 - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
-- sleep 10                   # just in case wait until mysql creates database 
+- sleep 5                    # to wait a bit until mysql creates required database
 - cwl-airflow init
 - airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070 --conn-extra "{\"endpoint\":\"/airflow/\"}"    # to add process_report connection
-- airflow scheduler &
+- airflow scheduler > /dev/null 2>&1 &
 - cwl-airflow api > /dev/null 2>&1 &
-- sleep 3                    # just in case to let scheduler to parse all dags, otherwise we can't run the following command
+- sleep 5                    # to let scheduler to parse all dags, otherwise we can't run the following command
 - airflow dags unpause resend_results
-script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range $NTEST > /dev/null 2>&1
+script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range $NTEST
 
 branches:
   only:
