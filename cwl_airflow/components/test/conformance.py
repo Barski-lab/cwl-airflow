@@ -76,11 +76,11 @@ class CustomHandler(SimpleHTTPRequestHandler):
                 int(self.headers["Content-Length"])
             ).decode("UTF-8")
         )["payload"]
-        if "results" in payload or payload.get("error", None) != "":     # "results" can be {}, so we should check only if key is present, but not value
+        if "results" in payload or payload["error"] != "":     # "results" can be {}, so we should check only if key is present, but not value
             self.server.results_queue.put({
                 "run_id":  payload["run_id"],
                 "dag_id":  payload["dag_id"],
-                "results": payload.get("results", payload.get("error", None))
+                "results": payload.get("results", payload["error"])
             })
 
 
