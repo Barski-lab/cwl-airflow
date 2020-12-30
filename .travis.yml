@@ -95,11 +95,11 @@ jobs:
     - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
     - ./python3/bin_portable/cwl-airflow init           # to init database
     - ./python3/bin_portable/airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070 --conn-extra "{\"endpoint\":\"/airflow/\"}"    # to add process_report connection
-    - ./python3/bin_portable/airflow scheduler > /dev/null 2>&1 &
+    - ./python3/bin_portable/airflow scheduler &
     - ./python3/bin_portable/cwl-airflow api > /dev/null 2>&1 &
     - sleep 3                                           # just in case to let scheduler to parse all dags, otherwise we can't run the following command
     - ./python3/bin_portable/airflow dags unpause resend_results
-    script: ./python3/bin_portable/cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1
+    script: ./python3/bin_portable/cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 > /dev/null 2>&1
 
 before_install:
 - git clone https://github.com/datirium/workflows.git --recursive
@@ -116,11 +116,11 @@ before_script:
 - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
 - cwl-airflow init           # to init database
 - airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070 --conn-extra "{\"endpoint\":\"/airflow/\"}"    # to add process_report connection
-- airflow scheduler > /dev/null 2>&1 &
+- airflow scheduler &
 - cwl-airflow api > /dev/null 2>&1 &
 - sleep 3                    # just in case to let scheduler to parse all dags, otherwise we can't run the following command
 - airflow dags unpause resend_results
-script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range $NTEST
+script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range $NTEST > /dev/null 2>&1
 
 branches:
   only:
