@@ -89,11 +89,13 @@ jobs:
     before_script:
     - ./python3/bin_portable/airflow --help             # to generate airflow.cfg
     - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
-    - sed -i'.backup' -e 's/^parsing_processes.*/parsing_processes = 1/g' ~/airflow/airflow.cfg    
+    - sed -i'.backup' -e 's/^parsing_processes.*/parsing_processes = 1/g' ~/airflow/airflow.cfg
+    - sed -i'.backup' -e 's/^logging_level.*/logging_level = DEBUG/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^dag_dir_list_interval =.*/dag_dir_list_interval = 60/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
     - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
-    - bash -c "EXIT_CODE=1 && while [ $$EXIT_CODE -ne 0 ]; do (./python3/bin_portable/airflow db check); EXIT_CODE=$$?; sleep 5; done && ./python3/bin_portable/cwl-airflow init"
+    - sleep 10                                          # just in case wait until mysql creates database
+    - cwl-airflow init
     - ./python3/bin_portable/airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070 --conn-extra "{\"endpoint\":\"/airflow/\"}"    # to add process_report connection
     - ./python3/bin_portable/airflow scheduler &
     - ./python3/bin_portable/cwl-airflow api > /dev/null 2>&1 &
@@ -111,10 +113,12 @@ before_script:
 - airflow --help             # to generate airflow.cfg
 - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
 - sed -i'.backup' -e 's/^parsing_processes.*/parsing_processes = 1/g' ~/airflow/airflow.cfg
+- sed -i'.backup' -e 's/^logging_level.*/logging_level = DEBUG/g' ~/airflow/airflow.cfg
 - sed -i'.backup' -e 's/^dag_dir_list_interval =.*/dag_dir_list_interval = 60/g' ~/airflow/airflow.cfg
 - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
 - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
-- bash -c "EXIT_CODE=1 && while [ $$EXIT_CODE -ne 0 ]; do (airflow db check); EXIT_CODE=$$?; sleep 5; done && cwl-airflow init"
+- sleep 10                   # just in case wait until mysql creates database 
+- cwl-airflow init
 - airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070 --conn-extra "{\"endpoint\":\"/airflow/\"}"    # to add process_report connection
 - airflow scheduler &
 - cwl-airflow api > /dev/null 2>&1 &
