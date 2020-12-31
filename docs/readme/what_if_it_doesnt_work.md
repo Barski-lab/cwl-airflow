@@ -36,3 +36,10 @@
 ## Fails to compile ruamel.yaml
    
   Perhaps, you should update your **setuptools** and try to reinstall **ruamel.yaml**
+
+## mysql_config not found
+
+  When running on Ubuntu with MySQL backend, it might be necessary to install **libmysqlclient-dev**
+  ```sh
+  sudo apt-get install libmysqlclient-dev
+  ```
