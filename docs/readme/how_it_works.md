@@ -2,7 +2,7 @@
 
 ## Keywords
 
-1. **CWL descriptor file (aka pipeline or workflow)** - YAML or JSON file or its parsed content that complies with **[CWL v1.2](https://www.commonwl.org/v1.2/)** specification and describes inputs, outputs and sequence of steps to be executed.
+1. **CWL descriptor file (aka pipeline or workflow)** - YAML or JSON file or its parsed content that complies with **[CWL v1.1](https://www.commonwl.org/v1.1/)** specification and describes inputs, outputs and sequence of steps to be executed.
 2. **Job file (aka job or running configuration)** - YAML or JSON file or its parsed content that is used for initializing workflow inputs with values. Job can optionally include 2 additional fields:
    - **tmp_folder** - folder to keep temporary data that will be removed after successful workflow execution
    - **outputs_folder** - folder to move generated results after successful workflow execution

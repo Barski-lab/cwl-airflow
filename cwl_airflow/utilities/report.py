@@ -7,6 +7,7 @@ from airflow.models import Variable
 from airflow.utils.state import State
 from airflow.hooks.http_hook import HttpHook
 from airflow.configuration import conf
+from airflow.exceptions import AirflowNotFoundException
 
 
 CONN_ID = "process_report"
@@ -51,6 +52,7 @@ def get_error_category(context):
     ERROR_MARKERS = {
         "docker: Error response from daemon":                 "Docker problems. Contact support team",
         "Docker is not available for this tool":              "Docker or Network problems. Contact support team",
+        "You have reached your pull rate limit":              "Docker pull limit reached. Restart in 6 hours",
         "ERROR - Received SIGTERM. Terminating subprocesses": "Workflow was stopped. Restart with the lower threads or memory parameters",
         "Failed to run workflow step":                        "Workflow step(s) {} failed. Contact support team"
     }
@@ -64,7 +66,7 @@ def get_error_category(context):
     log_handler = next(                                              # to get access to logs
         (
             h for h in logging.getLogger("airflow.task").handlers
-            if h.name == conf.get("core", "task_log_reader")
+            if h.name == conf.get("logging", "task_log_reader")      # starting from Airflow 2.0.0 moved from [core] to [logging] section
         ),
         None
     )
@@ -92,26 +94,46 @@ def post_progress(context, from_task=None):
     If dag_run failed but this function was run from the task callback,
     error would be always "". The "error" is not "" only when this function
     will be called from the DAG callback, thus making it the last and the only
-    message with the meaningful error description.
+    message with the meaningful error description. If function was called not
+    from a task and we failed to send a request we need to guarantee that message
+    is not getting lost so we back it up into the Variable to be able to resend
+    it later. We don't backup not sent messages if user didn't add the required
+    connection in Airflow.
     """
 
     from_task = False if from_task is None else from_task
-    try:
-        dag_run = context["dag_run"]
-        len_tis = len(dag_run.get_task_instances())
-        len_tis_success = len(dag_run.get_task_instances(state=State.SUCCESS)) + int(from_task)
-        data = sign_with_jwt(
+
+    dag_run = context["dag_run"]
+    len_tis = len(dag_run.get_task_instances())
+    len_tis_success = len(dag_run.get_task_instances(state=State.SUCCESS)) + int(from_task)
+    progress = 100 if len_tis == 0 else int(len_tis_success / len_tis * 100)
+    message = {
+        "payload": sign_with_jwt(
             {
                 "state": dag_run.state,
                 "dag_id": dag_run.dag_id,
                 "run_id": dag_run.run_id,
-                "progress": int(len_tis_success / len_tis * 100),
+                "progress": progress,
                 "error": get_error_category(context) if dag_run.state == State.FAILED and not from_task else ""
             }
         )
-        http_hook.run(endpoint=ROUTES["progress"], json={"payload": data})
+    }
+    try:
+        http_hook.run(endpoint=ROUTES["progress"], json=message)
+    except AirflowNotFoundException as err:
+        logging.debug(f"Failed to POST progress updates. Skipping \n {err}")
     except Exception as err:
         logging.debug(f"Failed to POST progress updates. \n {err}")
+        if not from_task and progress != 100:                        # we don't need to resend messages with progress == 100
+            logging.debug("Save the message into the Variables")
+            Variable.set(
+                key=f"post_progress__{dag_run.dag_id}__{dag_run.run_id}",
+                value={
+                    "message": message,
+                    "endpoint": ROUTES["progress"]
+                },
+                serialize_json=True
+            )
 
 
 def post_results(context):
@@ -121,34 +143,50 @@ def post_results(context):
     endless import loop (file where we define CWLJobGatherer class import this
     file). If CWLDAG is contsructed with custom gatherer node, posting results
     might not work. We need to except missing results file as the same callback
-    is used for clean_dag_run DAG
+    is used for clean_dag_run DAG. If we failed to send a request we need to
+    guarantee that message is not getting lost so we back it up into the Variable
+    to be able to resend it later. We don't backup not sent messages if user didn't
+    add the required connection in Airflow.
     """
+
+    dag_run = context["dag_run"]
+    results = {}
     try:
-        dag_run = context["dag_run"]
-        results = {}
-        try:
-            results_location = context["ti"].xcom_pull(task_ids="CWLJobGatherer")
-            with open(results_location, "r") as input_stream:
-                results = json.load(input_stream)
-        except Exception as err:
-            logging.debug(f"Failed to read results. \n {err}")
-        data = sign_with_jwt(
+        results_location = context["ti"].xcom_pull(task_ids="CWLJobGatherer")
+        with open(results_location, "r") as input_stream:
+            results = json.load(input_stream)
+    except Exception as err:
+        logging.debug(f"Failed to read results. \n {err}")
+    message = {
+        "payload": sign_with_jwt(
             {
                 "dag_id": dag_run.dag_id,
                 "run_id": dag_run.run_id,
                 "results": results
             }
         )
-        http_hook.run(endpoint=ROUTES["results"], json={"payload": data})
+    }
+    try:
+        http_hook.run(endpoint=ROUTES["results"], json=message)
+    except AirflowNotFoundException as err:
+        logging.debug(f"Failed to POST results. Skipping \n {err}")
     except Exception as err:
-        logging.debug(f"Failed to POST results. \n {err}")
+        logging.debug(f"Failed to POST results. Save the message into the Variables \n {err}")
+        Variable.set(
+            key=f"post_results__{dag_run.dag_id}__{dag_run.run_id}",
+            value={
+                "message": message,
+                "endpoint": ROUTES["results"]
+            },
+            serialize_json=True
+        )
 
 
 def post_status(context):
-    try:
-        dag_run = context["dag_run"]
-        ti = context["ti"]
-        data = sign_with_jwt(
+    dag_run = context["dag_run"]
+    ti = context["ti"]
+    message = {
+        "payload": sign_with_jwt(
             {
                 "state": ti.state,
                 "dag_id": dag_run.dag_id,
@@ -156,7 +194,9 @@ def post_status(context):
                 "task_id": ti.task_id
             }
         )
-        http_hook.run(endpoint=ROUTES["status"], json={"payload": data})
+    }
+    try:
+        http_hook.run(endpoint=ROUTES["status"], json=message)
     except Exception as err:
         logging.debug(f"Failed to POST status updates. \n {err}")
 

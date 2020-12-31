@@ -1,6 +1,6 @@
 # Quick start
 
-We assume that you have already installed **python 3.7**, latest **pip**, latest **setuptools**
+We assume that you have already installed **python 3.8**, latest **pip**, latest **setuptools**
 and **docker** that has access to pull images from the [DockerHub](https://hub.docker.com/).
 If something is missing or should be updated refer to the [How to install](./how_to_install.md)
 or [What if is doesn't work](./what_if_it_doesnt_work.md) sections.
@@ -8,7 +8,7 @@ or [What if is doesn't work](./what_if_it_doesnt_work.md) sections.
 1. Install CWL-airflow
     ```sh
     $ pip3 install cwl-airflow \
-    --constraint "https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/packaging/constraints/constraints-3.7.txt"
+    --constraint "https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/packaging/constraints/constraints-3.8.txt"
     ```
     When using optional `--constraint` parameter you can limit dependencies to those versions that were tested with your Python.
 
@@ -22,14 +22,24 @@ or [What if is doesn't work](./what_if_it_doesnt_work.md) sections.
     $ git clone https://github.com/datirium/workflows.git --recursive
     ```
 
-4. In a separate terminals start Airflow Webserver, Scheduler and our API
+4. To be able to use Airflow Webserver, create a new user following the example below
+   ```sh
+   airflow users create \
+   --username admin \
+   --firstname firstname \
+   --lastname lastname \
+   --role Admin \
+   --email firstname@lastname.org
+   ```
+
+5. In a separate terminals start Airflow Webserver, Scheduler and our API
    ```sh
    $ airflow scheduler
    $ airflow webserver
    $ cwl-airflow api
    ```
 
-5. Schedule execution of a sample pipeline. Set the workflow number with `--range`
+6. Schedule execution of a sample pipeline. Set the workflow number with `--range`
     ```sh
     $ cwl-airflow test --suite workflows/tests/conformance_tests.yaml --range 1
     ```
