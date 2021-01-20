@@ -187,23 +187,26 @@ def test_overwrite_deprecated_dag(
 
 
 @pytest.mark.parametrize(
-    "workflow, job",
+    "workflow, job, skipped_control",
     [
         (
             ["tools", "bedtools-genomecov.cwl"],
-            "bedtools-genomecov.json"
+            "bedtools-genomecov.json",
+            False
         ),
         (
             ["tools", "linux-sort.cwl"],
-            "linux-sort.json"
+            "linux-sort.json",
+            False
         ),
         (
             ["tools", "ucsc-bedgraphtobigwig.cwl"],
-            "ucsc-bedgraphtobigwig.json"
+            "ucsc-bedgraphtobigwig.json",
+            False
         )
     ]
 )
-def test_convert_to_workflow(workflow, job):
+def test_convert_to_workflow(workflow, job, skipped_control):
     pickle_folder = tempfile.mkdtemp()
 
     command_line_tool = slow_cwl_load(
@@ -222,14 +225,18 @@ def test_convert_to_workflow(workflow, job):
             cwl_args={"pickle_folder": pickle_folder}
         )
         job_data["tmp_folder"] = pickle_folder
-        step_outputs, step_report = execute_workflow_step(
+        step_outputs, step_report, skipped = execute_workflow_step(
             workflow=converted_workflow_path,
             task_id=get_rootname(command_line_tool["id"]),
             job_data=job_data,
             cwl_args={"pickle_folder": pickle_folder}
         )
+        if skipped != skipped_control:
+            raise ValueError("Workflow didn't follow skipping rule")
+    except ValueError as err:
+        assert False, f"Failed to execute the workflow. \n {err}"
     except BaseException as err:
-        assert False, f"Failed either to run test or execute workflow. \n {err}"
+        assert False, f"Failed to run the test. \n {err}"
     finally:
         shutil.rmtree(pickle_folder)
 
@@ -278,26 +285,29 @@ def test_get_default_cwl_args(monkeypatch, control_defaults):
 
 
 @pytest.mark.parametrize(
-    "workflow, job, task_id",
+    "workflow, job, task_id, skipped_control",
     [
         (
             ["workflows", "bam-bedgraph-bigwig.cwl"],
             "bam-to-bedgraph-step.json",
-            "bam_to_bedgraph"
+            "bam_to_bedgraph",
+            False
         ),
         (
             ["workflows", "bam-bedgraph-bigwig-single.cwl"],
             "bam-to-bedgraph-step.json",
-            "bam_to_bedgraph"
+            "bam_to_bedgraph",
+            False
         ),
         (
             ["workflows", "bam-bedgraph-bigwig-subworkflow.cwl"],
             "bam-bedgraph-bigwig.json",
-            "subworkflow"
+            "subworkflow",
+            False
         )
     ]
 )
-def test_embed_all_runs(workflow, job, task_id):
+def test_embed_all_runs(workflow, job, task_id, skipped_control):
     pickle_folder = tempfile.mkdtemp()
     packed_workflow_path = os.path.join(pickle_folder, "packed.cwl")
     embed_all_runs(
@@ -314,14 +324,18 @@ def test_embed_all_runs(workflow, job, task_id):
             cwl_args={"pickle_folder": pickle_folder}
         )
         job_data["tmp_folder"] = pickle_folder
-        step_outputs, step_report = execute_workflow_step(
+        step_outputs, step_report, skipped = execute_workflow_step(
             workflow=packed_workflow_path,
             task_id=task_id,
             job_data=job_data,
             cwl_args={"pickle_folder": pickle_folder}
         )
+        if skipped != skipped_control:
+            raise ValueError("Workflow didn't follow skipping rule")
+    except ValueError as err:
+        assert False, f"Failed to execute the workflow. \n {err}"
     except BaseException as err:
-        assert False, f"Failed either to run test or execute workflow. \n {err}"
+        assert False, f"Failed to run the test. \n {err}"
     finally:
         shutil.rmtree(pickle_folder)
 
@@ -506,22 +520,25 @@ def test_get_short_id(long_id, only_step_name, only_id, control):
 
 # It's also indirect testing of fast_cwl_step_load
 @pytest.mark.parametrize(
-    "workflow, job, task_id",
+    "workflow, job, task_id, skipped_control",
     [
         (
             ["workflows", "bam-bedgraph-bigwig.cwl"],
             "bam-to-bedgraph-step.json",
-            "bam_to_bedgraph"
+            "bam_to_bedgraph",
+            False
         ),
         (
             ["workflows", "bam-bedgraph-bigwig.cwl"],
             "bam-to-bedgraph-step.json",
-            "bam_to_bedgraph"
+            "bam_to_bedgraph",
+            False
         ),
         (
             ["workflows", "bam-bedgraph-bigwig.cwl"],
             "bam-to-bedgraph-step.json",
-            "bam_to_bedgraph"
+            "bam_to_bedgraph",
+            False
         ),
         (
             #  bam-bedgraph-bigwig-single.cwl
@@ -631,41 +648,60 @@ def test_get_short_id(long_id, only_step_name, only_id, control):
              MfUTcj1dFSVOLV4nIW461hhCyraQgzAQL9HchoI9V9mCMds1hF zhXTfFcVnL/gosFZpps\
              /GU8SmShNS4FB6wsEIYqpbGyfu61v/weDmYiG",
             "bam-to-bedgraph-step.json",
-            "bam_to_bedgraph"
+            "bam_to_bedgraph",
+            False
         ),
         (
             ["workflows", "bam-bedgraph-bigwig.cwl"],
             "sort-bedgraph-step.json",
-            "sort_bedgraph"
+            "sort_bedgraph",
+            False
         ),
+        (
+            ["workflows", "bam-bedgraph-bigwig-conditional.cwl"],
+            "sort-bedgraph-step-conditional-false.json",
+            "sort_bedgraph",
+            True
+        ),
+        (
+            ["workflows", "bam-bedgraph-bigwig-conditional.cwl"],
+            "sort-bedgraph-step-conditional-true.json",
+            "sort_bedgraph",
+            False
+        ),        
         (
             ["workflows", "bam-bedgraph-bigwig.cwl"],
             "sorted-bedgraph-to-bigwig-step.json",
-            "sorted_bedgraph_to_bigwig"
+            "sorted_bedgraph_to_bigwig",
+            False
         ),
         (
             ["workflows", "bam-bedgraph-bigwig-single.cwl"],
             "bam-to-bedgraph-step.json",
-            "bam_to_bedgraph"
+            "bam_to_bedgraph",
+            False
         ),
         (
             ["workflows", "bam-bedgraph-bigwig-single.cwl"],
             "sort-bedgraph-step.json",
-            "sort_bedgraph"
+            "sort_bedgraph",
+            False
         ),
         (
             ["workflows", "bam-bedgraph-bigwig-single.cwl"],
             "sorted-bedgraph-to-bigwig-step.json",
-            "sorted_bedgraph_to_bigwig"
+            "sorted_bedgraph_to_bigwig",
+            False
         ),
         (
             ["workflows", "bam-bedgraph-bigwig-subworkflow.cwl"],
             "bam-bedgraph-bigwig.json",
-            "subworkflow"
+            "subworkflow",
+            False
         )
     ]
 )
-def test_execute_workflow_step(workflow, job, task_id):
+def test_execute_workflow_step(workflow, job, task_id, skipped_control):
     pickle_folder = tempfile.mkdtemp()
     if (isinstance(workflow, str)):
         workflow_path = workflow
@@ -682,14 +718,18 @@ def test_execute_workflow_step(workflow, job, task_id):
     job_data["tmp_folder"] = pickle_folder                  # need manually add "tmp_folder"
 
     try:
-        step_outputs, step_report = execute_workflow_step(
+        step_outputs, step_report, skipped = execute_workflow_step(
             workflow=workflow_path,
             task_id=task_id,
             job_data=job_data,
             cwl_args=cwl_args
         )
+        if skipped != skipped_control:
+            raise ValueError("Workflow didn't follow skipping rule")
+    except ValueError as err:
+        assert False, f"Failed to execute the workflow. \n {err}"        
     except BaseException as err:
-        assert False, f"Failed either to run test or execute workflow. \n {err}"
+        assert False, f"Failed to run the test. \n {err}"
     finally:
         shutil.rmtree(pickle_folder)
 
@@ -733,7 +773,7 @@ def test_execute_workflow_step_when_failed(workflow, job, task_id, remove_tmp_fo
         job_data=job_data
     )
     try:
-        step_outputs, step_report = execute_workflow_step(                 # this should fail
+        step_outputs, step_report, skipped = execute_workflow_step(        # this should fail
             workflow=workflow_path,
             task_id=task_id,
             job_data=job_data,

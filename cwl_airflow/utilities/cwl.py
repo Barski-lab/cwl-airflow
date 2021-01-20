@@ -38,6 +38,7 @@ from cwltool.context import (
     RuntimeContext
 )
 from cwltool.process import relocateOutputs
+from cwltool.expression import do_eval
 from cwltool.load_tool import (
     load_tool,
     jobloaderctx
@@ -531,6 +532,28 @@ def kill_containers(containers):
             logging.error(f"Failed to kill container. \n {err}")
 
 
+def need_to_run(workflow_data, job_data, task_id):
+    """
+    If step selected by task_id has field "when" then decide
+    whether it should be run or not based on the evaluation of
+    this field. Otherwise return True (run the step)
+    """
+
+    selected_step = list(get_items(workflow_data.tool["steps"], task_id))[0][1]
+    if "when" in selected_step:
+        return do_eval(
+            ex=selected_step["when"],
+            jobinput=job_data,
+            requirements=workflow_data.requirements,
+            outdir=None,
+            tmpdir=None,
+            resources={},
+            timeout=120    # harcoded to 120, because default 30 sec might not be enough when running from Docker
+        )
+    else:
+        return True
+
+
 def execute_workflow_step(
     workflow,
     task_id,
@@ -544,7 +567,9 @@ def execute_workflow_step(
     and "task_id". "cwl_args" can be used to update default parameters
     used for loading and runtime contexts. Exports json file with the
     execution results. Removes temporary data if workflow step has failed,
-    unless "remove_tmp_folder" is set to False.
+    unless "remove_tmp_folder" is set to False. If the step was evaluated
+    as the one that need to be skipped, the output "skipped" will set to True
+    and the step_report file will include "nulls"
     """
 
     cwl_args = {} if cwl_args is None else cwl_args
@@ -578,30 +603,37 @@ def execute_workflow_step(
         location=workflow_step_path
     )
 
-    _stderr = sys.stderr                               # to trick the logger	
-    sys.stderr = sys.__stderr__
-    step_outputs, step_status = executor(
-        slow_cwl_load(
-            workflow=workflow_step_path,
-            cwl_args=default_cwl_args),
-        job_data,
-        RuntimeContext(default_cwl_args)
+    workflow_data = slow_cwl_load(
+        workflow=workflow_step_path,
+        cwl_args=default_cwl_args
     )
-    sys.stderr = _stderr
+    
+    skipped = True
+    step_outputs = {output_id: None for output_id, _ in get_items(workflow_data.tool["outputs"])}
+    if need_to_run(workflow_data, job_data, task_id):
+        skipped = False
+        _stderr = sys.stderr                               # to trick the logger
+        sys.stderr = sys.__stderr__
+        step_outputs, step_status = executor(
+            workflow_data,
+            job_data,
+            RuntimeContext(default_cwl_args)
+        )
+        sys.stderr = _stderr
 
-    if step_status != "success":
-        if remove_tmp_folder:
-            logging.info(f"Removing workflow step temporary data:\n - {step_cache_folder}\n - {step_outputs_folder}")
-            shutil.rmtree(step_cache_folder, ignore_errors=False)
-            shutil.rmtree(step_outputs_folder, ignore_errors=False)
-        raise ValueError("Failed to run workflow step")
+        if step_status != "success":
+            if remove_tmp_folder:
+                logging.info(f"Removing workflow step temporary data:\n - {step_cache_folder}\n - {step_outputs_folder}")
+                shutil.rmtree(step_cache_folder, ignore_errors=False)
+                shutil.rmtree(step_outputs_folder, ignore_errors=False)
+            raise ValueError("Failed to run workflow step")
 
-    # To remove "http://commonwl.org/cwltool#generation": 0 (copied from cwltool)
-    visit_class(step_outputs, ("File",), MutationManager().unset_generation)
+        # To remove "http://commonwl.org/cwltool#generation": 0 (copied from cwltool)
+        visit_class(step_outputs, ("File",), MutationManager().unset_generation)
 
     dump_json(step_outputs, step_report)
 
-    return step_outputs, step_report
+    return step_outputs, step_report, skipped
 
 
 def get_temp_folders(task_id, job_data):
@@ -803,9 +835,12 @@ def fast_cwl_step_load(workflow, target_id, cwl_args=None, location=None):
                 step_in_source_with_step_id = step_in_source.replace("/", "_")  # to include both step name and id
 
                 # Check if it should be assumed optional (default field is present)
+                # Also if we see "pickValue" we should add "null" too, but it might
+                # be not the best solution, as we are not sure whether all of the
+                # items from "source" should be optional or only some of them.
                 # NOTE: consider also checking if upstream step had scatter, so the
                 # output type should become array based on the scatter parameters
-                if "default" in step_in:
+                if "default" in step_in or "pickValue" in step_in:
                     upstream_step_output_type = ["null", upstream_step_output["type"]]
                 else:
                     upstream_step_output_type = upstream_step_output["type"]

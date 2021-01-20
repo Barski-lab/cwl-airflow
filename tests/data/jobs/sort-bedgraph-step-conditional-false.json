@@ -1,0 +1,7 @@
+{
+    "bam_to_bedgraph_genome_coverage_file": {
+        "class": "File",
+        "location": "../inputs/chr4_100_mapped_reads.bedGraph"
+    },
+    "sort_bedgraph": false
+}

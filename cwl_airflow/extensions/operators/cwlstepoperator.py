@@ -1,6 +1,8 @@
 #! /usr/bin/env python3
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
+from airflow.exceptions import AirflowSkipException
+from airflow.models.xcom import XCOM_RETURN_KEY
 
 from cwl_airflow.utilities.cwl import (
     execute_workflow_step,
@@ -21,7 +23,7 @@ class CWLStepOperator(BaseOperator):
         task_id,
         *args, **kwargs
     ):
-        super().__init__(task_id=task_id, *args, **kwargs)
+        super().__init__(task_id=task_id, trigger_rule="none_failed", *args, **kwargs)  # change default trigger_rule as the upstream can be skipped
 
 
     def execute(self, context):
@@ -35,12 +37,16 @@ class CWLStepOperator(BaseOperator):
         post_status(context)
 
         self.job_data = collect_reports(context)         # we need it also in "on_kill"
-        _, step_report = execute_workflow_step(
+        _, step_report, skipped = execute_workflow_step(
             workflow=context["dag"].workflow,
             task_id=self.task_id,
             job_data=self.job_data,
             cwl_args=context["dag"].default_args["cwl"]
         )
+
+        if skipped:
+            self.xcom_push(context, XCOM_RETURN_KEY, step_report)       # need to save empty report before raising exception
+            raise AirflowSkipException("Skip workflow step execution")  # to mark it as skipped for Airflow
 
         return step_report
 

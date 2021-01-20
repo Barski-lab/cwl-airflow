@@ -18,7 +18,7 @@ class CWLJobGatherer(BaseOperator):
         task_id,
         *args, **kwargs
     ):
-        super().__init__(task_id=task_id, *args, **kwargs)
+        super().__init__(task_id=task_id, trigger_rule="none_failed", *args, **kwargs)  # change default trigger_rule as the upstream can be skipped
         
 
     def execute(self, context):
