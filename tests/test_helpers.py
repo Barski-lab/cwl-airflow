@@ -17,13 +17,51 @@ from cwl_airflow.utilities.helpers import (
     remove_field_from_dict,
     get_compressed,
     get_uncompressed,
-    get_md5_sum
+    get_md5_sum,
+    get_dir_size
 )
 
 
 DATA_FOLDER = path.abspath(path.join(path.dirname(__file__), "data"))
 if sys.platform == "darwin":                                           # docker has troubles of mounting /var/private on macOs
     tempfile.tempdir = "/private/tmp"
+
+
+
+@pytest.mark.parametrize(
+    "location, blocksize, control_size",
+    [
+        (
+            path.join(DATA_FOLDER, "jobs"),
+            None,
+            40
+        ),
+        (
+            path.join(DATA_FOLDER, "jobs"),
+            1024,
+            40
+        ),
+        (
+            path.join(DATA_FOLDER, "jobs"),
+            "1K",
+            40
+        ),
+        (
+            path.join(DATA_FOLDER, "jobs"),
+            512,
+            80
+        ),
+        (
+            path.join(DATA_FOLDER, "jobs"),
+            "1M",
+            1
+        )
+    ]
+)
+def test_get_dir_size(location, blocksize, control_size):
+    dir_size = get_dir_size(location, blocksize)
+    assert dir_size==control_size, \
+        "Failed to calculate dir size"
 
 
 @pytest.mark.parametrize(

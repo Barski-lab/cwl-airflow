@@ -13,6 +13,7 @@ from ruamel.yaml import YAML
 from tempfile import mkdtemp
 from shutil import rmtree
 from urllib.parse import urlparse
+from subprocess import check_output
 from typing import MutableMapping, MutableSequence
 
 
@@ -143,6 +144,30 @@ def get_files(location, filename_pattern=None):
             {filename: os.path.join(root, filename) for filename in files if re.match(filename_pattern, filename)}
         )
     return files_dict
+
+
+def get_dir_size(location, blocksize=None):
+    """
+    Return dir size in blocksize counts as int for the provided location.
+    If blocksize is not set use 1K. blocksize can be set as int or string
+    with one of the following suffixes KB, K, MB, M, etc. Minimum blocksize
+    is 512. If we failed to execute "du" command or parse the result,
+    return 0. Params used for du command:
+        -s: display an entry for each specified file
+        -L: symbolic links on the command line and in file hierarchies are followed
+    """
+
+    blocksize = "1K" if blocksize is None else blocksize
+    custom_env = os.environ.copy()
+    custom_env["BLOCKSIZE"] = str(blocksize)
+    try:
+        dir_size = int(check_output(
+            ["du", "-sL", location],
+            env=custom_env
+        ).split()[0].decode("utf-8"))
+        return dir_size
+    except Exception:
+        return 0
 
 
 def get_dir(location, cwd=None, permissions=None, exist_ok=None):
