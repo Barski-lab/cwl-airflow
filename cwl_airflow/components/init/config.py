@@ -183,7 +183,7 @@ def upgrade_dags(args):
     dags_folder = conf.get("core", "dags_folder")
     for dag_location in list_py_file_paths(                     # will skip all DAGs from ".airflowignore"
         directory=dags_folder,
-        safe_mode=conf.get("core", "dag_discovery_safe_mode"),  # use what user set in his config
+        safe_mode=conf.getboolean("core", "dag_discovery_safe_mode"),  # use what user set in his config
         include_examples=False
     ):
         overwrite_deprecated_dag(                               # upgrades only deprecated DAGs, skips others

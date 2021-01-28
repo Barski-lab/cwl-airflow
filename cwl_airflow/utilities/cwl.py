@@ -59,7 +59,8 @@ from cwl_airflow.utilities.helpers import (
     remove_field_from_dict,
     get_uncompressed,
     get_compressed,
-    get_files
+    get_files,
+    get_dir_size
 )
 
 
@@ -68,12 +69,13 @@ CWL_OUTPUTS_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_outputs_folder")
 CWL_INPUTS_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_inputs_folder")
 CWL_PICKLE_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_pickle_folder")
 CWL_USE_CONTAINER = True
+CWL_KEEP_TMP_DATA = False
 CWL_NO_MATCH_USER = False
 CWL_SKIP_SCHEMAS = True
 CWL_STRICT = False
 CWL_QUIET = False
-CWL_RM_TMPDIR = True       # better not to change without need
-CWL_MOVE_OUTPUTS = "move"  # better not to change without need
+CWL_RM_TMPDIR = True       # better not to change without need, however if we "copy", this will be always False, and that's good for disk usage statistics
+CWL_MOVE_OUTPUTS = "copy"  # we want to "copy" instead of "move" to calculate disk usage from the dag callback
 CWL_ENABLE_DEV = True      # better not to change without need
 
 
@@ -84,6 +86,32 @@ dag = CWLDAG(
     dag_id="{1}"
 )
 """
+
+
+def get_workflow_execution_stats(context):
+    job_data = collect_reports(context)
+    dag_run = context["dag_run"]
+    statistics = {
+        "version": "1.0",  # upgrade the version when we decide to change the logic of how we collect statistics
+        "total": {
+            "tmp_folder_size": get_dir_size(job_data["tmp_folder"]),
+            "outputs_folder_size": get_dir_size(job_data["outputs_folder"]),
+            "start_date": dag_run.start_date.isoformat(),
+            "end_date": round((dag_run.end_date - dag_run.start_date).total_seconds(), 3)
+        },
+        "steps": {}
+    }
+    for ti in context["dag_run"].get_task_instances():
+        step_tmp_folder, _, _, _ = get_temp_folders(
+            task_id=ti.task_id,
+            job_data=job_data
+        )
+        statistics["steps"][ti.task_id] = {
+            "tmp_folder_size": get_dir_size(step_tmp_folder),
+            "start_date": round((ti.start_date - dag_run.start_date).total_seconds(), 3),
+            "end_date": round((ti.end_date - dag_run.start_date).total_seconds(), 3)
+        }
+    return statistics
 
 
 def overwrite_deprecated_dag(
@@ -298,7 +326,8 @@ def clean_up_dag_run(dag_id, run_id, dags_folder=None, kill_timeout=None):
 def conf_get(
     section,
     key,
-    default
+    default,
+    as_boolean=None
 ):
     """
     Return value from AirflowConfigParser object.
@@ -306,9 +335,13 @@ def conf_get(
     Suppresses annoying warning messages
     """
 
+    as_boolean = False if as_boolean is None else as_boolean
     try:
         logging.disable(logging.WARNING)
-        return conf.get(section, key)
+        if as_boolean:
+            return conf.getboolean(section, key)
+        else:
+            return conf.get(section, key)
     except AirflowConfigException:
         return default
     finally:
@@ -384,25 +417,35 @@ def get_default_cwl_args(preset_cwl_args=None):
                     preset_cwl_args.get("pickle_folder", CWL_PICKLE_FOLDER)
                 )
             ),
-            "use_container": conf_get(
+            "keep_tmp_data": conf_get(                                             # prevents from cleaning dag_run temp data and XCom's in both success or failure scenarios
+                "cwl", "keep_tmp_data",
+                preset_cwl_args.get("keep_tmp_data", CWL_KEEP_TMP_DATA),
+                True                                                               # return Boolean
+            ),
+            "use_container": conf_get(                                             # execute jobs in docker containers
                 "cwl", "use_container",
-                preset_cwl_args.get("use_container", CWL_USE_CONTAINER)            # execute jobs in docker containers
+                preset_cwl_args.get("use_container", CWL_USE_CONTAINER),
+                True                                                               # return Boolean
             ),
-            "no_match_user": conf_get(
+            "no_match_user": conf_get(                                             # disables passing the current uid to "docker run --user"
                 "cwl", "no_match_user",
-                preset_cwl_args.get("no_match_user", CWL_NO_MATCH_USER)            # disables passing the current uid to "docker run --user"
+                preset_cwl_args.get("no_match_user", CWL_NO_MATCH_USER),
+                True                                                               # return Boolean
             ),
-            "skip_schemas": conf_get(
+            "skip_schemas": conf_get(                                              # it looks like this doesn't influence anything in the latest cwltool
                 "cwl", "skip_schemas", 
-                preset_cwl_args.get("skip_schemas", CWL_SKIP_SCHEMAS)              # it looks like this doesn't influence anything in the latest cwltool
+                preset_cwl_args.get("skip_schemas", CWL_SKIP_SCHEMAS),
+                True                                                               # return Boolean
             ),
             "strict": conf_get(
                 "cwl", "strict", 
-                preset_cwl_args.get("strict", CWL_STRICT)
+                preset_cwl_args.get("strict", CWL_STRICT),
+                True                                                               # return Boolean
             ),
             "quiet": conf_get(
                 "cwl", "quiet", 
-                preset_cwl_args.get("quiet", CWL_QUIET)
+                preset_cwl_args.get("quiet", CWL_QUIET),
+                True                                                               # return Boolean
             ),
             "rm_tmpdir": preset_cwl_args.get("rm_tmpdir", CWL_RM_TMPDIR),          # even if we can set it in "preset_cwl_args" it's better not to change
             "move_outputs": preset_cwl_args.get("move_outputs", CWL_MOVE_OUTPUTS), # even if we can set it in "preset_cwl_args" it's better not to change
@@ -416,23 +459,21 @@ def get_default_cwl_args(preset_cwl_args=None):
 def relocate_outputs(
     workflow,
     job_data,
-    cwl_args=None,
-    remove_tmp_folder=None
+    cwl_args=None
 ):
     """
-    Relocates filtered outputs to "outputs_folder" and, by default,
-    removes tmp_folder, unless "remove_tmp_folder" is set to something
-    else. Saves report with relocated outputs as "workflow_report.json"
-    to "outputs_folder".
-    Maps outputs from "workflow" back to normal (from step_id_step_out
-    to workflow output) and filters "job_data" based on them (combining
-    items from "job_data" into a list based on "outputSource" if it
-    was a list). "cwl_args" can be used to update default parameters
-    used for loading and runtime contexts.
+    Moves or copies filtered outputs to "outputs_folder" depending on
+    "runtime_context.move_outputs" value, however "tmp_folder" is not
+    going to be deleted as it will be done when DAG finishes running.
+    Saves report with relocated outputs as "workflow_report.json"
+    to "outputs_folder". Maps outputs from "workflow" back to normal
+    (from step_id_step_out to workflow output) and filters "job_data"
+    based on them (combining items from "job_data" into a list based on
+    "outputSource" if it was a list). "cwl_args" can be used to update
+    default parameters used for loading and runtime contexts.
     """
 
     cwl_args = {} if cwl_args is None else cwl_args
-    remove_tmp_folder = True if remove_tmp_folder is None else remove_tmp_folder
 
     default_cwl_args = get_default_cwl_args(cwl_args)
 
@@ -458,12 +499,11 @@ def relocate_outputs(
         else:
             filtered_job_data[output_id] = collected_job_items[0]
 
-    # Outputs will be always copied, because source_directories=[]
     runtime_context = RuntimeContext(default_cwl_args)
     relocated_job_data = relocateOutputs(
         outputObj=filtered_job_data,
         destination_path=job_data_copy["outputs_folder"],
-        source_directories=[],                              # use it as a placeholder (shouldn't influence anything)
+        source_directories=[job_data_copy["tmp_folder"]],   # need to set it to tmp_folder otherwise it won't be able to delete tmp data if action is "move"
         action=runtime_context.move_outputs,
         fs_access=runtime_context.make_fs_access(""),
         compute_checksum=runtime_context.compute_checksum,
@@ -477,10 +517,6 @@ def relocate_outputs(
     )
 
     dump_json(relocated_job_data, workflow_report)
-
-    # Clean "tmp_folder"
-    if remove_tmp_folder:
-        shutil.rmtree(job_data_copy["tmp_folder"], ignore_errors=False)
 
     return relocated_job_data, workflow_report
 
@@ -559,22 +595,20 @@ def execute_workflow_step(
     task_id,
     job_data,
     cwl_args=None,
-    executor=None,
-    remove_tmp_folder=None
+    executor=None
 ):
     """
     Constructs and executes single step workflow based on the "workflow"
     and "task_id". "cwl_args" can be used to update default parameters
     used for loading and runtime contexts. Exports json file with the
-    execution results. Removes temporary data if workflow step has failed,
-    unless "remove_tmp_folder" is set to False. If the step was evaluated
-    as the one that need to be skipped, the output "skipped" will set to True
-    and the step_report file will include "nulls"
+    execution results. If the step was evaluated as the one that need to
+    be skipped, the output "skipped" will set to True and the step_report
+    file will include "nulls". This function doesn't remove any temporary
+    data in both success and failure scenarios.
     """
 
     cwl_args = {} if cwl_args is None else cwl_args
     executor = SingleJobExecutor() if executor is None else executor
-    remove_tmp_folder = True if remove_tmp_folder is None else remove_tmp_folder
 
     step_tmp_folder, step_cache_folder, step_outputs_folder, step_report = get_temp_folders(
         task_id=task_id,
@@ -622,10 +656,6 @@ def execute_workflow_step(
         sys.stderr = _stderr
 
         if step_status != "success":
-            if remove_tmp_folder:
-                logging.info(f"Removing workflow step temporary data:\n - {step_cache_folder}\n - {step_outputs_folder}")
-                shutil.rmtree(step_cache_folder, ignore_errors=False)
-                shutil.rmtree(step_outputs_folder, ignore_errors=False)
             raise ValueError("Failed to run workflow step")
 
         # To remove "http://commonwl.org/cwltool#generation": 0 (copied from cwltool)

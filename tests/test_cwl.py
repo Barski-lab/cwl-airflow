@@ -735,63 +735,6 @@ def test_execute_workflow_step(workflow, job, task_id, skipped_control):
 
 
 @pytest.mark.parametrize(
-    "workflow, job, task_id, remove_tmp_folder",
-    [
-        (
-            ["workflows", "bam-bedgraph-bigwig.cwl"],
-            "bam-bedgraph-bigwig-broken.json",
-            "bam_to_bedgraph",
-            None
-        ),
-        (
-            ["workflows", "bam-bedgraph-bigwig.cwl"],
-            "bam-bedgraph-bigwig-broken.json",
-            "bam_to_bedgraph",
-            True
-        ),
-        (
-            ["workflows", "bam-bedgraph-bigwig.cwl"],
-            "bam-bedgraph-bigwig-broken.json",
-            "bam_to_bedgraph",
-            False
-        )
-    ]
-)
-def test_execute_workflow_step_when_failed(workflow, job, task_id, remove_tmp_folder):
-    pickle_folder = tempfile.mkdtemp()
-    workflow_path = os.path.join(DATA_FOLDER, *workflow)
-    job_path = os.path.join(DATA_FOLDER, "jobs", job)
-    cwl_args = {"pickle_folder": pickle_folder}
-    job_data = load_job(
-        workflow=workflow_path,
-        job=job_path,
-        cwl_args=cwl_args
-    )
-    job_data["tmp_folder"] = pickle_folder                                 # need manually add "tmp_folder"
-    _, step_cache_folder, step_outputs_folder, _ = get_temp_folders(
-        task_id=task_id,
-        job_data=job_data
-    )
-    try:
-        step_outputs, step_report, skipped = execute_workflow_step(        # this should fail
-            workflow=workflow_path,
-            task_id=task_id,
-            job_data=job_data,
-            cwl_args=cwl_args,
-            remove_tmp_folder=remove_tmp_folder
-        )
-    except ValueError as err:
-        if (remove_tmp_folder is None or remove_tmp_folder) and (os.path.isdir(step_cache_folder) or os.path.isdir(step_outputs_folder)):
-            assert False, f"Failed to remove temporary data"
-        if (remove_tmp_folder is not None and not remove_tmp_folder) and (not os.path.isdir(step_cache_folder) or not os.path.isdir(step_outputs_folder)):
-            assert False, f"Temporary data have been mistakenly removed"
-    except BaseException as err:
-        assert False, f"Failed either to run test. Search for error in a test \n {err}"
-    finally:
-        shutil.rmtree(pickle_folder)
-
-
-@pytest.mark.parametrize(
     "job, workflow",
     [
         (

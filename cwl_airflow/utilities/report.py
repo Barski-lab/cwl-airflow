@@ -9,6 +9,12 @@ from airflow.hooks.http_hook import HttpHook
 from airflow.configuration import conf
 from airflow.exceptions import AirflowNotFoundException
 
+from cwl_airflow.utilities.cwl import (
+    get_workflow_execution_stats,
+    get_default_cwl_args,
+    remove_dag_run_tmp_data
+)
+
 
 CONN_ID = "process_report"
 ROUTES = {
@@ -114,6 +120,7 @@ def post_progress(context, from_task=None):
                 "dag_id": dag_run.dag_id,
                 "run_id": dag_run.run_id,
                 "progress": progress,
+                "statistics": get_workflow_execution_stats(context) if not from_task else "",
                 "error": get_error_category(context) if dag_run.state == State.FAILED and not from_task else ""
             }
         )
@@ -201,6 +208,23 @@ def post_status(context):
         logging.debug(f"Failed to POST status updates. \n {err}")
 
 
+def clean_up(context):
+    """
+    Loads "cwl" arguments from the DAG, just in case updates them with
+    all required defaults, and, unless "keep_tmp_data" was set to True,
+    removes all remporary data and related records in the XCom table
+    """
+
+    default_cwl_args = get_default_cwl_args(
+        context["dag"].default_args["cwl"]
+    )
+    if not default_cwl_args["keep_tmp_data"]:
+        dag_run = context["dag_run"]
+        remove_dag_run_tmp_data(dag_run)
+        for ti in dag_run.get_task_instances():
+            ti.clear_xcom_data()
+
+
 def task_on_success(context):
     post_progress(context, True)
     post_status(context)
@@ -219,8 +243,10 @@ def task_on_retry(context):
 def dag_on_success(context):
     post_progress(context)
     post_results(context)
+    clean_up(context)
 
 
 def dag_on_failure(context):
     # we need to post progress, because we will also report error in it
     post_progress(context)
+    clean_up(context)
