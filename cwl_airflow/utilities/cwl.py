@@ -91,26 +91,30 @@ dag = CWLDAG(
 def get_workflow_execution_stats(context):
     job_data = collect_reports(context)
     dag_run = context["dag_run"]
-    statistics = {
-        "version": "1.0",  # upgrade the version when we decide to change the logic of how we collect statistics
-        "total": {
-            "tmp_folder_size": get_dir_size(job_data["tmp_folder"]),
-            "outputs_folder_size": get_dir_size(job_data["outputs_folder"]),
-            "start_date": dag_run.start_date.isoformat(),
-            "end_date": round((dag_run.end_date - dag_run.start_date).total_seconds(), 3)
-        },
-        "steps": {}
-    }
-    for ti in context["dag_run"].get_task_instances():
-        step_tmp_folder, _, _, _ = get_temp_folders(
-            task_id=ti.task_id,
-            job_data=job_data
-        )
-        statistics["steps"][ti.task_id] = {
-            "tmp_folder_size": get_dir_size(step_tmp_folder),
-            "start_date": round((ti.start_date - dag_run.start_date).total_seconds(), 3),
-            "end_date": round((ti.end_date - dag_run.start_date).total_seconds(), 3)
+    statistics = ""
+    try:
+        statistics = {
+            "version": "1.0",  # upgrade the version when we decide to change the logic of how we collect statistics
+            "total": {
+                "tmp_folder_size": get_dir_size(job_data["tmp_folder"]),
+                "outputs_folder_size": get_dir_size(job_data["outputs_folder"]),
+                "start_date": dag_run.start_date.isoformat(),
+                "end_date": round((dag_run.end_date - dag_run.start_date).total_seconds(), 3)
+            },
+            "steps": {}
         }
+        for ti in context["dag_run"].get_task_instances():
+            step_tmp_folder, _, _, _ = get_temp_folders(
+                task_id=ti.task_id,
+                job_data=job_data
+            )
+            statistics["steps"][ti.task_id] = {
+                "tmp_folder_size": get_dir_size(step_tmp_folder),
+                "start_date": round((ti.start_date - dag_run.start_date).total_seconds(), 3),
+                "end_date": round((ti.end_date - dag_run.start_date).total_seconds(), 3)
+            }
+    except Exception as err:
+        logging.info(f"Failed to collect statistics for dag_id: {dag_run.dag_id}, run_id: {dag_run.run_id}, due to\n {err}")
     return statistics
 
 
@@ -266,7 +270,7 @@ def remove_dag_run_tmp_data(dag_run):
             report_location = ti.xcom_pull(task_ids=ti.task_id)
             tmp_folder_set.add(load_yaml(report_location)["tmp_folder"])
         except Exception:
-            logging.debug(" - report file has been already deleted or it's missing tmp_folder field")
+            logging.debug(" - XCom was empty, or report file has been already deleted, or it's missing tmp_folder field")
     for tmp_folder in tmp_folder_set:
         try:
             logging.info(f"Removing tmp data from {tmp_folder}")
