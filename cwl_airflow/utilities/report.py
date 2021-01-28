@@ -212,17 +212,20 @@ def clean_up(context):
     """
     Loads "cwl" arguments from the DAG, just in case updates them with
     all required defaults, and, unless "keep_tmp_data" was set to True,
-    removes all remporary data and related records in the XCom table
+    tries to remove all remporary data and related records in the XCom
+    table
     """
-
-    default_cwl_args = get_default_cwl_args(
-        context["dag"].default_args["cwl"]
-    )
-    if not default_cwl_args["keep_tmp_data"]:
-        dag_run = context["dag_run"]
-        remove_dag_run_tmp_data(dag_run)
-        for ti in dag_run.get_task_instances():
-            ti.clear_xcom_data()
+    try:
+        default_cwl_args = get_default_cwl_args(
+            context["dag"].default_args["cwl"]
+        )
+        if not default_cwl_args["keep_tmp_data"]:
+            dag_run = context["dag_run"]
+            remove_dag_run_tmp_data(dag_run)
+            for ti in dag_run.get_task_instances():
+                ti.clear_xcom_data()
+    except KeyError as err:  # other than CWLDAG non of our DAGs should have "cwl" field in default_args
+        logging.info(f"Failed to clean up data for current DAG, due to \n {err}")
 
 
 def task_on_success(context):
