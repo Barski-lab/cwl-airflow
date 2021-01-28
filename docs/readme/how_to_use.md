@@ -120,14 +120,59 @@ $ airflow trigger_dag --conf "{\"job\":$(cat ./bam-bedgraph-bigwig.json)}" bam-b
 
 **Note**, to trigger workflow execution one can also use **POST** to `/dag_runs` API endpoing. For additional details refer to [Using an API](#using-an-api) section.
 
-## Posting pipeline execution progress and results
+## Posting pipeline execution progress, statistics and results
 
-To make CWL-Airflow **post workflow executions progress and results** `process_report` connection should be added. Parameters can be adjusted based on the current needs following the example below.
+To make CWL-Airflow **post workflow executions progress, statistics and results** `process_report` connection should be added. Parameters can be adjusted based on the current needs following the example below.
 
 ```sh
 $ airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070
 ```
 In case CWL-Airflow failed to POST progress updates or workflow execution results, the corresponded records with the prefixes `post_progress` and `post_results` will be added to the Airflow Variables. Later, if unpaused, `resend_results` DAG will attemt to deliver them every 10 min.
+Workflow execution statistics is sent as part of the progress report at the end of the pipeline execution regardless of whether it finished with success or failure. If progress report is sent from the task, the statistics will be set to "".
+
+On the example below, the workflow execution statistics includes `total` section with the `start_date` in isoformat. This timestamp will be used as a reference point for all other `start_date` and `end_date` fields which are represented in `seconds.milliseconds` format. All `tmp_folder_size` and `outputs_folder_size` are in kBytes.
+
+```JSON
+{
+  'state': 'success',
+  'dag_id': 'star-index',
+  'run_id': 'ba46dd51-9c7d-4f92-adc5-503a812ddb6d',
+  'progress': 100,
+  'statistics':
+  {
+    'version': '1.0',
+    'total':
+    {
+      'tmp_folder_size': 3080904,
+      'outputs_folder_size': 1538044,
+      'start_date': '2021-01-28T20:55:03.258202+00:00',
+      'end_date': 60.715
+    },
+    'steps':
+    {
+      'CWLJobDispatcher':
+      {
+        'tmp_folder_size': 4,
+        'start_date': 2.69,
+        'end_date': 6.96
+      },
+      'CWLJobGatherer':
+      {
+        'tmp_folder_size': 0,
+        'start_date': 56.534,
+        'end_date': 58.718
+      },
+      'star_generate_indices':
+      {
+        'tmp_folder_size': 3080900,
+        'start_date': 10.657,
+        'end_date': 52.23
+      }
+    }
+  },
+  'error': ''
+}
+```
 
 ## Using an API
 
