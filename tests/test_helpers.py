@@ -34,22 +34,22 @@ if sys.platform == "darwin":                                           # docker 
         (
             path.join(DATA_FOLDER, "jobs"),
             None,
-            40
+            44
         ),
         (
             path.join(DATA_FOLDER, "jobs"),
             1024,
-            40
+            44
         ),
         (
             path.join(DATA_FOLDER, "jobs"),
             "1K",
-            40
+            44
         ),
         (
             path.join(DATA_FOLDER, "jobs"),
             512,
-            80
+            88
         ),
         (
             path.join(DATA_FOLDER, "jobs"),
