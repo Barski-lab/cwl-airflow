@@ -82,9 +82,9 @@ def get_error_category(context):
     for ti in failed_tis:
         ti.task = context["dag"].get_task(ti.task_id)                # for some reasons when retreived from DagRun we need to set "task" property from the DAG
         try:                                                         # in case log files were deleted or unavailable
-            logs, _ = log_handler.read(ti)                           # logs is always a list.
+            logs, _ = log_handler.read(ti)                           # logs is always a list, so we need to take [0]
             for marker, category in ERROR_MARKERS.items():
-                if marker in logs[-1]:                               # logs[-1] is a string with \n from the last task retry
+                if marker in logs[0][-1][1]:                         # [-1] - to get only the last task retry, [1] - to get the actual log string with "\n"
                     categories.add(category)
                     break
         except Exception as err:
