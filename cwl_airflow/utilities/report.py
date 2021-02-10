@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 import json
-import jwt
 import logging
 
 from airflow.models import Variable
@@ -22,22 +21,9 @@ ROUTES = {
     "results":  "airflow/results",
     "status":   "airflow/status"
 }
-PRIVATE_KEY = "process_report_private_key"
-ALGORITHM = "process_report_algorithm"
+
 
 http_hook = HttpHook(method="POST", http_conn_id=CONN_ID)  # won't fail even if CONN_ID doesn't exist
-
-
-def sign_with_jwt(data):
-    try:
-        data = jwt.encode(
-            payload=data,
-            key=Variable.get(PRIVATE_KEY),
-            algorithm=Variable.get(ALGORITHM)
-        ).decode("utf-8")
-    except Exception as err:
-        logging.debug(f"Failed to sign data with JWT key. \n {err}")
-    return data
 
 
 def get_error_category(context):
@@ -95,16 +81,12 @@ def get_error_category(context):
     return "Unknown error. Contact support team"
 
 
-def post_progress(context, from_task=None):
+def report_progress(context, from_task=None):
     """
     If dag_run failed but this function was run from the task callback,
     error would be always "". The "error" is not "" only when this function
     will be called from the DAG callback, thus making it the last and the only
-    message with the meaningful error description. If function was called not
-    from a task and we failed to send a request we need to guarantee that message
-    is not getting lost so we back it up into the Variable to be able to resend
-    it later. We don't backup not sent messages if user didn't add the required
-    connection in Airflow.
+    message with the meaningful error description.
     """
 
     from_task = False if from_task is None else from_task
@@ -114,27 +96,41 @@ def post_progress(context, from_task=None):
     len_tis_success = len(dag_run.get_task_instances(state=State.SUCCESS)) + int(from_task)
     progress = 100 if len_tis == 0 else int(len_tis_success / len_tis * 100)
     message = {
-        "payload": sign_with_jwt(
-            {
-                "state": dag_run.state,
-                "dag_id": dag_run.dag_id,
-                "run_id": dag_run.run_id,
-                "progress": progress,
-                "statistics": get_workflow_execution_stats(context) if not from_task else "",
-                "error": get_error_category(context) if dag_run.state == State.FAILED and not from_task else ""
-            }
-        )
+        "payload": {
+            "state": dag_run.state,
+            "dag_id": dag_run.dag_id,
+            "run_id": dag_run.run_id,
+            "progress": progress,
+            "statistics": get_workflow_execution_stats(context) if not from_task else "",
+            "error": get_error_category(context) if dag_run.state == State.FAILED and not from_task else ""
+        }
     }
+    post_progress(message, from_task)
+
+
+def post_progress(message, from_task, backup=None):
+    """
+    If this function was called not from a task and we failed to send a request
+    when backup was true (by default it's always true) we need to guarantee that
+    message is not getting lost so we back it up into the Variable to be able to
+    resend it later. We don't backup not sent messages if user didn't add the
+    required connection in Airflow by catching AirflowNotFoundException.
+    """
+
+    backup = True if backup is None else backup
+
     try:
         http_hook.run(endpoint=ROUTES["progress"], json=message, extra_options={"timeout": 30})
     except AirflowNotFoundException as err:
         logging.debug(f"Failed to POST progress updates. Skipping \n {err}")
     except Exception as err:
         logging.debug(f"Failed to POST progress updates. \n {err}")
-        if not from_task and progress != 100:                        # we don't need to resend messages with progress == 100
+        if backup and not from_task and message["payload"]["progress"] != 100:                    # we don't need to resend messages with progress == 100
             logging.debug("Save the message into the Variables")
+            dag_id = message["payload"]["dag_id"]
+            run_id = message["payload"]["run_id"]
             Variable.set(
-                key=f"post_progress__{dag_run.dag_id}__{dag_run.run_id}",
+                key=f"post_progress__{dag_id}__{run_id}",
                 value={
                     "message": message,
                     "endpoint": ROUTES["progress"]
@@ -143,17 +139,14 @@ def post_progress(context, from_task=None):
             )
 
 
-def post_results(context):
+def report_results(context):
     """
     Results are collected from the task with id "CWLJobGatherer". We cannot use
     isinstance(task, CWLJobGatherer) to find the proper task because of the
     endless import loop (file where we define CWLJobGatherer class import this
     file). If CWLDAG is contsructed with custom gatherer node, posting results
     might not work. We need to except missing results file as the same callback
-    is used for clean_dag_run DAG. If we failed to send a request we need to
-    guarantee that message is not getting lost so we back it up into the Variable
-    to be able to resend it later. We don't backup not sent messages if user didn't
-    add the required connection in Airflow.
+    is used for clean_dag_run DAG.
     """
 
     dag_run = context["dag_run"]
@@ -165,43 +158,64 @@ def post_results(context):
     except Exception as err:
         logging.debug(f"Failed to read results. \n {err}")
     message = {
-        "payload": sign_with_jwt(
-            {
-                "dag_id": dag_run.dag_id,
-                "run_id": dag_run.run_id,
-                "results": results
-            }
-        )
+        "payload": {
+            "dag_id": dag_run.dag_id,
+            "run_id": dag_run.run_id,
+            "results": results
+        }
     }
+    post_results(message)
+        
+
+def post_results(message, backup=None):
+    """
+    If we failed to post results when backup was true (by default it's always true)
+    we need to guarantee that message is not getting lost so we back it up into the
+    Variable to be able to resend it later. We don't backup not sent messages if user
+    didn't add the required connection in Airflow by catching AirflowNotFoundException.
+    """
+
+    backup = True if backup is None else backup
+
     try:
         http_hook.run(endpoint=ROUTES["results"], json=message, extra_options={"timeout": 30})
     except AirflowNotFoundException as err:
         logging.debug(f"Failed to POST results. Skipping \n {err}")
     except Exception as err:
         logging.debug(f"Failed to POST results. Save the message into the Variables \n {err}")
-        Variable.set(
-            key=f"post_results__{dag_run.dag_id}__{dag_run.run_id}",
-            value={
-                "message": message,
-                "endpoint": ROUTES["results"]
-            },
-            serialize_json=True
-        )
+        if backup:
+            dag_id = message["payload"]["dag_id"]
+            run_id = message["payload"]["run_id"]
+            Variable.set(
+                key=f"post_results__{dag_id}__{run_id}",
+                value={
+                    "message": message,
+                    "endpoint": ROUTES["results"]
+                },
+                serialize_json=True
+            )
 
 
-def post_status(context):
+def report_status(context):
     dag_run = context["dag_run"]
     ti = context["ti"]
     message = {
-        "payload": sign_with_jwt(
-            {
-                "state": ti.state,
-                "dag_id": dag_run.dag_id,
-                "run_id": dag_run.run_id,
-                "task_id": ti.task_id
-            }
-        )
+        "payload": {
+            "state": ti.state,
+            "dag_id": dag_run.dag_id,
+            "run_id": dag_run.run_id,
+            "task_id": ti.task_id
+        }
     }
+    post_status(message)
+
+
+def post_status(message):
+    """
+    We don't need to backup not delivered status updates so we
+    don't save them in to Variables
+    """
+
     try:
         http_hook.run(endpoint=ROUTES["status"], json=message, extra_options={"timeout": 30})
     except Exception as err:
@@ -231,27 +245,27 @@ def clean_up(context):
 
 
 def task_on_success(context):
-    post_progress(context, True)
-    post_status(context)
+    report_progress(context, True)
+    report_status(context)
 
 
 def task_on_failure(context):
-    # no need to post progress as it hasn't been changed
-    post_status(context)
+    # no need to report progress as it hasn't been changed
+    report_status(context)
 
 
 def task_on_retry(context):
-    # no need to post progress as it hasn't been changed
-    post_status(context)
+    # no need to report progress as it hasn't been changed
+    report_status(context)
 
 
 def dag_on_success(context):
-    post_progress(context)
-    post_results(context)
+    report_progress(context)
+    report_results(context)
     clean_up(context)
 
 
 def dag_on_failure(context):
-    # we need to post progress, because we will also report error in it
-    post_progress(context)
+    # we need to report progress, because we will also report error in it
+    report_progress(context)
     clean_up(context)

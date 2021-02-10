@@ -99,7 +99,6 @@ setup(
         "cwltool==3.0.20200710214758",
         "cwltest==2.0.20200626112502",
         "jsonmerge",
-        "pyjwt",
         "connexion",
         "tornado",
         "docker",
