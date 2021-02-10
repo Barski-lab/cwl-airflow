@@ -139,7 +139,7 @@ def check_result(suite_data, results_queue):
 
 def load_test_suite(args):
     """
-    Loads tests from the provided --conformance file.
+    Loads tests from the provided --suite file.
     Selects tests based on the indices from --range.
     
     Updates tools locations to be absolute. Loads
@@ -152,8 +152,8 @@ def load_test_suite(args):
     test identification when receiving results.
     """
 
-    suite_data = load_yaml(args.conformance)
-    suite_dir = os.path.dirname(args.conformance)
+    suite_data = load_yaml(args.suite)
+    suite_dir = os.path.dirname(args.suite)
     suite_data_filtered = OrderedDict()                                       # use OrderedDict just to keep it similar to suite_data
     for i in args.range:
         test_data = suite_data[i]
@@ -312,7 +312,7 @@ def run_test_conformance(args):
 
     # TODO: do not forget to remove args.tmp
 
-    # Load conformance test suite data, setup a queue to keep results
+    # Load test suite data, setup a queue to keep results
     suite_data = load_test_suite(args)
     results_queue = queue.Queue(maxsize=len(suite_data))
 
