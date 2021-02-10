@@ -12,7 +12,8 @@ from cwl_airflow.utilities.helpers import (
 
 from cwl_airflow.components.api.server import run_api_server
 from cwl_airflow.components.init.config import run_init_config
-from cwl_airflow.components.test.conformance import run_test_conformance
+from cwl_airflow.components.test.mode import select_test_mode
+
 
 with CleanAirflowImport():
     from airflow.configuration import (
@@ -120,12 +121,18 @@ def get_parser():
         parents=[parent_parser],
         help="Run conformance tests"
     )
-    test_parser.set_defaults(func=run_test_conformance)
-    test_parser.add_argument(
-        "--suite", 
+    test_parser.set_defaults(func=select_test_mode)
+
+    test_mode_group = test_parser.add_mutually_exclusive_group(required=True)  # select between running conformance tests or simuating hacking attempts through progress, status, and results reports
+    test_mode_group.add_argument(
+        "--conformance",
         type=str,
-        required=True,
         help="Set path to the conformance test suite"
+    )
+    test_mode_group.add_argument(
+        "--vulnerability",
+        action="store_true",
+        help="Simulates hacking attempts through progress, status, and results reports"
     )
     test_parser.add_argument(
         "--tmp",
@@ -137,8 +144,10 @@ def get_parser():
         "--port", 
         type=int,
         default=3070,
-        help="Set port to listen for DAG results and status updates. \
+        help="For --conformance mode sets port to listen for DAG results and status updates. \
             Should correspond to the port from 'process_report' connection. \
+            For --vulnerability mode defines the port to send progress, status, and \
+            results reports on localhost. \
             Default: 3070"
     )
     test_parser.add_argument(
@@ -152,7 +161,7 @@ def get_parser():
         "--range", 
         type=str,
         help="Set test range to run, format 1,3-6,9. \
-            Order corresponds to the tests from --suite file, starting from 1. \
+            Order corresponds to the tests from --conformance file, starting from 1. \
             Default: run all tests"
     )
     test_parser.add_argument(
@@ -191,17 +200,18 @@ def assert_and_fix_args_for_init(args):
         args.config = get_airflow_config(args.home)
 
 
-def assert_and_fix_args_for_test(args):
+def assert_and_fix_args_for_conformance_test(args):
     """
-    Asserts, fixes and sets parameters from test parser.
+    Asserts, fixes and sets parameters from test parser
+    if --conformance was provided
 
     Tries to convert --range argument to a list of indices.
     If --range wasn't set or indices are not valid, set it
-    to include all tests from --suite. Dublicates are removed.
-    This function should never fail.
+    to include all tests from --conformance. Dublicates are
+    removed. This function should never fail.
     """
 
-    suite_data = load_yaml(args.suite)
+    suite_data = load_yaml(args.conformance)
     suite_len = len(suite_data)
     try:
         selected_indices = []
@@ -237,8 +247,10 @@ def assert_and_fix_args(args):
 
     if args.func == run_init_config:
         assert_and_fix_args_for_init(args)
-    elif args.func == run_test_conformance:
-        assert_and_fix_args_for_test(args)
+    elif args.func == select_test_mode and args.conformance:
+        assert_and_fix_args_for_conformance_test(args)
+    elif args.func == select_test_mode and args.vulnerability:
+        pass  # TODO: once needed, put here something like assert_and_fix_args_for_conformance_test      
     else:
         pass  # TODO: once needed, put here something like assert_and_fix_args_for_api
 
@@ -267,7 +279,8 @@ def parse_arguments(argsl, cwd=None):
             "embed",
             "upgrade",
             "combine",
-            "relative"
+            "relative",
+            "vulnerability"
         ],
         cwd
     )
