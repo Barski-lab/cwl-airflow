@@ -1,6 +1,8 @@
 # Real reports from the star-index workflow.
-# Correct reports order.
-# dag_id and run_id will be reported as they are written in this file
+# Wrong reports order. Sends results before the final progress report.
+# dag_id and run_id are omitted, so the will be replaced with
+# those values that were used when triggering DAG execution from
+# API
 
 - id: 1
   doc: "real status report for star-index pipeline sent from CWLJobDispatcher step"
@@ -8,8 +10,6 @@
   message:
     payload:
       state: "success"
-      dag_id: "star-index"
-      run_id: "8e0d19c5-f4b7-45ea-a41c-af54350dfa63"
       task_id: "CWLJobDispatcher"
 
 - id: 2
@@ -18,8 +18,6 @@
   message:
     payload:
       state: "running"
-      dag_id: "star-index"
-      run_id: "8e0d19c5-f4b7-45ea-a41c-af54350dfa63"
       progress: 33
       statistics: ""
       error: ""
@@ -32,8 +30,6 @@
   message:
     payload:
       state: "success"
-      dag_id: "star-index"
-      run_id: "8e0d19c5-f4b7-45ea-a41c-af54350dfa63"
       task_id: "star_generate_indices"
 
 - id: 4
@@ -42,8 +38,6 @@
   message:
     payload:
       state: "running"
-      dag_id: "star-index"
-      run_id: "8e0d19c5-f4b7-45ea-a41c-af54350dfa63"
       progress: 66
       statistics: ""
       error: ""
@@ -56,8 +50,6 @@
   message:
     payload:
       state: "success"
-      dag_id: "star-index"
-      run_id: "8e0d19c5-f4b7-45ea-a41c-af54350dfa63"
       task_id: "CWLJobGatherer"
 
 - id: 6
@@ -66,8 +58,6 @@
   message:
     payload:
       state: "running"
-      dag_id: "star-index"
-      run_id: "8e0d19c5-f4b7-45ea-a41c-af54350dfa63"
       progress: 100
       statistics: ""
       error: ""
@@ -75,45 +65,10 @@
     backup: false
 
 - id: 7
-  doc: "real progress for star-index pipeline sent from DAG"
-  category: "progress"
-  message:
-    payload:
-      state: "success"
-      dag_id: "star-index"
-      run_id: "8e0d19c5-f4b7-45ea-a41c-af54350dfa63"
-      progress: 100
-      statistics:
-        version: "1.0"
-        total:
-          tmp_folder_size: 3092168
-          outputs_folder_size: 1538044
-          start_date: "2021-02-10T21:55:08.173999+00:00"
-          end_date: 131.125
-        steps:
-          CWLJobDispatcher:
-            tmp_folder_size: 4
-            start_date: 78.543
-            end_date: 81.521
-          CWLJobGatherer:
-            tmp_folder_size: 0
-            start_date: 127.145
-            end_date: 129.541
-          star_generate_indices:
-            tmp_folder_size: 3092164
-            start_date: 83.94
-            end_date: 123.916
-      error: ""
-  params:
-    backup: false
-
-- id: 8
   doc: "real results for star-index pipeline sent from DAG"
   category: "results"
   message:
     payload:
-      dag_id: "star-index"
-      run_id: "8e0d19c5-f4b7-45ea-a41c-af54350dfa63"
       results:
         chrom_length_file:
           location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/chrNameLength.txt"
@@ -226,5 +181,36 @@
           class: "File"
           checksum: "sha1$432145514891cb23f2312c5e7792191d63ca6592"
           size: 763
+  params:
+    backup: false
+
+- id: 8
+  doc: "real progress for star-index pipeline sent from DAG"
+  category: "progress"
+  message:
+    payload:
+      state: "success"
+      progress: 100
+      statistics:
+        version: "1.0"
+        total:
+          tmp_folder_size: 3092168
+          outputs_folder_size: 1538044
+          start_date: "2021-02-10T21:55:08.173999+00:00"
+          end_date: 131.125
+        steps:
+          CWLJobDispatcher:
+            tmp_folder_size: 4
+            start_date: 78.543
+            end_date: 81.521
+          CWLJobGatherer:
+            tmp_folder_size: 0
+            start_date: 127.145
+            end_date: 129.541
+          star_generate_indices:
+            tmp_folder_size: 3092164
+            start_date: 83.94
+            end_date: 123.916
+      error: ""
   params:
     backup: false
