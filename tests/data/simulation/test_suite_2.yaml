@@ -1,6 +1,6 @@
 # Real reports from the star-index workflow.
 # Correct reports order.
-# dag_id and run_id are omitted, so the will be replaced with
+# dag_id and run_id are omitted, so they will be replaced with
 # those values that were used when triggering DAG execution from
 # API
 

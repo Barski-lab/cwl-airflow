@@ -1,6 +1,6 @@
 # Real reports from the star-index workflow.
 # Wrong reports order. Sends results before the final progress report.
-# dag_id and run_id are omitted, so the will be replaced with
+# dag_id and run_id are omitted, so they will be replaced with
 # those values that were used when triggering DAG execution from
 # API
 

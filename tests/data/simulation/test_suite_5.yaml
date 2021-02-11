@@ -1,6 +1,6 @@
 # Malformed statistics report from the star-index workflow.
 # Use array instead of object.
-# dag_id and run_id are omitted, so the will be replaced with
+# dag_id and run_id are omitted, so they will be replaced with
 # those values that were used when triggering DAG execution from
 # API
 
