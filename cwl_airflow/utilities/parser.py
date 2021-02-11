@@ -86,6 +86,12 @@ def get_parser():
         default="127.0.0.1",
         help="Set host to run API server. Default: 127.0.0.1"
     )
+    api_parser.add_argument(
+        "--simulation",
+        type=str,
+        help="Set path to the test suite file to simulate reports. \
+            Pipelines won't be triggered in this mode"
+    )
 
     # Init
     init_parser = subparsers.add_parser(

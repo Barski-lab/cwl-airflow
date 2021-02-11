@@ -13,7 +13,7 @@ def run_api_server(args):
         specification_dir="openapi",
         server="tornado"
     )
-    backend = CWLApiBackend()
+    backend = CWLApiBackend(args.simulation)
     app.add_api(
         specification="swagger_configuration.yaml",
         resolver=Resolver(lambda x: getattr(backend, x))
