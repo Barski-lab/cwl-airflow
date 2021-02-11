@@ -20,7 +20,6 @@
       statistics: ""
       error: ""
   params:
-    from_task: true
     backup: false
 
 - id: 3
@@ -45,7 +44,6 @@
       statistics: ""
       error: ""
   params:
-    from_task: true
     backup: false
 
 - id: 5
@@ -70,7 +68,6 @@
       statistics: ""
       error: ""
   params:
-    from_task: true
     backup: false
 
 - id: 7
@@ -104,7 +101,6 @@
             end_date: 123.916
       error: ""
   params:
-    from_task: false
     backup: false
 
 - id: 8

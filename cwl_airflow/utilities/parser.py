@@ -90,7 +90,7 @@ def get_parser():
         "--simulation",
         type=str,
         help="Set path to the test suite file to simulate reports. \
-            Pipelines won't be triggered in this mode"
+            Pipelines won't get triggered in this mode"
     )
 
     # Init
