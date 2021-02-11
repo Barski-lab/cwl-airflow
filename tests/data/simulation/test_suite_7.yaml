@@ -1,9 +1,8 @@
-# Updating outputs for the wrong sample by its _id
-# 
+# Updating outputs of the wrong sample by its _id.
 # dag_id is omitted, so it will be replaced with the values
 # that was used when triggering DAG execution from API, but
 # run_id is set from the other sample that already exists
-# in the databse
+# in the database
 
 - id: 7
   doc: "Malformed results for star-index pipeline sent from DAG"
