@@ -5,6 +5,7 @@ import logging
 from airflow.models import Variable
 from airflow.utils.state import State
 from airflow.hooks.http_hook import HttpHook
+from airflow.utils.session import create_session
 from airflow.configuration import conf
 from airflow.exceptions import AirflowNotFoundException
 
@@ -24,6 +25,24 @@ ROUTES = {
 
 
 http_hook = HttpHook(method="POST", http_conn_id=CONN_ID)  # won't fail even if CONN_ID doesn't exist
+
+
+def resend_reports():
+    with create_session() as session:
+        for var in session.query(Variable):
+            if any(prefix in var.key for prefix in ["post_progress__", "post_results__"]):
+                logging.debug(f"Retreive {var.key} from Variables")
+                value = Variable.get(key=var.key, deserialize_json=True)
+                try:
+                    http_hook.run(
+                        endpoint=value["endpoint"],
+                        json=value["message"],
+                        extra_options={"timeout": 30}  # need to have timeout otherwise may get stuck forever
+                    )
+                    Variable.delete(key=var.key)
+                    logging.debug(f"Value from {var.key} variable has been successfully sent")
+                except Exception as err:
+                    logging.debug(f"Failed to POST value from {var.key} variable. Will retry in the next run \n {err}")
 
 
 def get_error_category(context):
