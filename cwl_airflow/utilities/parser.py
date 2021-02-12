@@ -86,6 +86,20 @@ def get_parser():
         default="127.0.0.1",
         help="Set host to run API server. Default: 127.0.0.1"
     )
+    api_parser.add_argument(
+        "--simulation",
+        type=str,
+        help="Set path to the test suite file to simulate reports. \
+            Pipelines won't get triggered in this mode"
+    )
+    api_parser.add_argument(
+        "--replay",
+        type=int,
+        help="Retries to post undelivered progress and results reports \
+            to the process_report connection every N seconds. \
+            If connection is not set this parameter is ignored. \
+            Default: do not resend not delivered reports"
+    )
 
     # Init
     init_parser = subparsers.add_parser(
@@ -267,7 +281,8 @@ def parse_arguments(argsl, cwd=None):
             "embed",
             "upgrade",
             "combine",
-            "relative"
+            "relative",
+            "replay"
         ],
         cwd
     )

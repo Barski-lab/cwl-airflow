@@ -23,11 +23,13 @@ from airflow.utils.timezone import parse as parsedate
 from airflow.utils.db import provide_session
 from airflow.utils.types import DagRunType
 
+from cwl_airflow.utilities.simulation import run_workflow_execution_simulation
 from cwl_airflow.utilities.helpers import (
     get_version,
     get_dir,
     get_compressed,
-    get_md5_sum
+    get_md5_sum,
+    load_yaml
 )
 from cwl_airflow.utilities.cwl import (
     conf_get,
@@ -68,12 +70,20 @@ class CWLApiBackend():
     # curl -X POST "127.0.0.1:8081/api/experimental/wes/runs" -H "accept: application/json" -H "Content-Type: multipart/form-data" -F "workflow_attachment[]=@custom-bash.cwl"
 
 
-    def __init__(self):
+    def __init__(self, simulated_reports_location=None):
         get_dir(DAGS_FOLDER)
+        self.simulation_mode = False  # when set to True, will bypass execution of post_dag_runs and post_dags_dag_runs functions
         self.include_examples = False
         self.dag_template_with_tmp_folder = "#!/usr/bin/env python3\nfrom cwl_airflow import CWLDAG, CWLJobDispatcher, CWLJobGatherer\ndag = CWLDAG(cwl_workflow='{0}', dag_id='{1}', default_args={{'tmp_folder':'{2}'}})\ndag.create()\ndag.add(CWLJobDispatcher(dag=dag), to='top')\ndag.add(CWLJobGatherer(dag=dag), to='bottom')"
         self.wes_state_conversion = {"running": "RUNNING", "success": "COMPLETE", "failed": "EXECUTOR_ERROR"}
         self.validated_dags = {}  # stores dags' content md5 checksums as keys and one of the statuses ["checking", "success", "error"] as values
+        if simulated_reports_location is not None:
+            try:
+                self.suite_data = load_yaml(simulated_reports_location)
+                self.simulation_mode = True
+                logging.info(f"Running simulation mode from the {simulated_reports_location}")
+            except Exception as err:
+                logging.error(f"Failed to load simulation data from {simulated_reports_location} \n {err}")
 
 
     def get_dags(self, dag_ids=[]):
@@ -130,28 +140,34 @@ class CWLApiBackend():
     def post_dag_runs(self, dag_id, run_id=None, conf=None):
         logging.info(f"Call post_dag_runs with dag_id={dag_id}, run_id={run_id}, conf={conf}")
         conf = "{\"job\":{}}" if conf is None else conf
-        try:
-            dagrun = self.trigger_dag(dag_id, run_id, conf)
-            return {"dag_id": dagrun.dag_id,
-                    "run_id": dagrun.run_id,
-                    "execution_date": dagrun.execution_date,
-                    "start_date": dagrun.start_date,
-                    "state": dagrun.state}
-        except Exception as err:
-            logging.error(f"Failed to call post_dag_runs {err}")
-            return connexion.problem(500, "Failed to create dag_run", str(err))
+        if not self.simulation_mode:
+            try:
+                dagrun = self.trigger_dag(dag_id, run_id, conf)
+                return {"dag_id": dagrun.dag_id,
+                        "run_id": dagrun.run_id,
+                        "execution_date": dagrun.execution_date,
+                        "start_date": dagrun.start_date,
+                        "state": dagrun.state}
+            except Exception as err:
+                logging.error(f"Failed to call post_dag_runs {err}")
+                return connexion.problem(500, "Failed to create dag_run", str(err))
+        else:
+            return run_workflow_execution_simulation(self.suite_data, dag_id, run_id)
 
 
     def post_dags_dag_runs(self, dag_id, run_id, conf=None):
         logging.info(f"Call post_dags_dag_runs with dag_id={dag_id}, run_id={run_id}, conf={conf}")
-        conf = "{\"job\":{}}" if conf is None else conf
-        self.post_dags(dag_id)
-        clean_up_dag_run(
-            dag_id=dag_id,
-            run_id=run_id,
-            kill_timeout=3  # use shorter timeout for killing runnign tasks
-        )                   # should wait untill it finish running, as we can't trigger the same DAG with the same run_id
-        return self.post_dag_runs(dag_id, run_id, conf)
+        conf = "{\"job\":{}}" if conf is None else conf    # safety measure if conf wasn't provided
+        if not self.simulation_mode:
+            self.post_dags(dag_id)
+            clean_up_dag_run(
+                dag_id=dag_id,
+                run_id=run_id,
+                kill_timeout=3  # use shorter timeout for killing running tasks
+            )                   # should wait untill it finish running, as we can't trigger the same DAG with the same run_id
+            return self.post_dag_runs(dag_id, run_id, conf)
+        else:
+            return run_workflow_execution_simulation(self.suite_data, dag_id, run_id)
 
 
     def post_dag_runs_legacy(self, dag_id):

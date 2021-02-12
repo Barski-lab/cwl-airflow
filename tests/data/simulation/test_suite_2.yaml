@@ -1,0 +1,216 @@
+# Real reports from the star-index workflow.
+# Correct reports order.
+# dag_id and run_id are omitted, so they will be replaced with
+# those values that were used when triggering DAG execution from
+# API
+
+- id: 1
+  doc: "real status report for star-index pipeline sent from CWLJobDispatcher step"
+  category: "status"
+  message:
+    payload:
+      state: "success"
+      task_id: "CWLJobDispatcher"
+
+- id: 2
+  doc: "real progress for star-index pipeline sent from CWLJobDispatcher step"
+  category: "progress"
+  message:
+    payload:
+      state: "running"
+      progress: 33
+      statistics: ""
+      error: ""
+  params:
+    backup: false
+
+- id: 3
+  doc: "real status report for star-index pipeline sent from star_generate_indices step"
+  category: "status"
+  message:
+    payload:
+      state: "success"
+      task_id: "star_generate_indices"
+
+- id: 4
+  doc: "real progress for star-index pipeline sent from star_generate_indices step"
+  category: "progress"
+  message:
+    payload:
+      state: "running"
+      progress: 66
+      statistics: ""
+      error: ""
+  params:
+    backup: false
+
+- id: 5
+  doc: "real status report for star-index pipeline sent from CWLJobGatherer step"
+  category: "status"
+  message:
+    payload:
+      state: "success"
+      task_id: "CWLJobGatherer"
+
+- id: 6
+  doc: "real progress for star-index pipeline sent from CWLJobGatherer step"
+  category: "progress"
+  message:
+    payload:
+      state: "running"
+      progress: 100
+      statistics: ""
+      error: ""
+  params:
+    backup: false
+
+- id: 7
+  doc: "real progress for star-index pipeline sent from DAG"
+  category: "progress"
+  message:
+    payload:
+      state: "success"
+      progress: 100
+      statistics:
+        version: "1.0"
+        total:
+          tmp_folder_size: 3092168
+          outputs_folder_size: 1538044
+          start_date: "2021-02-10T21:55:08.173999+00:00"
+          end_date: 131.125
+        steps:
+          CWLJobDispatcher:
+            tmp_folder_size: 4
+            start_date: 78.543
+            end_date: 81.521
+          CWLJobGatherer:
+            tmp_folder_size: 0
+            start_date: 127.145
+            end_date: 129.541
+          star_generate_indices:
+            tmp_folder_size: 3092164
+            start_date: 83.94
+            end_date: 123.916
+      error: ""
+  params:
+    backup: false
+
+- id: 8
+  doc: "real results for star-index pipeline sent from DAG"
+  category: "results"
+  message:
+    payload:
+      results:
+        chrom_length_file:
+          location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/chrNameLength.txt"
+          basename: "chrNameLength.txt"
+          nameroot: "chrNameLength"
+          nameext: ".txt"
+          class: "File"
+          checksum: "sha1$a88ca947e71c1df79a066231188baf9b12a42839"
+          size: 13
+        indices_folder:
+          location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices"
+          basename: "star_indices"
+          nameroot: "star_indices"
+          nameext: ""
+          class: "Directory"
+          listing:
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/chrStart.txt"
+            basename: "chrStart.txt"
+            checksum: "sha1$e7d5943b1935016596245ae5b92d9f7753c8024f"
+            size: 10
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/chrNameLength.txt"
+            basename: "chrNameLength.txt"
+            checksum: "sha1$a88ca947e71c1df79a066231188baf9b12a42839"
+            size: 13
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/chrLength.txt"
+            basename: "chrLength.txt"
+            checksum: "sha1$3290b01acd24d637a79bb152d19f282ec2656c96"
+            size: 8
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/sjdbList.fromGTF.out.tab"
+            basename: "sjdbList.fromGTF.out.tab"
+            checksum: "sha1$05f178b691dc52f26a21d4972ac1b4d055f506b3"
+            size: 29565
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/exonInfo.tab"
+            basename: "exonInfo.tab"
+            checksum: "sha1$1988a84da386207c3530b591706d238eeda3083f"
+            size: 45281
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/sjdbList.out.tab"
+            basename: "sjdbList.out.tab"
+            checksum: "sha1$3c44a5e9e93706ce5693c2c0e616584ea11bab55"
+            size: 19133
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/SAindex"
+            basename: "SAindex"
+            checksum: "sha1$8d53f84e161d02a5b0e54116290cfe0a0a229b82"
+            size: 1565873619
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/chrName.txt"
+            basename: "chrName.txt"
+            checksum: "sha1$68d9aa7a68656619041a22fb54a1f6792ba0af7c"
+            size: 5
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/Log.out"
+            basename: "Log.out"
+            checksum: "sha1$a62fcd69a0536c49068ea3d65fa45fab2ed1bbc9"
+            size: 4585
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/geneInfo.tab"
+            basename: "geneInfo.tab"
+            checksum: "sha1$f1fb4df05b59b8cfcc72d44cf7ed99095b5e8001"
+            size: 12700
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/SA"
+            basename: "SA"
+            checksum: "sha1$5745cf2255284111993db0d2f2779a2417beee7d"
+            size: 7047801
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/sjdbInfo.txt"
+            basename: "sjdbInfo.txt"
+            checksum: "sha1$8a3ac69041200c11bfa24412cbaf5965ee25b029"
+            size: 20033
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/exonGeTrInfo.tab"
+            basename: "exonGeTrInfo.tab"
+            checksum: "sha1$571244fe981ec3c513f83444d3f9639ac3dec3ff"
+            size: 74437
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/transcriptInfo.tab"
+            basename: "transcriptInfo.tab"
+            checksum: "sha1$aeb95563c22a73b15401f37669236d3bfdc3d7b5"
+            size: 14961
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/Genome"
+            basename: "Genome"
+            checksum: "sha1$0c2578cf07e7bfb13fb7c802f97067d0e3941744"
+            size: 1752156
+          - class: "File"
+            location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_indices/genomeParameters.txt"
+            basename: "genomeParameters.txt"
+            checksum: "sha1$56a30583300d28f36c9ea364ea3610beb00158dc"
+            size: 803
+        stderr_log:
+          location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_build_stderr.log"
+          basename: "star_build_stderr.log"
+          nameroot: "star_build_stderr"
+          nameext: ".log"
+          class: "File"
+          checksum: "sha1$efea3c4ac6415d2a7fe83feed72ba8f55f32bd06"
+          size: 195
+        stdout_log:
+          location: "file:///var/folders/sd/41rg42_16q72_2yzl_vvgsbw0000gn/T/tmp9atnnk6_/8e0d19c5-f4b7-45ea-a41c-af54350dfa63/star_build_stdout.log"
+          basename: "star_build_stdout.log"
+          nameroot: "star_build_stdout"
+          nameext: ".log"
+          class: "File"
+          checksum: "sha1$432145514891cb23f2312c5e7792191d63ca6592"
+          size: 763
+  params:
+    backup: false

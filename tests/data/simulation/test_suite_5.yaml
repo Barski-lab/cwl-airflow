@@ -1,0 +1,36 @@
+# Malformed statistics report from the star-index workflow.
+# Use array instead of object.
+# dag_id and run_id are omitted, so they will be replaced with
+# those values that were used when triggering DAG execution from
+# API
+
+- id: 1
+  doc: "malformed progress for star-index pipeline sent from DAG"
+  category: "progress"
+  message:
+    payload:
+      state: "success"
+      progress: 100
+      statistics:
+      - version: "1.0"
+      - total:
+          tmp_folder_size: 3092168
+          outputs_folder_size: 1538044
+          start_date: "2021-02-10T21:55:08.173999+00:00"
+          end_date: 131.125
+      - steps:
+          CWLJobDispatcher:
+            tmp_folder_size: 4
+            start_date: 78.543
+            end_date: 81.521
+          CWLJobGatherer:
+            tmp_folder_size: 0
+            start_date: 127.145
+            end_date: 129.541
+          star_generate_indices:
+            tmp_folder_size: 3092164
+            start_date: 83.94
+            end_date: 123.916
+      error: ""
+  params:
+    backup: false

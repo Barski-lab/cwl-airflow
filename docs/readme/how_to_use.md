@@ -21,10 +21,10 @@ optional arguments:
 
 **Init command will run the following steps** for the specified `--home` and `--config` parameters:
 - Call `airflow --help` to create a default `airflow.cfg`
-- Update `airflow.cfg` to hide paused DAGs, skip loading example DAGs and connections and **do not** pause newly created DAGs. Also, we set our custom `logging_config_class` to split Airflow and CWL related logs into the separate files. In case of upgrading from the previous version of CWL-Airflow that used Airflow < 2.0.0 to the latest one, `airflow.cfg` will be backuped and upgraded to fit Airflow 2.0.0. You will have to manually make sure that all custom fields were properly copied to the new `airflow.cfg`
+- Update `airflow.cfg` to hide paused DAGs, skip loading example DAGs and connections and **do not** pause newly created DAGs. Also, we set our custom `logging_config_class` to split Airflow and CWL related logs into the separate files. In case of upgrading from the previous version of CWL-Airflow that used Airflow < 2.0.0 to the latest one, `airflow.cfg` will be backuped and upgraded to fit Airflow 2.0.1. You will have to manually make sure that all custom fields were properly copied to the new `airflow.cfg`
 - Call `airflow db init` to init/upgrade Airflow metadata database.
 - If run with `--upgrade`, upgrade old CWLDAGs to correspond to the latest format, save original CWLDAGs into `deprecated_dags` folder.
-- Put **clean_dag_run.py** and **resend_results.py** into the DAGs folder.
+- Put **clean_dag_run.py** into the DAGs folder.
 
 ## Updating airflow.cfg
 
@@ -127,7 +127,7 @@ To make CWL-Airflow **post workflow executions progress, statistics and results*
 ```sh
 $ airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070
 ```
-In case CWL-Airflow failed to POST progress updates or workflow execution results, the corresponded records with the prefixes `post_progress` and `post_results` will be added to the Airflow Variables. Later, if unpaused, `resend_results` DAG will attemt to deliver them every 10 min.
+In case CWL-Airflow failed to POST progress updates or workflow execution results, the corresponded records with the prefixes `post_progress__` and `post_results__` will be added to the Airflow Variables. Later, when CWL-Airlfow API run with `--replay N` argument, it will attemt to resend not delivered messages every N seconds.
 Workflow execution statistics is sent as part of the progress report at the end of the pipeline execution regardless of whether it finished with success or failure. If progress report is sent from the task, the statistics will be set to "".
 
 On the example below, the workflow execution statistics includes `total` section with the `start_date` in isoformat. This timestamp will be used as a reference point for all other `start_date` and `end_date` fields which are represented in `seconds.milliseconds` format. All `tmp_folder_size` and `outputs_folder_size` are in kBytes.
@@ -187,6 +187,14 @@ optional arguments:
   -h, --help   show this help message and exit
   --port PORT  Set port to run API server. Default: 8081
   --host HOST  Set host to run API server. Default: 127.0.0.1
+  --simulation SIMULATION
+               Set path to the test suite file to simulate reports.
+               Pipelines won't get triggered in this mode.
+  --replay     REPLAY
+               Retries to post undelivered progress and results reports to
+               the process_report connection every N seconds. If connection
+               is not set this parameter is ignored.
+               Default: do not resend not delivered reports.
 ```
 
 Although, **detailed API specification** available on [SwaggerHub](https://app.swaggerhub.com/apis/michael-kotliar/cwl_airflow_workflow_execution_service/1.0.1), here we provide the **most commonly used endpoints**.

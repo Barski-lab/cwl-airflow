@@ -1,0 +1,96 @@
+# Real reports from the star-index workflow.
+# Wrong reports order. Missing results report.
+# dag_id and run_id are omitted, so they will be replaced with
+# those values that were used when triggering DAG execution from
+# API
+
+- id: 1
+  doc: "real status report for star-index pipeline sent from CWLJobDispatcher step"
+  category: "status"
+  message:
+    payload:
+      state: "success"
+      task_id: "CWLJobDispatcher"
+
+- id: 2
+  doc: "real progress for star-index pipeline sent from CWLJobDispatcher step"
+  category: "progress"
+  message:
+    payload:
+      state: "running"
+      progress: 33
+      statistics: ""
+      error: ""
+  params:
+    backup: false
+
+- id: 3
+  doc: "real status report for star-index pipeline sent from star_generate_indices step"
+  category: "status"
+  message:
+    payload:
+      state: "success"
+      task_id: "star_generate_indices"
+
+- id: 4
+  doc: "real progress for star-index pipeline sent from star_generate_indices step"
+  category: "progress"
+  message:
+    payload:
+      state: "running"
+      progress: 66
+      statistics: ""
+      error: ""
+  params:
+    backup: false
+
+- id: 5
+  doc: "real status report for star-index pipeline sent from CWLJobGatherer step"
+  category: "status"
+  message:
+    payload:
+      state: "success"
+      task_id: "CWLJobGatherer"
+
+- id: 6
+  doc: "real progress for star-index pipeline sent from CWLJobGatherer step"
+  category: "progress"
+  message:
+    payload:
+      state: "running"
+      progress: 100
+      statistics: ""
+      error: ""
+  params:
+    backup: false
+
+- id: 7
+  doc: "real progress for star-index pipeline sent from DAG"
+  category: "progress"
+  message:
+    payload:
+      state: "success"
+      progress: 100
+      statistics:
+        version: "1.0"
+        total:
+          tmp_folder_size: 3092168
+          outputs_folder_size: 1538044
+          start_date: "2021-02-10T21:55:08.173999+00:00"
+          end_date: 131.125
+        steps:
+          CWLJobDispatcher:
+            tmp_folder_size: 4
+            start_date: 78.543
+            end_date: 81.521
+          CWLJobGatherer:
+            tmp_folder_size: 0
+            start_date: 127.145
+            end_date: 129.541
+          star_generate_indices:
+            tmp_folder_size: 3092164
+            start_date: 83.94
+            end_date: 123.916
+      error: ""
+  params:
+    backup: false

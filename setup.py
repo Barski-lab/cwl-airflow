@@ -63,7 +63,7 @@ EXTRAS_REQUIRE = {
         "vine~=1.3"
     ],
     "mysql": [
-        "mysql-connector-python>=8.0.11, <=8.0.18",
+        "mysql-connector-python>=8.0.11, <=8.0.22",
         "mysqlclient>=1.3.6,<1.4"
     ],
     "statsd": [
@@ -95,11 +95,10 @@ setup(
     ),
     extras_require=EXTRAS_REQUIRE,
     install_requires=[
-        "apache-airflow==2.0.0",
+        "apache-airflow==2.0.1",
         "cwltool==3.0.20200710214758",
         "cwltest==2.0.20200626112502",
         "jsonmerge",
-        "pyjwt",
         "connexion",
         "tornado",
         "docker",
