@@ -187,6 +187,9 @@ optional arguments:
   -h, --help   show this help message and exit
   --port PORT  Set port to run API server. Default: 8081
   --host HOST  Set host to run API server. Default: 127.0.0.1
+  --simulation SIMULATION
+               Set path to the test suite file to simulate reports.
+               Pipelines won't get triggered in this mode.
 ```
 
 Although, **detailed API specification** available on [SwaggerHub](https://app.swaggerhub.com/apis/michael-kotliar/cwl_airflow_workflow_execution_service/1.0.1), here we provide the **most commonly used endpoints**.
