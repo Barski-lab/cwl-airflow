@@ -206,7 +206,7 @@ def copy_dags(args, source_folder=None):
         source_folder = os.path.join(
             os.path.dirname(
                 os.path.abspath(
-                    os.path.join(__file__, "../../")     
+                    os.path.join(__file__, "../../")
                 )
             ), 
             "extensions/dags",

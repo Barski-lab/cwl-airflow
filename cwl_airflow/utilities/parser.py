@@ -1,6 +1,6 @@
 import argparse
 
-from os import environ, getcwd
+from os import environ, getcwd, path
 from tempfile import mkdtemp
 
 from cwl_airflow.utilities.helpers import (
@@ -89,8 +89,11 @@ def get_parser():
     api_parser.add_argument(
         "--simulation",
         type=str,
+        nargs="?",                                                          #  0 or 1 argument
+        const=path.abspath(path.join(__file__, "../../data/default_simulation_suite.yaml")),
         help="Set path to the test suite file to simulate reports. \
-            Pipelines won't get triggered in this mode"
+            Pipelines won't get triggered in this mode. \
+            Default: real reports from the star-index workflow"
     )
     api_parser.add_argument(
         "--replay",

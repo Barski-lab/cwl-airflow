@@ -1,2 +1,3 @@
 include cwl_airflow/git_version
 include cwl_airflow/components/api/openapi/swagger_configuration.yaml
+include cwl_airflow/data/default_simulation_suite.yaml
