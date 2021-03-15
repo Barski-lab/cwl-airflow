@@ -33,10 +33,11 @@ from cwl_airflow.utilities.cwl import (
 
 def get_listener_thread(                                       # safe to kill when run as daemon
     results_queue,
+    host,
     port,
     daemon
 ):
-    httpd = socketserver.TCPServer(("127.0.0.1", port), CustomHandler)
+    httpd = socketserver.TCPServer((host, port), CustomHandler)
     httpd.results_queue = results_queue                        # to have access to results_queue from CustomHandler through self.server.results_queue
     return threading.Thread(
         target=httpd.serve_forever,
@@ -325,6 +326,7 @@ def run_test_conformance(args):
     # we trigger DAGs. "results_queue" is thread safe
     listener = get_listener_thread(
         results_queue=results_queue,
+        host=args.host,
         port=args.port,
         daemon=True
     )

@@ -151,6 +151,13 @@ def get_parser():
         help="Set path to the temp folder. Default: /tmp"
     )
     test_parser.add_argument(
+        "--host", 
+        type=str,
+        default="127.0.0.1",
+        help="Set host to listen for DAG results and status updates. \
+            Default: 127.0.0.1"
+    )
+    test_parser.add_argument(
         "--port", 
         type=int,
         default=3070,
