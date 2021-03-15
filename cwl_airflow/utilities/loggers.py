@@ -22,7 +22,10 @@ def setup_cwl_logger(ti, level=None):
             pass
     cwl_logger.setLevel(level)
 
-    less_verbose(level="ERROR")
+    less_verbose(
+        loggers=["rdflib.term", "salad", "requests", "urllib3"],
+        level="ERROR"
+    )
 
 
 def less_verbose(loggers=None, level=None):
@@ -30,7 +33,7 @@ def less_verbose(loggers=None, level=None):
     For a list of loggers sets desired level
     """
 
-    loggers = ["rdflib.term", "salad", "requests", "urllib3"] if loggers is None else loggers
+    loggers = ["cwltool", "rdflib.term", "salad", "requests", "urllib3"] if loggers is None else loggers
     level = "FATAL" if level is None else level
 
     for logger_name in loggers:
