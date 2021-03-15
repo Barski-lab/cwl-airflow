@@ -22,7 +22,17 @@ def setup_cwl_logger(ti, level=None):
             pass
     cwl_logger.setLevel(level)
 
-    loggers_to_suppress = ["rdflib.term", "salad", "requests", "urllib3"]
-    for logger_name in loggers_to_suppress:
+    less_verbose(level="ERROR")
+
+
+def less_verbose(loggers=None, level=None):
+    """
+    For a list of loggers sets desired level
+    """
+
+    loggers = ["rdflib.term", "salad", "requests", "urllib3"] if loggers is None else loggers
+    level = "FATAL" if level is None else level
+
+    for logger_name in loggers:
         logger = logging.getLogger(logger_name)
-        logger.setLevel("ERROR")
+        logger.setLevel(level)

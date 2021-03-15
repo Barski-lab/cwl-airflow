@@ -1,5 +1,14 @@
 #!/bin/bash
 
+
+# Tool runs conformance tests from the provided repository's URL
+# and path to the conformance.yaml file using docker-compose.
+# All temporary data is kept in the ./temp folder which is cleaned
+# before running the tests. If this script was stopped with Ctrl+C,
+# docker containers started by docker-compose may still keep running.
+# Use `docker-compose -f FILE down` command to stop them.
+
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 REPO_URL=$1
@@ -63,3 +72,10 @@ local_executor_scheduler \
 cwl-airflow test --api "http://apiserver:${CWL_AIRFLOW_API_PORT}" \
 --host 0.0.0.0 --port "${PROCESS_REPORT_PORT}" \
 --suite "${AIRFLOW_HOME}/${REPO_FOLDER}/${SUITE}" 2> "${AIRFLOW_HOME}/${REPO_FOLDER}.report"
+
+EXIT_CODE=`echo $?`  # to keep exit code while we are stoping docker-compose
+
+echo "Stoping running docker containers"
+docker-compose -f ${DOCKER_COMPOSE_FILE} down
+
+exit ${EXIT_CODE}

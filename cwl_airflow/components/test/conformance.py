@@ -16,6 +16,7 @@ from collections import OrderedDict
 from cwltest.utils import compare, CompareFail
 from http.server import SimpleHTTPRequestHandler
 
+from cwl_airflow.utilities.loggers import less_verbose
 from cwl_airflow.utilities.helpers import (
     load_yaml,
     get_dir,
@@ -312,6 +313,8 @@ def run_test_conformance(args):
     """
 
     # TODO: do not forget to remove args.tmp
+
+    less_verbose()
 
     # Load test suite data, setup a queue to keep results
     suite_data = load_test_suite(args)
