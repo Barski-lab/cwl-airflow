@@ -36,7 +36,7 @@ RUN apt-get update && \
     git clone ${CWL_AIRFLOW_URL}                                                            && \
     cd cwl-airflow                                                                          && \
     git checkout ${CWL_AIRFLOW_VERSION}                                                     && \
-    pip3 install ".[mysql,crypto]" --constraint ./packaging/constraints/constraints-3.8.txt && \
+    pip3 install ".[mysql]" --constraint ./packaging/constraints/constraints-3.8.txt && \
     cd ..                                                                                   && \
     rm -rf cwl-airflow                                                                      && \
     # cleaning up

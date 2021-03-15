@@ -54,7 +54,7 @@ jobs:
     - pip install . --constraint ./packaging/constraints/constraints-$TRAVIS_PYTHON_VERSION.txt
     before_script:    # to overwrite from the main config
     - echo "Skip"
-    script: ./tests/run_tests.sh
+    script: ./tests/run_unit_tests.sh
     after_success:
     - coveralls
     deploy:

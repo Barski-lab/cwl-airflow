@@ -38,7 +38,7 @@ services:
         privileged: true                                               # maybe I don't actully need it here
         restart: always
         <<: *airflow_env_var
-        command: bash -c "EXIT_CODE=1 && while [ $$EXIT_CODE -ne 0 ]; do (airflow checkdb); EXIT_CODE=$$?; sleep 5; done && cwl-airflow init --upgrade && airflow scheduler"
+        command: bash -c "EXIT_CODE=1 && while [ $$EXIT_CODE -ne 0 ]; do (airflow db check); EXIT_CODE=$$?; sleep 5; done && cwl-airflow init --upgrade && airflow scheduler"
         depends_on:
             - mysql
 
@@ -67,7 +67,7 @@ services:
         <<: *airflow_volumes        
         <<: *airflow_env_var
         restart: always
-        command: bash -c "EXIT_CODE=1 && while [ $$EXIT_CODE -ne 0 ]; do (mysql -h mysql -u ${MYSQL_USER} -p${MYSQL_PASSWORD} -e 'select * from ${MYSQL_DATABASE}.dag_run'); EXIT_CODE=$$?; sleep 5; done && cwl-airflow api --host 0.0.0.0"
+        command: bash -c "EXIT_CODE=1 && while [ $$EXIT_CODE -ne 0 ]; do (mysql -h mysql -u ${MYSQL_USER} -p${MYSQL_PASSWORD} -e 'select * from ${MYSQL_DATABASE}.dag_run'); EXIT_CODE=$$?; sleep 5; done && cwl-airflow api --replay 60 --host 0.0.0.0"
         depends_on:
             - scheduler  # need to start only after cwl-airflow init was run
 
