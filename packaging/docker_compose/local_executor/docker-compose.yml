@@ -5,6 +5,7 @@ x-aliases:  # if it starts with x- it's ignored by docker-compose
     - &airflow_env_var
         environment:
             - AIRFLOW_HOME=${AIRFLOW_HOME}
+            - PROCESS_REPORT_URL=${PROCESS_REPORT_URL}
             - AIRFLOW__CORE__EXECUTOR=LocalExecutor
             - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
             - AIRFLOW__CORE__DAGS_FOLDER=${AIRFLOW_HOME}/dags

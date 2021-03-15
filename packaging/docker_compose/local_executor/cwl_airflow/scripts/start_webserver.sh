@@ -1,10 +1,10 @@
 #!/bin/bash
 
 echo "Set parameters from the environment variables or apply defaults"
-: "${AIRFLOW_HOME:=airflow}"
-: "${MYSQL_USER:=airflow}"
-: "${MYSQL_PASSWORD:=airflow}"
-: "${MYSQL_DATABASE:=airflow}"
+: ${AIRFLOW_HOME:=airflow}
+: ${MYSQL_USER:=airflow}
+: ${MYSQL_PASSWORD:=airflow}
+: ${MYSQL_DATABASE:=airflow}
 
 echo "Wait until required database and tables are ready"
 until mysql -h mysql -u ${MYSQL_USER} -p${MYSQL_PASSWORD} -e "select * from ${MYSQL_DATABASE}.dag_run"
