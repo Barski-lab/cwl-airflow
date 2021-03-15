@@ -236,7 +236,7 @@ def create_dags(suite_data, args, dags_folder=None):
 
             if not r.ok:
                 reason = get_api_failure_reason(r)
-                logging.error(f"Failed to add DAG {test_data['dag_id']} from test case {test_data['index']} due to \n {reason}")
+                logging.info(f"Failed to add DAG {test_data['dag_id']} from test case {test_data['index']} due to \n {reason}")
 
 
 def trigger_dags(suite_data, args):
@@ -290,7 +290,7 @@ def trigger_dags(suite_data, args):
             )
         if not r.ok:
             reason = get_api_failure_reason(r)
-            logging.error(f"Failed to trigger DAG {test_data['dag_id']} from test case {test_data['index']} as {run_id} due to {reason}")
+            logging.info(f"Failed to trigger DAG {test_data['dag_id']} from test case {test_data['index']} as {run_id} due to {reason}")
             test_data["error"] = reason
             test_data["finished"] = True
 
@@ -302,7 +302,7 @@ def print_report(suite_data):
             exit_code = 1
             logging.error(f"Test case {test_data['index']} that runs DAG {test_data['dag_id']} as {run_id} failed with error \n{test_data['error']}")
         else:
-            logging.info(f"Test case {test_data['index']} that runs DAG {test_data['dag_id']} as {run_id} finished successfully")
+            logging.error(f"Test case {test_data['index']} that runs DAG {test_data['dag_id']} as {run_id} finished successfully")
     return exit_code
 
 
