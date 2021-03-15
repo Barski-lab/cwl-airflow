@@ -20,6 +20,9 @@ WORKDIR /tmp
 
 ENV CWL_AIRFLOW_VERSION "master"
 ENV CWL_AIRFLOW_URL "https://github.com/Barski-lab/cwl-airflow"
+COPY ./scripts/start_webserver.sh /usr/local/bin/start_webserver.sh
+COPY ./scripts/start_scheduler.sh /usr/local/bin/start_scheduler.sh
+COPY ./scripts/start_apiserver.sh /usr/local/bin/start_apiserver.sh
 
 RUN apt-get update && \
     # installing dependencies (including docker dependencies)
