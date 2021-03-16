@@ -27,6 +27,12 @@ echo "Cleaning temporary directory ${TEMP}"
 rm -rf ${TEMP} && mkdir ${TEMP}
 
 echo "Setting environment variables for docker-compose"
+export AIRFLOW_ENV_FILE="${TEMP}/airflow_settings.env"
+echo "AIRFLOW__CORE__PARALLELISM=1" >> ${AIRFLOW_ENV_FILE}
+echo "AIRFLOW__CORE__DAG_CONCURRENCY=1" >> ${AIRFLOW_ENV_FILE}
+echo "AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL=60" >> ${AIRFLOW_ENV_FILE}
+echo "AIRFLOW__CORE__HOSTNAME_CALLABLE=socket.gethostname" >> ${AIRFLOW_ENV_FILE}
+
 export AIRFLOW_HOME="${TEMP}/airflow"
 export CWL_TMP_FOLDER="${TEMP}/airflow/cwl_tmp_folder"
 export CWL_INPUTS_FOLDER="${TEMP}/airflow/cwl_inputs_folder"
