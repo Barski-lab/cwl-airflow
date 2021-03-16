@@ -6,7 +6,8 @@
 # All temporary data is kept in the ./temp folder which is cleaned
 # before running the tests. If this script was stopped with Ctrl+C,
 # docker containers started by docker-compose may still keep running.
-# Use `docker-compose -f FILE down` command to stop them.
+# Use `docker-compose -f FILE down` command to stop them. Tests report
+# is saved in /temp/tests.log
 
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -69,9 +70,8 @@ docker run --rm \
 -v "${AIRFLOW_HOME}:${AIRFLOW_HOME}" \
 --network local_executor_default \
 local_executor_scheduler \
-cwl-airflow test --api "http://apiserver:${CWL_AIRFLOW_API_PORT}" \
---host 0.0.0.0 --port "${PROCESS_REPORT_PORT}" \
---suite "${AIRFLOW_HOME}/${REPO_FOLDER}/${SUITE}" 2> "${AIRFLOW_HOME}/${REPO_FOLDER}.report"
+/bin/bash -c \
+"cwl-airflow test --api http://apiserver:${CWL_AIRFLOW_API_PORT} --host 0.0.0.0 --port ${PROCESS_REPORT_PORT} --suite ${AIRFLOW_HOME}/${REPO_FOLDER}/${SUITE} --range 1 > ${AIRFLOW_HOME}/tests.log"
 
 EXIT_CODE=`echo $?`  # to keep exit code while we are stoping docker-compose
 

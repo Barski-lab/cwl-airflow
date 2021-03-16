@@ -303,7 +303,7 @@ def print_report(suite_data):
             exit_code = 1
             logging.error(f"Test case {test_data['index']} that runs DAG {test_data['dag_id']} as {run_id} failed with error \n{test_data['error']}")
         else:
-            logging.error(f"Test case {test_data['index']} that runs DAG {test_data['dag_id']} as {run_id} finished successfully")
+            logging.info(f"Test case {test_data['index']} that runs DAG {test_data['dag_id']} as {run_id} finished successfully")
     return exit_code
 
 
