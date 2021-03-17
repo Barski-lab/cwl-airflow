@@ -152,6 +152,9 @@ def load_test_suite(args):
 
     Adds run_id's as keys for easy access and proper
     test identification when receiving results.
+
+    In case we failed to load test case, sets "finished"
+    to True and writes reason to "error".
     """
 
     suite_data = load_yaml(args.suite)
@@ -168,13 +171,20 @@ def load_test_suite(args):
 
         if "job" in test_data:
             job_location = get_absolute_path(test_data["job"], suite_dir)
-            if args.relative:                       # skips relative path resolutions as well as adding values from the workflow default inputs
-                job_data = load_yaml(job_location)
-            else:
-                job_data = load_job(
-                    workflow=tool_location,
-                    job=job_location
-                )
+            try:
+                if args.relative:                       # skips relative path resolutions as well as adding values from the workflow default inputs
+                    job_data = load_yaml(job_location)
+                else:
+                    job_data = load_job(
+                        workflow=tool_location,
+                        job=job_location
+                    )
+            except Exception as ex:
+                logging.error(f"Failed to load test case {i+1} to run {tool_location} with {job_location}")
+                test_data.update({
+                    "error": "Failed to load test case",
+                    "finished": True
+                })
 
         job_data["outputs_folder"] = get_dir(os.path.join(args.tmp, run_id))
 
@@ -183,7 +193,7 @@ def load_test_suite(args):
             "tool": tool_location,
             "dag_id": get_rootname(test_data["tool"]),
             "index": i+1,                                                     # to know test case number, 1-based to correspond to --range
-            "finished": False                                                 # to indicate whether the test was finished or not
+            "finished": test_data.get("finished", False)                      # to indicate whether the test was finished or not
         })
         logging.info(f"Successfully loaded test case {i+1} to run {tool_location} with {job_location} as {run_id}")
         suite_data_filtered[run_id] = test_data                               # use "run_id" as a key for fast access when checking results
@@ -199,6 +209,8 @@ def create_dags(suite_data, args, dags_folder=None):
     will parse all dags at the end of the next "dag_dir_list_interval"
     from airflow.cfg. If args.embed was True, send base64 encoded gzip
     compressed content of the workflow file instead of attaching it.
+    In case we failed to load and parse worklfow, sets "finished" to
+    True and writes reason to "error".
     """
 
     # TODO: Do we need to force scheduler to reload DAGs after all DAG added?
@@ -209,10 +221,19 @@ def create_dags(suite_data, args, dags_folder=None):
             args.tmp,
             os.path.basename(test_data["tool"])
         )
-        embed_all_runs(                                                                               # will save results to "workflow_path"
-            workflow_tool=fast_cwl_load(test_data["tool"]),
-            location=workflow_path
-        )
+        try:
+            embed_all_runs(                                                                           # will save results to "workflow_path"
+                workflow_tool=fast_cwl_load(test_data["tool"]),
+                location=workflow_path
+            )
+        except Exception as ex:
+            logging.error(f"Failed to load test case to run {test_data['tool']}")
+            test_data.update({
+                "error": "Failed to load test case",
+                "finished": True
+            })
+            continue
+
         with open(workflow_path, "rb") as input_stream:
             logging.info(f"Add DAG {test_data['dag_id']} from test case {test_data['index']}")
 
@@ -250,9 +271,16 @@ def trigger_dags(suite_data, args):
     rule cwlid-commitsha) and only after that trigger the workflow execution.
     If not only --combine but also --embed was provided, send base64 encoded
     gzip compressed content of the workflow file instead of attaching it.
+    In case we created DAGs before and some test case got "error", we don't want
+    to trigger them. In case --combine was used, we still can fail to load workflow,
+    so we should use try-catch and set "error" if case of failure.
     """
 
     for run_id, test_data in suite_data.items():
+
+        if "error" in test_data:                  # do not trigger those DAGs that we failed to create if we run without --combine
+            continue
+
         params = {
             "run_id": run_id,
             "dag_id": test_data["dag_id"],
@@ -264,10 +292,19 @@ def trigger_dags(suite_data, args):
                 args.tmp,
                 os.path.basename(test_data["tool"])
             )
-            embed_all_runs(                                                                               # will save results to "workflow_path"
-                workflow_tool=fast_cwl_load(test_data["tool"]),
-                location=workflow_path
-            )
+            try:
+                embed_all_runs(                                                                           # will save results to "workflow_path"
+                    workflow_tool=fast_cwl_load(test_data["tool"]),
+                    location=workflow_path
+                )
+            except Exception as ex:
+                logging.error(f"Failed to load test case to run {test_data['tool']}")
+                test_data.update({
+                    "error": "Failed to load test case",
+                    "finished": True
+                })
+                continue
+
             with open(workflow_path, "rb") as input_stream:
                 if args.embed:                                                                            # send base64 encoded gzip compressed workflow content that will be embedded into DAG python file
                     logging.info(f"Sending base64 encoded gzip compressed content from {workflow_path}")
