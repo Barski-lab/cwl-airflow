@@ -14,9 +14,10 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 REPO_URL=$1
 SUITE=$2
+PARAMS=${@:3}
 
-if [ $# != 2 ]; then
-    echo "Usage: run_conformance_tests.sh https://github.com/repository.git ./location/within/repository/conformance.yaml"
+if [ $# -lt 2 ]; then
+    echo "Usage: run_conformance_tests.sh https://github.com/repository.git ./location/within/repository/conformance.yaml [other params for cwl-airflow test]"
     exit 1
 fi
 
@@ -78,7 +79,7 @@ docker run --rm \
 --network local_executor_default \
 local_executor_scheduler \
 /bin/bash -c \
-"cwl-airflow test --api http://apiserver:${CWL_AIRFLOW_API_PORT} --host 0.0.0.0 --port ${PROCESS_REPORT_PORT} --suite ${AIRFLOW_HOME}/${REPO_FOLDER}/${SUITE} > ${AIRFLOW_HOME}/tests.log"
+"cwl-airflow test --api http://apiserver:${CWL_AIRFLOW_API_PORT} --host 0.0.0.0 --port ${PROCESS_REPORT_PORT} --suite ${AIRFLOW_HOME}/${REPO_FOLDER}/${SUITE} ${PARAMS} > ${AIRFLOW_HOME}/tests.log"
 
 EXIT_CODE=`echo $?`  # to keep exit code while we are stoping docker-compose
 
