@@ -55,9 +55,10 @@ export PROCESS_REPORT_URL="http://${PROCESS_REPORT_HOST}:${PROCESS_REPORT_PORT}"
 echo "Cleaning old images"  # image names are based on the docker-compose file and should be updated manually if that file was changed
 docker rmi --force local_executor_apiserver local_executor_scheduler local_executor_webserver
 
-echo "Starting docker-compose as daemon"
+echo "Building and starting docker-compose as daemon"
 DOCKER_COMPOSE_FILE="${DIR}/../packaging/docker_compose/local_executor/docker-compose.yml"
-docker-compose -f ${DOCKER_COMPOSE_FILE} up --build -d
+docker-compose -f ${DOCKER_COMPOSE_FILE} build --no-cache  # need --no-cache as we want to have the latest commit for CWL-Airflow, but its Dockerfile is not changed
+docker-compose -f ${DOCKER_COMPOSE_FILE} up -d
 
 echo "Cloning repository with tests ${REPO_URL}"
 cd ${AIRFLOW_HOME}
