@@ -88,11 +88,10 @@ setup(
     packages=find_packages(exclude=["docs", "tests", "dev"]),
     extras_require=EXTRAS_REQUIRE,
     install_requires=[
-        "apache-airflow==2.0.0",
-        "git+https://github.com/mdrio/cwltool.git@gpu",
-        "cwltest==2.0.20200626112502", "jsonmerge", "connexion", "tornado",
-        "docker", "swagger-ui-bundle"
+        "apache-airflow==2.0.0", "cwltool", "cwltest==2.0.20200626112502",
+        "jsonmerge", "connexion", "tornado", "docker", "swagger-ui-bundle"
     ],
+    dependency_links=["git+https://github.com/mdrio/cwltool.git@gpu"],
     zip_safe=False,
     scripts=["cwl_airflow/bin/cwl-airflow"],
     classifiers=[
