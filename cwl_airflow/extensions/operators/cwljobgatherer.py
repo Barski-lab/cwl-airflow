@@ -2,24 +2,17 @@
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
-from cwl_airflow.utilities.cwl import (
-    relocate_outputs,
-    collect_reports
-)
+from cwl_airflow.utilities.cwl import (relocate_outputs, collect_reports)
 from cwl_airflow.utilities.report import post_status
 from cwl_airflow.utilities.loggers import setup_cwl_logger
 
 
 class CWLJobGatherer(BaseOperator):
-
     @apply_defaults  # in case someone decided to overwrite default_args from the DAG
-    def __init__(
-        self,
-        task_id,
-        *args, **kwargs
-    ):
-        super().__init__(task_id=task_id, trigger_rule="none_failed", *args, **kwargs)  # change default trigger_rule as the upstream can be skipped
-        
+    def __init__(self, task_id, *args, **kwargs):
+        super().__init__(
+            task_id=task_id, trigger_rule="none_failed", *args, **kwargs
+        )  # change default trigger_rule as the upstream can be skipped
 
     def execute(self, context):
         """
@@ -33,7 +26,7 @@ class CWLJobGatherer(BaseOperator):
         _, workflow_report = relocate_outputs(
             workflow=context["dag"].workflow,
             job_data=collect_reports(context),
-            cwl_args=context["dag"].default_args["cwl"]
-        )
-     
+            params=context["dag_run"].conf["job"],
+            cwl_args=context["dag"].default_args["cwl"])
+
         return workflow_report
