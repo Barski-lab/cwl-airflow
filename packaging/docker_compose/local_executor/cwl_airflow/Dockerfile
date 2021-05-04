@@ -19,7 +19,7 @@ ENV DEBIAN_FRONTEND noninteractive
 WORKDIR /tmp
 
 ENV CWL_AIRFLOW_VERSION "master"
-ENV CWL_AIRFLOW_URL "https://github.com/Barski-lab/cwl-airflow"
+ENV CWL_AIRFLOW_URL "https://github.com/mdrio/cwl-airflow.git"
 COPY ./scripts/start_webserver.sh /usr/local/bin/start_webserver.sh
 COPY ./scripts/start_scheduler.sh /usr/local/bin/start_scheduler.sh
 COPY ./scripts/start_apiserver.sh /usr/local/bin/start_apiserver.sh
@@ -33,9 +33,10 @@ RUN apt-get update && \
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
     add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
     apt-get update && \
-    apt-get -y install docker-ce-cli && \
+    apt-get -y install docker-ce-cli
+
     # installing cwl-airflow
-    pip3 install -U pip                                                                     && \
+RUN pip3 install -U pip                                                                     && \
     git clone ${CWL_AIRFLOW_URL}                                                            && \
     cd cwl-airflow                                                                          && \
     git checkout ${CWL_AIRFLOW_VERSION}                                                     && \
