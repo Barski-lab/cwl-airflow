@@ -30,10 +30,10 @@ task bam_to_bedgraph {
         File bam_file
     }
     output {
-        File bedgraph_file = stdout()
+        File bedgraph_file = "genome_coverage.bedGraph"
     }
     command {
-        bedtools genomecov -bg -ibam ${bam_file}
+        bedtools genomecov -bg -ibam ${bam_file} > genome_coverage.bedGraph
     }    
     runtime {
         docker: "biowardrobe2/bedtools2:v2.26.0"
@@ -48,10 +48,10 @@ task sort_bedgraph {
         File bedgraph_file
     }
     output {
-        File sorted_bedgraph_file = stdout()
+        File sorted_bedgraph_file = "sorted_genome_coverage.bedGraph"
     }
     command {
-        sort -k 1,1 -k 2,2n ${bedgraph_file}
+        sort -k 1,1 -k 2,2n ${bedgraph_file} > sorted_genome_coverage.bedGraph
     }    
     runtime {
         docker: "biowardrobe2/scidap:v0.0.2"
