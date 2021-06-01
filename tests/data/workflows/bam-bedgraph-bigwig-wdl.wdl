@@ -37,6 +37,8 @@ task bam_to_bedgraph {
     }    
     runtime {
         docker: "biowardrobe2/bedtools2:v2.26.0"
+        memory: "1GB"
+        disks: "local-disk 1 HDD"
     }
 }
 
@@ -53,6 +55,8 @@ task sort_bedgraph {
     }    
     runtime {
         docker: "biowardrobe2/scidap:v0.0.2"
+        memory: "1GB"
+        disks: "local-disk 1 HDD"
     }
 }
 
@@ -70,5 +74,7 @@ task sorted_bedgraph_to_bigwig {
     }
     runtime {
         docker: "biowardrobe2/ucscuserapps:v358"
+        memory: "1GB"
+        disks: "local-disk 1 HDD"
     }
 }
