@@ -14,7 +14,7 @@ import binascii
 from copy import deepcopy
 from jsonmerge import merge
 from urllib.parse import urlsplit
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from datetime import datetime
 from typing import MutableMapping, MutableSequence
 from ruamel.yaml.comments import CommentedMap
@@ -62,6 +62,11 @@ from cwl_airflow.utilities.helpers import (
     get_files,
     get_dir_size
 )
+
+try:
+    from janis_core.ingestion.fromwdl import translate_from_wdl
+except ImportError:                                                # in case CWL-Airflow was installed without "wdl" extension the import will fail
+    translate_from_wdl = None
 
 
 CWL_TMP_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_tmp_folder")
@@ -1115,6 +1120,12 @@ def slow_cwl_load(workflow, cwl_args=None, only_tool=None):
     same way as described above. After loading temp file will be
     removed automatically. First always try to uncompress, because
     it's faster.
+    In case we failed to load tool from CWL, we try to load it as WDL.
+    To function it properly, CWL-Airflow should be installed with
+    [wdl] extension. WDL file is transpiled into CWL format and saved
+    in a temporary directory. Then all used tools are being embedded into
+    the same CWL file. That file will be later loaded as a normal CWL
+    workflow.
     """
     
     cwl_args = {} if cwl_args is None else cwl_args
@@ -1126,15 +1137,45 @@ def slow_cwl_load(workflow, cwl_args=None, only_tool=None):
     default_cwl_args = get_default_cwl_args(cwl_args)
 
     def __load(location):
-        return load_tool(
-            location,
-            setup_loadingContext(
-                LoadingContext(default_cwl_args),
-                RuntimeContext(default_cwl_args),
-                argparse.Namespace(**default_cwl_args)
+        try:
+            workflow_data = load_tool(
+                location,
+                setup_loadingContext(
+                    LoadingContext(default_cwl_args),
+                    RuntimeContext(default_cwl_args),
+                    argparse.Namespace(**default_cwl_args)
+                )
             )
-        )
-
+        except (SchemaSaladException) as err:                                             # try to load as WDL
+            with TemporaryDirectory(dir=default_cwl_args["tmp_folder"]) as temp_folder:
+                try:
+                    translate_from_wdl(location, temp_folder)                             # save outputs to a temporary folder
+                except TypeError:
+                    raise ValueError(f"Failed to load DAG from {location}, check if CWL-Airflow was installed with [wdl] extension")
+                for filename in os.listdir(temp_folder):
+                    if re.match(".*\\.cwl$", filename):
+                        location = os.path.join(temp_folder, filename)                    # find generated workflow and redefine location to point to CWL workflow
+                        break
+                embed_all_runs(                                                           # embed all tools and overwrite workflow saved in location
+                    workflow_tool=load_tool(
+                        location,
+                        setup_loadingContext(
+                            LoadingContext(default_cwl_args),
+                            RuntimeContext(default_cwl_args),
+                            argparse.Namespace(**default_cwl_args)
+                        )
+                    ).tool,
+                    location=location
+                )
+                workflow_data = load_tool(                                                # reload workflow with embedded tools from location
+                    location,
+                    setup_loadingContext(
+                        LoadingContext(default_cwl_args),
+                        RuntimeContext(default_cwl_args),
+                        argparse.Namespace(**default_cwl_args)
+                    )
+                )
+        return workflow_data
     try:
         with NamedTemporaryFile(mode="w") as temp_stream:  # guarantees that temp file will be removed
             json.dump(

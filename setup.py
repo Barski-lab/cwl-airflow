@@ -62,6 +62,10 @@ EXTRAS_REQUIRE = {
         "flower>=0.7.3, <1.0",
         "vine~=1.3"
     ],
+    "wdl": [
+        "miniwdl==1.1.5",
+        "janis-pipelines.core@git+https://github.com/michael-kotliar/janis-core.git@add-from-wdl"
+    ],
     "mysql": [
         "mysql-connector-python>=8.0.11, <=8.0.22",
         "mysqlclient>=1.3.6,<1.4"
@@ -96,8 +100,8 @@ setup(
     extras_require=EXTRAS_REQUIRE,
     install_requires=[
         "apache-airflow==2.0.1",
-        "cwltool==3.0.20200710214758",
-        "cwltest==2.0.20200626112502",
+        "cwltool==3.1.20210521105815",
+        "cwltest==2.1.20210423130452",
         "jsonmerge",
         "connexion",
         "tornado",
