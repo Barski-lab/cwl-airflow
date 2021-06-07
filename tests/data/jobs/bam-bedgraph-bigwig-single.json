@@ -1,0 +1,4 @@
+{
+    "bam_file": "/Users/nickluckey/Documents/wdl-workspace/cwl-airflow/tests/data/inputs/chr4_100_mapped_reads.bam",
+    "chrom_length_file": "/Users/nickluckey/Documents/wdl-workspace/cwl-airflow/tests/data/inputs/chr_name_length.txt"
+}
