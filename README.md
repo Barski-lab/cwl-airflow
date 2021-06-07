@@ -5,6 +5,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/Barski-lab/cwl-airflow/badge.svg?branch=master)](https://coveralls.io/github/Barski-lab/cwl-airflow?branch=master)
 [![Downloads](https://pepy.tech/badge/cwl-airflow)](https://pepy.tech/project/cwl-airflow)
 
+# WDL Support
+
 
 # **CWL-Airflow**
 
