@@ -46,10 +46,11 @@ from cwl_airflow.utilities.helpers import (
     get_dir_size
 )
 
-from miniwdl.WDL.CLI import load as wdl_load
-from miniwdl.WDL.CLI import {
+
+from WDL.CLI import (
     make_read_source,
-}
+    load as wdl_load
+)
 
 
 WDL_TMP_FOLDER = os.path.join(AIRFLOW_HOME, "wdl_tmp_folder")
