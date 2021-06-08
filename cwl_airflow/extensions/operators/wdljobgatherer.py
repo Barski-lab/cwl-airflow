@@ -7,7 +7,7 @@ from cwl_airflow.utilities.wdl import (
     collect_reports
 )
 from cwl_airflow.utilities.report import post_status
-from cwl_airflow.utilities.loggers import setup_wdl_logger
+#from cwl_airflow.utilities.loggers import setup_wdl_logger
 
 
 class WDLJobGatherer(BaseOperator):

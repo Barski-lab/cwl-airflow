@@ -22,6 +22,9 @@ from cwl_airflow.utilities.report import (
 )
 
 
+from pprint import pprint
+
+
 class CWLDAG(DAG):
 
     def __init__(
@@ -50,6 +53,8 @@ class CWLDAG(DAG):
             cwl_args=kwargs["default_args"]["cwl"]  # in case user has overwritten some of the default parameters
         )
 
+        pprint(vars(self.workflow_tool))
+
         self.dispatcher = CWLJobDispatcher(
             dag=self,                               # need dag=self otherwise new operator will not get proper default_args
             task_id="CWLJobDispatcher"
@@ -61,6 +66,9 @@ class CWLDAG(DAG):
         ) if gatherer is None else gatherer
 
         self.__assemble()
+
+        print(self.dispatcher)
+        #pprint(vars(self.dispatcher))
 
 
     def __setup_params(self, kwargs):
@@ -117,13 +125,22 @@ class CWLDAG(DAG):
         # TODO: add support for CommandLineTool and ExpressionTool
         # TODO: add colors for Tasks?
 
+        #print(self.workflow_tool)
+
         task_by_id = {}         # to get airflow task assosiated with workflow step by its id
         task_by_out_id = {}     # to get airflow task assosiated with workflow step by its out id
         
         for step_id, step_data in get_items(self.workflow_tool["steps"]):
+            print("step_id")
+            print(step_id)
             task_by_id[step_id] = CWLStepOperator(dag=self, task_id=step_id)
+            print(list(task_by_id))
             for step_out_id, _ in get_items(step_data["out"]):
                 task_by_out_id[step_out_id] = task_by_id[step_id]
+
+        print('printing list 1')
+        print(list(task_by_id))
+        print(list(task_by_out_id))
 
         for step_id, step_data in get_items(self.workflow_tool["steps"]):
             for step_in_id, step_in_data in get_items(step_data.get("in", [])):           # step might not have "in"
@@ -136,6 +153,9 @@ class CWLDAG(DAG):
                 task_by_id[step_id].set_upstream(self.dispatcher)                         # connected to dispatcher
 
 
+        # print('printing list 2')
+        # print(list(task_by_id))
+
         for _, output_data in get_items(self.workflow_tool["outputs"]):
             for output_source_id, _ in get_items(output_data["outputSource"]):            # in case "outputSource" is a list
                 try:
@@ -143,6 +163,9 @@ class CWLDAG(DAG):
                 except KeyError:
                     self.gatherer.set_upstream(self.dispatcher)                           # connected to dispatcher
 
+
+        # print('printing list 3')
+        # print(list(task_by_id))
         # safety measure in case of very specific workflows
         # if gatherer happened to be not connected to anything, connect it to all "leaves"
         # if dispatcher happened to be not connected to anything, connect it to all "roots"
@@ -152,3 +175,11 @@ class CWLDAG(DAG):
 
         if not self.dispatcher.downstream_list:
             self.dispatcher.set_downstream([task for task in task_by_id.values() if not task.upstream_list])
+
+        # print("task by id")
+        # # print(list(task_by_id))
+        # for task in task_by_id:
+        #     print(task)
+
+        # print('task by out id')
+        # print(list(task_by_out_id))

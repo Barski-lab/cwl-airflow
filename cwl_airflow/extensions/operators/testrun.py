@@ -1,0 +1,2 @@
+from cwl_airflow.extensions.wdldag import WDLDAG
+dag = WDLDAG(workflow="/Users/nickluckey/Documents/wdl-workspace/cwl-airflow/tests/data/workflows/bam-bedgraph-bigwig-single.wdl", dag_id="bam-bedgraph-bigwig-single")

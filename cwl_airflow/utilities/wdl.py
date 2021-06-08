@@ -416,69 +416,69 @@ def get_default_wdl_args(preset_wdl_args=None):
             "tmp_folder": get_dir(
                 conf_get(
                     "wdl", "tmp_folder",
-                    preset_wdl_args.get("tmp_folder", CWL_TMP_FOLDER)
+                    preset_wdl_args.get("tmp_folder", WDL_TMP_FOLDER)
                 )
             ),
             "outputs_folder": get_dir(                                             # for CWL-Airflow to store outputs if "outputs_folder" is not overwritten in job
                 conf_get(
                     "wdl", "outputs_folder",
-                    preset_wdl_args.get("outputs_folder", CWL_OUTPUTS_FOLDER)
+                    preset_wdl_args.get("outputs_folder", WDL_OUTPUTS_FOLDER)
                 )
             ),
             "inputs_folder": get_dir(                                             # for CWL-Airflow to resolve relative locations for input files if job was loaded from parsed object
                 conf_get(
                     "wdl", "inputs_folder",
-                    preset_wdl_args.get("inputs_folder", CWL_INPUTS_FOLDER)
+                    preset_wdl_args.get("inputs_folder", WDL_INPUTS_FOLDER)
                 )
             ),
             "pickle_folder": get_dir(                                              # for CWL-Airflow to store pickled workflows
                 conf_get(
                     "wdl", "pickle_folder",
-                    preset_wdl_args.get("pickle_folder", CWL_PICKLE_FOLDER)
+                    preset_wdl_args.get("pickle_folder", WDL_PICKLE_FOLDER)
                 )
             ),
             "keep_tmp_data": conf_get(                                             # prevents from cleaning dag_run temp data and XCom's in both success or failure scenarios
                 "wdl", "keep_tmp_data",
-                preset_wdl_args.get("keep_tmp_data", CWL_KEEP_TMP_DATA),
+                preset_wdl_args.get("keep_tmp_data", WDL_KEEP_TMP_DATA),
                 # return Boolean
                 True
             ),
             "use_container": conf_get(                                             # execute jobs in docker containers
                 "wdl", "use_container",
-                preset_wdl_args.get("use_container", CWL_USE_CONTAINER),
+                preset_wdl_args.get("use_container", WDL_USE_CONTAINER),
                 # return Boolean
                 True
             ),
             "no_match_user": conf_get(                                             # disables passing the current uid to "docker run --user"
                 "wdl", "no_match_user",
-                preset_wdl_args.get("no_match_user", CWL_NO_MATCH_USER),
+                preset_wdl_args.get("no_match_user", WDL_NO_MATCH_USER),
                 # return Boolean
                 True
             ),
             "skip_schemas": conf_get(                                              # it looks like this doesn't influence anything in the latest wdltool
                 "wdl", "skip_schemas",
-                preset_wdl_args.get("skip_schemas", CWL_SKIP_SCHEMAS),
+                preset_wdl_args.get("skip_schemas", WDL_SKIP_SCHEMAS),
                 # return Boolean
                 True
             ),
             "strict": conf_get(
                 "wdl", "strict",
-                preset_wdl_args.get("strict", CWL_STRICT),
+                preset_wdl_args.get("strict", WDL_STRICT),
                 # return Boolean
                 True
             ),
             "quiet": conf_get(
                 "wdl", "quiet",
-                preset_wdl_args.get("quiet", CWL_QUIET),
+                preset_wdl_args.get("quiet", WDL_QUIET),
                 # return Boolean
                 True
             ),
             # even if we can set it in "preset_wdl_args" it's better not to change
-            "rm_tmpdir": preset_wdl_args.get("rm_tmpdir", CWL_RM_TMPDIR),
+            "rm_tmpdir": preset_wdl_args.get("rm_tmpdir", WDL_RM_TMPDIR),
             # even if we can set it in "preset_wdl_args" it's better not to change
-            "move_outputs": preset_wdl_args.get("move_outputs", CWL_MOVE_OUTPUTS),
+            "move_outputs": preset_wdl_args.get("move_outputs", WDL_MOVE_OUTPUTS),
             # fails to run without it when creating workflow from tool. TODO: Ask Peter?
-            "enable_dev": preset_wdl_args.get("enable_dev", CWL_ENABLE_DEV)
+            "enable_dev": preset_wdl_args.get("enable_dev", WDL_ENABLE_DEV)
         }
     )
 
@@ -1166,11 +1166,10 @@ def slow_wdl_load(workflow, wdl_args=None, only_tool=None):
 
 # replace load_tool with
     def __load(location):
-        check_quant = True
         return wdl_load(
             location,
             [],
-            check_quant=check_quant,
+            check_quant=True,
             read_source=make_read_source(False),
         )
 
@@ -1187,7 +1186,9 @@ def slow_wdl_load(workflow, wdl_args=None, only_tool=None):
     except (zlib.error, binascii.Error):                   # file was real
         workflow_data = __load(workflow)
 
-    return workflow_data.tool if only_tool else workflow_data
+    print(workflow_data)
+    return workflow_data
+    #return workflow_data.tool if only_tool else workflow_data
 
 
 def embed_all_runs(
