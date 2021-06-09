@@ -22,6 +22,7 @@ from cwl_airflow.utilities.report import (
 )
 
 from pprint import pprint
+import itertools
 
 
 class WDLDAG(DAG):
@@ -47,7 +48,6 @@ class WDLDAG(DAG):
 
         super().__init__(dag_id=dag_id, *args, **kwargs)
 
-        print('before loading wdl file')
 
         self.workflow_tool = fast_wdl_load(         # keeps only the tool (CommentedMap object)
             workflow=self.workflow,
@@ -55,9 +55,6 @@ class WDLDAG(DAG):
             wdl_args=kwargs["default_args"]["wdl"]
         )
 
-        print('after loading wdl file')
-        #print(self.workflow_tool)
-        pprint(vars(self.workflow_tool))
 
        
         print('before attaching job dispatcher')
@@ -74,7 +71,6 @@ class WDLDAG(DAG):
             task_id="WDLJobGatherer"
         ) if gatherer is None else gatherer
 
-        print('before calling assemble')
         self.__assemble()
 
     def __setup_params(self, kwargs):
@@ -133,92 +129,51 @@ class WDLDAG(DAG):
         task_by_id = {}         # to get airflow task assosiated with workflow step by its id
         task_by_out_id = {}     # to get airflow task assosiated with workflow step by its out id
 
-        #pprint(vars(self.workflow_tool.workflow))
+      
+        for task in self.workflow_tool.workflow.body:
+            task_by_id[task.name] = WDLStepOperator(dag=self, task_id=task.name)
+            for output in task.callee.outputs:
+                out_id = output.name
+                task_by_out_id[out_id] = task_by_id[task.name]
 
-        print("_body:")
-        print(self.workflow_tool.workflow.body)
-        for call in self.workflow_tool.workflow.body:
-            #pprint(vars(call))
-            print('_call:')
-            print(call.name)
-            task_by_id[call.name] = call.name
-            task_by_out_id[call.name] = call.callee.outputs
-            print('checking attrs')
-            pprint(vars(call))
-            print('callee')
-            pprint(vars(call.callee))
-            print('callee.command')
-            pprint((vars(call.callee.command)))
-            print(list(call._after_node_ids))
-            for nodes in call._after_node_ids:
-                print('nodes')
-                print(nodes.expr)
-            # print(list(call.children))
-            # print('dependencies')
-            # print(call._memo_workflow_node_dependencies)
-            
-            for child in call.children:
-                print('_call.children:')
-                print(child.expr, child.member)
-                #print(list(child.children))
-                for grandchild in child.children:
-                    print('_child.children:')
-                    print(grandchild.name)
-                    print(list(grandchild.children))
 
-        print('task by id')
-        print(task_by_id)
+        for upstream in self.workflow_tool.workflow.body:  
+            for task in self.workflow_tool.workflow.body:
+                if task != upstream:
+                    for output in upstream.callee.outputs:
+                        for input in task.inputs:
+                            if output.name == input:
+                                task_by_id[task.name].set_upstream(task_by_out_id[output.name])
+                            else:
+                                for wf_inputs in self.workflow_tool.workflow.inputs:
+                                    if input == wf_inputs.name:
+                                        task_by_id[task.name].set_upstream(self.dispatcher)
+                    
 
-        print('task by out id')
-        print(task_by_out_id)
-        # for task in self.workflow_tool.tasks:
-        #     print(task.name)
+        for wf_outputs in self.workflow_tool.workflow.outputs:
+            try:
+                self.gatherer.set_upstream(task_by_out_id[wf_outputs.name])
+            except KeyError:
+                self.gatherer.set_upstream(self.dispatcher)
+
+        if not self.gatherer.upstream_list:
+            self.gatherer.set_upstream([task for task in task_by_id.values() if not task.downstream_list])
+
+        if not self.dispatcher.downstream_list:
+            self.dispatcher.set_downstream([task for task in task_by_id.values() if not task.upstream_list])
+
+
+        # print('task by id', task_by_id)
+        # print('task by out id', task_by_out_id)
+
+        # print('dispatcher: ')
+        # pprint(vars(self.dispatcher))
+        # node_by_id = {}
+        # node_by_out_id = {}
+
+        # workflow = self.workflow_tool.workflow
+        # print('workflow')
+        # pprint(vars(workflow))
+        # for task in self.workflow_tool.workflow.body:
+        #     print('task: ')
         #     pprint(vars(task))
-            
-            
-            #pprint(vars(task.parent))
-            
-            # task_by_id[step_id] = WDLStepOperator(dag=self, task_id=step_id)
-            # for step_out_id, _ in get_items(step_data["out"]):
-            #     task_by_out_id[step_out_id] = task_by_id[step_id]
-
-        # for step_id, step_data in get_items(self.workflow_tool.tasks):
-        #     # step might not have "in"
-        #     for step_in_id, step_in_data in get_items(step_data.get("in", [])):
-        #         # "in" might not have "source"
-        #         for step_in_source, _ in get_items(step_in_data.get("source", [])):
-        #             try:
-        #                 task_by_id[step_id].set_upstream(
-        #                     task_by_out_id[step_in_source])  # connected to another step
-        #             except KeyError:
-        #                 # connected to dispatcher
-        #                 task_by_id[step_id].set_upstream(self.dispatcher)
-        #     # safety measure in case "in" was empty
-        #     if not step_data.get("in", []):
-        #         # connected to dispatcher
-        #         task_by_id[step_id].set_upstream(self.dispatcher)
-
-        # for _, output_data in get_items(self.workflow_tool["outputs"]):
-        #     # in case "outputSource" is a list
-        #     for output_source_id, _ in get_items(output_data["outputSource"]):
-        #         try:
-        #             # connected to another step
-        #             self.gatherer.set_upstream(
-        #                 task_by_out_id[output_source_id])
-        #         except KeyError:
-        #             # connected to dispatcher
-        #             self.gatherer.set_upstream(self.dispatcher)
-
-        # # safety measure in case of very specific workflows
-        # # if gatherer happened to be not connected to anything, connect it to all "leaves"
-        # # if dispatcher happened to be not connected to anything, connect it to all "roots"
-
-        # if not self.gatherer.upstream_list:
-        #     self.gatherer.set_upstream(
-        #         [task for task in task_by_id.values() if not task.downstream_list])
-
-        # if not self.dispatcher.downstream_list:
-        #     self.dispatcher.set_downstream(
-        #         [task for task in task_by_id.values() if not task.upstream_list])
-
-
