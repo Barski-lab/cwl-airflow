@@ -103,7 +103,7 @@ class CWLDAG(DAG):
                 "default_args": required_default_args,
                 "on_failure_callback": kwargs.get("on_failure_callback", dag_on_failure),
                 "on_success_callback": kwargs.get("on_success_callback", dag_on_success),
-                "schedule_interval": None
+                "schedule_interval": kwargs.get("schedule_interval", None)
             }
         )
 
