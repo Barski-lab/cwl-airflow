@@ -128,27 +128,19 @@ class WDLDAG(DAG):
 
         task_by_id = {}         # to get airflow task assosiated with workflow step by its id
         task_by_out_id = {}     # to get airflow task assosiated with workflow step by its out id
-
-      
+        
         for task in self.workflow_tool.workflow.body:
             task_by_id[task.name] = WDLStepOperator(dag=self, task_id=task.name)
             for output in task.callee.outputs:
                 out_id = output.name
                 task_by_out_id[out_id] = task_by_id[task.name]
+            for upstreams in task._memo_workflow_node_dependencies:
+                upstreams = upstreams.split('-',1)
+                try:
+                    task_by_id[task.name].set_upstream(task_by_id[upstreams[1]])
+                except KeyError:
+                    task_by_id[task.name].set_upstream(self.dispatcher)
 
-
-        for upstream in self.workflow_tool.workflow.body:  
-            for task in self.workflow_tool.workflow.body:
-                if task != upstream:
-                    for output in upstream.callee.outputs:
-                        for input in task.inputs:
-                            if output.name == input:
-                                task_by_id[task.name].set_upstream(task_by_out_id[output.name])
-                            else:
-                                for wf_inputs in self.workflow_tool.workflow.inputs:
-                                    if input == wf_inputs.name:
-                                        task_by_id[task.name].set_upstream(self.dispatcher)
-                    
 
         for wf_outputs in self.workflow_tool.workflow.outputs:
             try:
@@ -163,17 +155,6 @@ class WDLDAG(DAG):
             self.dispatcher.set_downstream([task for task in task_by_id.values() if not task.upstream_list])
 
 
-        # print('task by id', task_by_id)
-        # print('task by out id', task_by_out_id)
 
-        # print('dispatcher: ')
-        # pprint(vars(self.dispatcher))
-        # node_by_id = {}
-        # node_by_out_id = {}
 
-        # workflow = self.workflow_tool.workflow
-        # print('workflow')
-        # pprint(vars(workflow))
-        # for task in self.workflow_tool.workflow.body:
-        #     print('task: ')
-        #     pprint(vars(task))
+
