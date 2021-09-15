@@ -63,15 +63,16 @@ DOCKER_COMPOSE_FILE="${DIR}/../../packaging/docker_compose/local_executor/docker
 docker-compose -f ${DOCKER_COMPOSE_FILE} build --no-cache  # need --no-cache as we want to have the latest commit for CWL-Airflow, but its Dockerfile is not changed
 docker-compose -f ${DOCKER_COMPOSE_FILE} up -d
 
+echo "Sleeping 30 sec to let all services start"
+sleep 30
+
 echo "Cloning repository with tests ${REPO_URL}"
+mkdir -p ${AIRFLOW_HOME}
 cd ${AIRFLOW_HOME}
 git clone ${REPO_URL} --recursive
 REPO_FOLDER=`basename ${REPO_URL}`
 REPO_FOLDER="${REPO_FOLDER%.*}"      # to exclude possible .git in the url
 cd -
-
-echo "Sleeping 30 sec to let all services start"
-sleep 30
 
 echo "Starting docker container to run tests from ${SUITE}"
 docker run --rm \
