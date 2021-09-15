@@ -44,7 +44,7 @@ from cwl_airflow.utilities.cwl import (
 )
 
 
-DATA_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
+DATA_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "../data"))
 if sys.platform == "darwin":                                                    # docker has troubles of mounting /var/private on macOs
     tempfile.tempdir = "/private/tmp"
 

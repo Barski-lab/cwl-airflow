@@ -16,4 +16,4 @@ RANGE="--range 2-999"
 
 
 echo "Running ${RANGE} tests for ${REPO_URL} from file ${SUITE}"
-./test_conformance.sh ${REPO_URL} ${SUITE} ${RANGE}
+./conformance_tests/test_conformance.sh ${REPO_URL} ${SUITE} ${RANGE}
