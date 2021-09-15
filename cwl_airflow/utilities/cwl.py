@@ -26,7 +26,7 @@ from airflow.models import DagRun, TaskInstance
 from airflow.utils.state import State
 from airflow.utils.db import provide_session
 from airflow.exceptions import AirflowConfigException
-from airflow.utils.dag_processing import list_py_file_paths
+from airflow.utils.file import list_py_file_paths
 from airflow.api.common.experimental import delete_dag
 from cwltool.argparser import get_default_args
 from cwltool.main import (

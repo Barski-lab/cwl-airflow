@@ -15,7 +15,7 @@ from cwl_airflow.utilities.helpers import (
 with CleanAirflowImport():
     from airflow.configuration import conf
     from airflow.exceptions import AirflowConfigException
-    from airflow.utils.dag_processing import list_py_file_paths
+    from airflow.utils.file import list_py_file_paths
     from cwl_airflow.utilities.cwl import overwrite_deprecated_dag
 
 
