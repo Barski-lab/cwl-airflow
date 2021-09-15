@@ -57,7 +57,7 @@ echo "Cleaning old images"  # image names are based on the docker-compose file a
 docker rmi --force local_executor_apiserver local_executor_scheduler local_executor_webserver
 
 echo "Building and starting docker-compose as daemon"
-DOCKER_COMPOSE_FILE="${DIR}/../packaging/docker_compose/local_executor/docker-compose.yml"
+DOCKER_COMPOSE_FILE="${DIR}/../../packaging/docker_compose/local_executor/docker-compose.yml"
 docker-compose -f ${DOCKER_COMPOSE_FILE} build --no-cache  # need --no-cache as we want to have the latest commit for CWL-Airflow, but its Dockerfile is not changed
 docker-compose -f ${DOCKER_COMPOSE_FILE} up -d
 
