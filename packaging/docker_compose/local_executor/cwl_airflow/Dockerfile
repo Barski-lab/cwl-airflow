@@ -8,12 +8,12 @@
 # Website:          https://cwl-airflow.readthedocs.io/en/latest/
 # Provides:         Airflow, CWL-Airflow, cwltool
 # Base Image:       ubuntu:20.04
-# Build Cmd:        docker build --rm -t biowardrobe2/cwl-airflow:latest .
-#   for tag:        docker build --build-arg CWL_AIRFLOW_VERSION=tag --rm -t biowardrobe2/cwl-airflow:latest . 
+# Build Cmd:        docker build --no-cache  --rm -t biowardrobe2/cwl-airflow:latest .
+#   for tag:        docker build --no-cache --build-arg CWL_AIRFLOW_VERSION=tag --rm -t biowardrobe2/cwl-airflow:latest .
 ###############################################################################
 
 # can be provided through --build-arg CWL_AIRFLOW_VERSION=branch or tag
-ARG CWL_AIRFLOW_VERSION "master"
+ARG CWL_AIRFLOW_VERSION="master"
 
 FROM ubuntu:20.04
 LABEL maintainer="misha.kotliar@gmail.com"
@@ -30,7 +30,8 @@ COPY ./scripts/start_webserver.sh /usr/local/bin/start_webserver.sh
 COPY ./scripts/start_scheduler.sh /usr/local/bin/start_scheduler.sh
 COPY ./scripts/start_apiserver.sh /usr/local/bin/start_apiserver.sh
 
-RUN apt-get update && \
+RUN echo "Building ${CWL_AIRFLOW_VERSION} version of CWL-Airflow" && \
+    apt-get update && \
     # installing dependencies (including docker dependencies)
     apt-get install -y python3-dev python3-pip nodejs gcc git wget curl \
                        libmysqlclient-dev mysql-client apt-transport-https \

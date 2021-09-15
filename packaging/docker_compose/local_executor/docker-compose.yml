@@ -34,7 +34,7 @@ services:
             context: ./cwl_airflow
             dockerfile: Dockerfile
             args:
-                - CWL_AIRFLOW_VERSION:${CWL_AIRFLOW_VERSION}
+                CWL_AIRFLOW_VERSION: ${CWL_AIRFLOW_VERSION}
         container_name: scheduler
         volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
             - /var/run/docker.sock:/var/run/docker.sock
@@ -58,7 +58,7 @@ services:
             context: ./cwl_airflow
             dockerfile: Dockerfile
             args:
-                - CWL_AIRFLOW_VERSION:${CWL_AIRFLOW_VERSION}
+                CWL_AIRFLOW_VERSION: ${CWL_AIRFLOW_VERSION}
         container_name: webserver
         ports:
             - ${AIRFLOW_WEBSERVER_PORT}:8080
@@ -78,7 +78,7 @@ services:
             context: ./cwl_airflow
             dockerfile: Dockerfile
             args:
-                - CWL_AIRFLOW_VERSION:${CWL_AIRFLOW_VERSION}
+                CWL_AIRFLOW_VERSION: ${CWL_AIRFLOW_VERSION}
         container_name: apiserver
         ports:
             - ${CWL_AIRFLOW_API_PORT}:8081
