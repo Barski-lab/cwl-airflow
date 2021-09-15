@@ -30,7 +30,11 @@ services:
     # starts after mysql was launched, then waits until airflow gets access to the database,
     # then runs cwl-airflow init creating all required tables in the database and starts scheduler
     scheduler:
-        build: ./cwl_airflow
+        build:
+            context: ./cwl_airflow
+            dockerfile: Dockerfile
+            args:
+                - CWL_AIRFLOW_VERSION:${CWL_AIRFLOW_VERSION}
         container_name: scheduler
         volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
             - /var/run/docker.sock:/var/run/docker.sock
@@ -50,7 +54,11 @@ services:
     # starts after scheduler was launched, then waits untill all required for airflow tables have been
     # created (we just check dag_run table) and starts webserver
     webserver:
-        build: ./cwl_airflow
+        build:
+            context: ./cwl_airflow
+            dockerfile: Dockerfile
+            args:
+                - CWL_AIRFLOW_VERSION:${CWL_AIRFLOW_VERSION}
         container_name: webserver
         ports:
             - ${AIRFLOW_WEBSERVER_PORT}:8080
@@ -66,7 +74,11 @@ services:
     # created (we just check dag_run table) and starts apiserver
     # the default API --host 127.0.0.1 won't work from inside the docker container, so we used 0.0.0.0
     apiserver:
-        build: ./cwl_airflow
+        build:
+            context: ./cwl_airflow
+            dockerfile: Dockerfile
+            args:
+                - CWL_AIRFLOW_VERSION:${CWL_AIRFLOW_VERSION}
         container_name: apiserver
         ports:
             - ${CWL_AIRFLOW_API_PORT}:8081

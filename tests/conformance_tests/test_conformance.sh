@@ -14,14 +14,15 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 REPO_URL=$1
 SUITE=$2
-PARAMS=${@:3}
+BRANCH=$3
+PARAMS=${@:4}
 
 if [ $# -lt 2 ]; then
     echo "Usage: run_conformance_tests.sh https://github.com/repository.git ./location/within/repository/conformance.yaml [other params for cwl-airflow test]"
     exit 1
 fi
 
-echo "Running conformance tests from ${REPO_URL} repository. File ${SUITE}"
+echo "Running tests for ${REPO_URL} from file ${SUITE} with CWL-Airflow==${BRANCH}"
 
 TEMP="${DIR}/temp"
 echo "Cleaning temporary directory ${TEMP}"
@@ -34,6 +35,7 @@ echo "AIRFLOW__CORE__DAG_CONCURRENCY=1" >> ${AIRFLOW_ENV_FILE}
 echo "AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL=60" >> ${AIRFLOW_ENV_FILE}
 echo "AIRFLOW__CORE__HOSTNAME_CALLABLE=socket.gethostname" >> ${AIRFLOW_ENV_FILE}
 
+export CWL_AIRFLOW_VERSION="${BRANCH}"
 export AIRFLOW_HOME="${TEMP}/airflow"
 export CWL_TMP_FOLDER="${TEMP}/airflow/cwl_tmp_folder"
 export CWL_INPUTS_FOLDER="${TEMP}/airflow/cwl_inputs_folder"

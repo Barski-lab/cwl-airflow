@@ -9,6 +9,7 @@
 # Provides:         Airflow, CWL-Airflow, cwltool
 # Base Image:       ubuntu:20.04
 # Build Cmd:        docker build --rm -t biowardrobe2/cwl-airflow:latest .
+#   for tag:        docker build --build-arg CWL_AIRFLOW_VERSION=tag --rm -t biowardrobe2/cwl-airflow:latest . 
 ###############################################################################
 
 
@@ -18,7 +19,10 @@ ENV DEBIAN_FRONTEND noninteractive
 
 WORKDIR /tmp
 
-ENV CWL_AIRFLOW_VERSION "master"
+# can be provided through --build-arg CWL_AIRFLOW_VERSION=branch or tag
+# ARG need to be declared after FROM statement
+ARG CWL_AIRFLOW_VERSION "master"
+
 ENV CWL_AIRFLOW_URL "https://github.com/Barski-lab/cwl-airflow"
 COPY ./scripts/start_webserver.sh /usr/local/bin/start_webserver.sh
 COPY ./scripts/start_scheduler.sh /usr/local/bin/start_scheduler.sh

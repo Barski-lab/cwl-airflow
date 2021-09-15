@@ -1,6 +1,7 @@
 
 REPO_URL="https://github.com/common-workflow-language/cwl-v1.1.git"
 SUITE="conformance_tests.yaml"
+BRANCH=`git rev-parse --abbrev-ref HEAD`
 RANGE="--range 2-999"
 
 
@@ -15,5 +16,5 @@ RANGE="--range 2-999"
 # the normal flow of things.
 
 
-echo "Running ${RANGE} tests for ${REPO_URL} from file ${SUITE}"
-./conformance_tests/test_conformance.sh ${REPO_URL} ${SUITE} ${RANGE}
+echo "Running tests for ${REPO_URL} from file ${SUITE} with CWL-Airflow==${BRANCH}"
+./conformance_tests/test_conformance.sh ${REPO_URL} ${SUITE} ${BRANCH} ${RANGE}
