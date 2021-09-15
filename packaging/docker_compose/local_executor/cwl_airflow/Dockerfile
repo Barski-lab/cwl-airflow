@@ -12,6 +12,8 @@
 #   for tag:        docker build --build-arg CWL_AIRFLOW_VERSION=tag --rm -t biowardrobe2/cwl-airflow:latest . 
 ###############################################################################
 
+# can be provided through --build-arg CWL_AIRFLOW_VERSION=branch or tag
+ARG CWL_AIRFLOW_VERSION "master"
 
 FROM ubuntu:20.04
 LABEL maintainer="misha.kotliar@gmail.com"
@@ -19,9 +21,9 @@ ENV DEBIAN_FRONTEND noninteractive
 
 WORKDIR /tmp
 
-# can be provided through --build-arg CWL_AIRFLOW_VERSION=branch or tag
-# ARG need to be declared after FROM statement
-ARG CWL_AIRFLOW_VERSION "master"
+# ARG need to be declared after FROM statement again. See details below
+# https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
+ARG CWL_AIRFLOW_VERSION
 
 ENV CWL_AIRFLOW_URL "https://github.com/Barski-lab/cwl-airflow"
 COPY ./scripts/start_webserver.sh /usr/local/bin/start_webserver.sh
