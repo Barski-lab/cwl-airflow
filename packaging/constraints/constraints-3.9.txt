@@ -333,7 +333,7 @@ multi-key-dict==2.0.3
 multidict==5.1.0
 mypy-extensions==0.4.3
 mypy==0.770
-mysql-connector-python==8.0.26
+mysql-connector-python==8.0.22
 mysqlclient==2.0.3
 nbclient==0.5.4
 nbformat==5.1.3
