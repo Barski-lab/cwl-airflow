@@ -12,17 +12,19 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-REPO_URL=$1
-SUITE=$2
-BRANCH=$3
-PARAMS=${@:4}
+UBUNTU_VERSION=$1
+PYTHON_VERSION=$2
+CWL_AIRFLOW_VERSION=$3
+REPO_URL=$4
+SUITE=$5
+PARAMS=${@:6}
 
 if [ $# -lt 2 ]; then
     echo "Usage: run_conformance_tests.sh https://github.com/repository.git ./location/within/repository/conformance.yaml [other params for cwl-airflow test]"
     exit 1
 fi
 
-echo "Running tests for ${REPO_URL} from file ${SUITE} with CWL-Airflow==${BRANCH}"
+echo "Running tests for ${REPO_URL} from file ${SUITE} with CWL-Airflow==${CWL_AIRFLOW_VERSION}"
 
 TEMP="${DIR}/temp"
 echo "Cleaning temporary directory ${TEMP}"
@@ -34,8 +36,12 @@ echo "AIRFLOW__CORE__PARALLELISM=1" >> ${AIRFLOW_ENV_FILE}
 echo "AIRFLOW__CORE__DAG_CONCURRENCY=1" >> ${AIRFLOW_ENV_FILE}
 echo "AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL=60" >> ${AIRFLOW_ENV_FILE}
 echo "AIRFLOW__CORE__HOSTNAME_CALLABLE=socket.gethostname" >> ${AIRFLOW_ENV_FILE}
+echo "AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT=120" >> ${AIRFLOW_ENV_FILE}
 
-export CWL_AIRFLOW_VERSION="${BRANCH}"
+
+export UBUNTU_VERSION="${UBUNTU_VERSION}"
+export PYTHON_VERSION="${PYTHON_VERSION}"
+export CWL_AIRFLOW_VERSION="${CWL_AIRFLOW_VERSION}"
 export AIRFLOW_HOME="${TEMP}/airflow"
 export CWL_TMP_FOLDER="${TEMP}/airflow/cwl_tmp_folder"
 export CWL_INPUTS_FOLDER="${TEMP}/airflow/cwl_inputs_folder"
@@ -63,8 +69,8 @@ DOCKER_COMPOSE_FILE="${DIR}/../../packaging/docker_compose/local_executor/docker
 docker-compose -f ${DOCKER_COMPOSE_FILE} build --no-cache  # need --no-cache as we want to have the latest commit for CWL-Airflow, but its Dockerfile is not changed
 docker-compose -f ${DOCKER_COMPOSE_FILE} up -d
 
-echo "Sleeping 30 sec to let all services start"
-sleep 30
+echo "Sleeping 60 sec to let all services start"
+sleep 60
 
 echo "Cloning repository with tests ${REPO_URL}"
 mkdir -p ${AIRFLOW_HOME}

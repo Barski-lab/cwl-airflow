@@ -18,8 +18,6 @@
 ARG UBUNTU_VERSION="20.04"
 ARG PYTHON_VERSION="3.8.10"
 ARG CWL_AIRFLOW_VERSION="master"
-ARG AIRFLOW_UID="50000"
-ARG AIRFLOW_GID="50000"
 
 FROM ubuntu:${UBUNTU_VERSION}
 LABEL maintainer="misha.kotliar@gmail.com"
@@ -31,8 +29,6 @@ WORKDIR /tmp
 # https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
 ARG PYTHON_VERSION
 ARG CWL_AIRFLOW_VERSION
-ARG AIRFLOW_UID
-ARG AIRFLOW_GID
 
 ENV CWL_AIRFLOW_URL "https://github.com/Barski-lab/cwl-airflow"
 ENV PYTHON_URL "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz"
@@ -69,14 +65,8 @@ RUN echo "Installing dependencies" && \
     export SHORT_PYTHON_VERSION=$(echo ${PYTHON_VERSION} | cut -d "." -f 1,2) && \
     pip3 install ".[mysql]" --constraint ./packaging/constraints/constraints-${SHORT_PYTHON_VERSION}.txt && \
     cd .. && \
-    echo "Adding airflow user and group" && \
-    addgroup --gid ${AIRFLOW_GID} "airflow" && \
-    adduser --quiet "airflow" --uid ${AIRFLOW_UID} --gid "${AIRFLOW_GID}" --home /home/airflow && \
-    # cleaning up
+    echo "Cleaning up" && \
     apt-get clean && \
     apt-get purge && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* && \
     strip /usr/local/bin/*; true
-
-USER ${AIRFLOW_UID}
-WORKDIR /home/airflow

@@ -34,6 +34,8 @@ services:
             context: ./cwl_airflow
             dockerfile: Dockerfile
             args:
+                UBUNTU_VERSION: ${UBUNTU_VERSION}
+                PYTHON_VERSION: ${PYTHON_VERSION}
                 CWL_AIRFLOW_VERSION: ${CWL_AIRFLOW_VERSION}
         container_name: scheduler
         volumes:  # can't reuse *airflow_volumes as YAML doesn't support sequence merging
@@ -58,6 +60,8 @@ services:
             context: ./cwl_airflow
             dockerfile: Dockerfile
             args:
+                UBUNTU_VERSION: ${UBUNTU_VERSION}
+                PYTHON_VERSION: ${PYTHON_VERSION}
                 CWL_AIRFLOW_VERSION: ${CWL_AIRFLOW_VERSION}
         container_name: webserver
         ports:
@@ -78,6 +82,8 @@ services:
             context: ./cwl_airflow
             dockerfile: Dockerfile
             args:
+                UBUNTU_VERSION: ${UBUNTU_VERSION}
+                PYTHON_VERSION: ${PYTHON_VERSION}
                 CWL_AIRFLOW_VERSION: ${CWL_AIRFLOW_VERSION}
         container_name: apiserver
         ports:

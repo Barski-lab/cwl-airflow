@@ -1,4 +1,3 @@
-sudo: false
 language: python
 
 dist: bionic
@@ -6,7 +5,7 @@ os:
 - linux
 
 services:
-  - docker
+- docker
 
 python:
 - 3.7
@@ -33,41 +32,47 @@ jobs:
         secure: Mji1koR4nyt/KgoycpuvgIp9toFVNYaSxUmNY6EVt0pmIpRb/GKbw6TdyfAdtnSAwH3BcSUC/R1hCwyaXfv1GDPFYqv9Yg1MaNHR1clvo8E8KIIPt1JDqPM47lgPQQFFbwB+Cc6uSV0Nn9oDBkhWEPQqV3kI/GJkSUzSs/yjZqR4C+aZxsJzE+VX2ZzeGCD3x4mzhAAWan4MLrdgANaXQVTHhyHIhTp3l109FblYimMvx8HqKotMiM+32mVFxgwf/pMw/N8gDOFXd4VrtlaOqqHpn4VJko+jSNYuAdKn62N2KFKqExyU39ycvU9ngYaU38nmCjJdibRgNyxfdH6LfndS9xzu3KPY64ACLG1i8Ym+57Q7wSJZAb2WF/b8av1RnkKMUGHHYXBzVIGk7Abvuhde0DsV0lr9XsapQn7XySmhdBWYazZTr+AtgIdsx7AmHV1ug6nPp3tIQzW1+YAOf295Puwqbrn+SF3jYw6167jAl5M1a81kxqli1UTsLgpcaTbTD1ofwLn4gP3VuU1f4fKGzhrxl6ybHW+LpO/wkcN2wJDdBbqz5OQIYfshMQEooIODOw1OonmwbY3vcMATuvi7Hz3mIElqpu3TVxH9aoBzcvL1148wPhZF8u87T8nDgsHeUT66I56ILGcZszASolt2Cb6oPZmxg2jgajTREwk=
       on:
         tags: true
+
+  # Still valid, but soon will be deprecated, if we start using Airflow API
   - name: DAG with embedded workflow (just one test)
     script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --embed
   - name: DAG with attached workflow using combined API call (just one test)
     script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --combine
   - name: DAG with embedded workflow using combined API call (just one test)
     script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --embed --combine
-  - name: Test of `init --upgrade`
-    before_install:
-    - mkdir -p ~/airflow/dags
-    - cp ./tests/data/dags/bam_bedgraph_bigwig_single_old_format.py ~/airflow/dags
-    - cp ./tests/data/workflows/bam-bedgraph-bigwig-single.cwl ~/airflow/dags
-    install:
-    - pip install . --constraint ./packaging/constraints/constraints-$TRAVIS_PYTHON_VERSION.txt
-    before_script:
-    - cwl-airflow init --upgrade
-    - rm -f ~/airflow/dags/bam-bedgraph-bigwig-single.cwl
-    script: airflow dags list  # to check if all DAGs are correct
-  - name: Test packaging for Ubuntu 18.04, Python 3.6
-    install:
-    - ./packaging/portable/ubuntu/pack.sh 18.04 3.6 $TRAVIS_BRANCH
-    - ls ./packaging/portable/ubuntu/build/
-    - tar xzf "./packaging/portable/ubuntu/build/python_3.6_with_cwl_airflow_${TRAVIS_BRANCH}_ubuntu_18.04.tar.gz"
-    before_script:
-    - ./python3/bin_portable/airflow --help             # to generate airflow.cfg
-    - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
-    - sed -i'.backup' -e 's/^parsing_processes.*/parsing_processes = 1/g' ~/airflow/airflow.cfg
-    - sed -i'.backup' -e 's/^sql_alchemy_pool_enabled.*/sql_alchemy_pool_enabled = False/g' ~/airflow/airflow.cfg
-    - sed -i'.backup' -e 's/^dag_dir_list_interval =.*/dag_dir_list_interval = 60/g' ~/airflow/airflow.cfg
-    - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
-    - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
-    - ./python3/bin_portable/cwl-airflow init
-    - ./python3/bin_portable/airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070    # to add process_report connection
-    - ./python3/bin_portable/airflow scheduler > /dev/null 2>&1 &
-    - ./python3/bin_portable/cwl-airflow api --replay 600 > /dev/null 2>&1 &
-    script: ./python3/bin_portable/cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1
+
+  # TEST DEPRECATED as it not needed anymore. Everything already got updated.
+  # - name: Test of `init --upgrade`
+  #   before_install:
+  #   - mkdir -p ~/airflow/dags
+  #   - cp ./tests/data/dags/bam_bedgraph_bigwig_single_old_format.py ~/airflow/dags
+  #   - cp ./tests/data/workflows/bam-bedgraph-bigwig-single.cwl ~/airflow/dags
+  #   install:
+  #   - pip install . --constraint ./packaging/constraints/constraints-$TRAVIS_PYTHON_VERSION.txt
+  #   before_script:
+  #   - cwl-airflow init --upgrade
+  #   - rm -f ~/airflow/dags/bam-bedgraph-bigwig-single.cwl
+  #   script: airflow dags list  # to check if all DAGs are correct
+
+  # TEST DEPRECATED as the packaging scripts should be replaced
+  # - name: Test packaging for Ubuntu 18.04, Python 3.6
+  #   install:
+  #   - ./packaging/portable/ubuntu/pack.sh 18.04 3.6 $TRAVIS_BRANCH
+  #   - ls ./packaging/portable/ubuntu/build/
+  #   - tar xzf "./packaging/portable/ubuntu/build/python_3.6_with_cwl_airflow_${TRAVIS_BRANCH}_ubuntu_18.04.tar.gz"
+  #   before_script:
+  #   - ./python3/bin_portable/airflow --help             # to generate airflow.cfg
+  #   - sed -i'.backup' -e 's/^executor.*/executor = LocalExecutor/g' ~/airflow/airflow.cfg
+  #   - sed -i'.backup' -e 's/^parsing_processes.*/parsing_processes = 1/g' ~/airflow/airflow.cfg
+  #   - sed -i'.backup' -e 's/^sql_alchemy_pool_enabled.*/sql_alchemy_pool_enabled = False/g' ~/airflow/airflow.cfg
+  #   - sed -i'.backup' -e 's/^dag_dir_list_interval =.*/dag_dir_list_interval = 60/g' ~/airflow/airflow.cfg
+  #   - sed -i'.backup' -e 's/^parallelism =.*/parallelism = 1/g' ~/airflow/airflow.cfg
+  #   - sed -i'.backup' -e 's/^sql_alchemy_conn.*/sql_alchemy_conn = mysql:\/\/airflow:airflow@127.0.0.1:6603\/airflow/g' ~/airflow/airflow.cfg
+  #   - ./python3/bin_portable/cwl-airflow init
+  #   - ./python3/bin_portable/airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070    # to add process_report connection
+  #   - ./python3/bin_portable/airflow scheduler > /dev/null 2>&1 &
+  #   - ./python3/bin_portable/cwl-airflow api --replay 600 > /dev/null 2>&1 &
+  #   script: ./python3/bin_portable/cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1
 
 before_install:
 - git clone https://github.com/datirium/workflows.git --recursive
