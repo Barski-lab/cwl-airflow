@@ -183,7 +183,7 @@ $namespaces:
   s: http://schema.org/
 
 $schemas:
-- https://schema.org/version/latest/schema.rdf
+- https://github.com/schemaorg/schemaorg/raw/main/data/releases/11.01/schemaorg-current-http.rdf
 
 s:name: "bedtools-genomecov"
 s:downloadUrl: https://raw.githubusercontent.com/Barski-lab/workflows/master/tools/bedtools-genomecov.cwl
