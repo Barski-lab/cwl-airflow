@@ -9,7 +9,7 @@ from cwl_airflow.utilities.parser import parse_arguments
 from cwl_airflow.utilities.helpers import get_absolute_path
 
 
-DATA_FOLDER = path.abspath(path.join(path.dirname(__file__), "data"))
+DATA_FOLDER = path.abspath(path.join(path.dirname(__file__), "../data"))
 if sys.platform == "darwin":                                           # docker has troubles of mounting /var/private on macOs
     tempfile.tempdir = "/private/tmp"
 

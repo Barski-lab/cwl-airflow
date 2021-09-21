@@ -64,7 +64,7 @@ EXTRAS_REQUIRE = {
     ],
     "mysql": [
         "mysql-connector-python>=8.0.11, <=8.0.22",
-        "mysqlclient>=1.3.6,<1.4"
+        "mysqlclient>=1.3.6,<3",
     ],
     "statsd": [
         "statsd>=3.3.0, <4.0"
@@ -95,9 +95,9 @@ setup(
     ),
     extras_require=EXTRAS_REQUIRE,
     install_requires=[
-        "apache-airflow==2.0.1",
-        "cwltool==3.0.20200710214758",
-        "cwltest==2.0.20200626112502",
+        "apache-airflow==2.1.4",
+        "cwltool==3.1.20210816212154",
+        "cwltest==2.1.20210626101542",
         "jsonmerge",
         "connexion",
         "tornado",

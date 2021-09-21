@@ -8,7 +8,7 @@
 
 # **CWL-Airflow**
 
-Python package to extend **[Apache-Airflow 2.0.1](https://airflow.apache.org)**
+Python package to extend **[Apache-Airflow 2.1.4](https://airflow.apache.org)**
 functionality with **[CWL v1.1](https://www.commonwl.org/v1.1/)** support
 
 ## **Cite as**
@@ -29,9 +29,4 @@ pip install cwl-airflow==1.0.18
 Published version [documentation](https://cwl-airflow.readthedocs.io/en/1.0.18/)
 
 ## **Notes**
-
-When running on MacOS, you might need to set up the following env variable before starting `airflow scheduler/webserver`
-
-```
-export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
-```
+Notes for developers can be found in [DEV README](https://github.com/Barski-lab/cwl-airflow/blob/master/README.dev.md)
