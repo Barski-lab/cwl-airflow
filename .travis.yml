@@ -10,9 +10,6 @@ services:
 python:
 - 3.7
 
-env:
-- NTEST=1
-
 jobs:
   include:
   - name: Unit tests
@@ -34,6 +31,8 @@ jobs:
         tags: true
 
   # Still valid, but soon will be deprecated, if we start using Airflow API
+  - name: DAG with workflow in a separate file (just one test)
+    script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1
   - name: DAG with embedded workflow (just one test)
     script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range 1 --embed
   - name: DAG with attached workflow using combined API call (just one test)
@@ -92,7 +91,6 @@ before_script:
 - airflow connections add process_report --conn-type http --conn-host localhost --conn-port 3070    # to add process_report connection
 - airflow scheduler > /dev/null 2>&1 &
 - cwl-airflow api --replay 600 > /dev/null 2>&1 &
-script: cwl-airflow test --suite workflows/tests/conformance_tests.yaml --spin --range $NTEST
 
 branches:
   only:
