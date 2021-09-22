@@ -170,7 +170,8 @@ On the example below, the workflow execution statistics includes `total` section
       }
     }
   },
-  'error': ''
+  'error': '',
+  'logs': ''
 }
 ```
 
