@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+import os
 import json
 import logging
 
@@ -14,7 +15,10 @@ from cwl_airflow.utilities.cwl import (
     get_default_cwl_args,
     remove_dag_run_tmp_data
 )
-
+from cwl_airflow.utilities.loggers import (
+    get_log_handler,
+    get_log_location
+)
 
 CONN_ID = "process_report"
 ROUTES = {
@@ -45,19 +49,25 @@ def resend_reports():
                     logging.debug(f"Failed to POST value from {var.key} variable. Will retry in the next run \n {err}")
 
 
-def get_error_category(context):
+def get_error_info(context):
     """
     This function should be called only from the dag_run failure callback.
     It's higly relies on the log files, so logging level in airflow.cfg
-    shouldn't be lower than ERROR. We load log file only for the latest task
-    retry, because the get_error_category function is called when the dag_run
-    has failed, so all previous task retries didn't bring any positive results.
-    We load logs only for the actually failed task, not for upstream_failed
+    shouldn't be lower than ERROR. We search and load log files only for the
+    latest task retry attempt, because the get_error_category function is called
+    when the dag_run has failed, so all previous task retries didn't bring any
+    positive results.
+    We load airflow logs only for the actually failed task, not for upstream_failed
     tasks. All error categories are sorted by priority from higher level to the
     lower one. We report only one (the highest, the first found) error category
     per failed task. Error categories from all failed tasks are combined and
     deduplicated. The "Failed to run workflow step" category additionally is
-    filled with failed task ids. The returned value is always a string.
+    filled with failed task ids.
+    Additionally we return file location for airflow and cwl logs. If any of them
+    is not present, it won't be added to the returned object.
+    The returned value is an object with fields "label" to describe to error category,
+    and logs - another object with logs collected for all failed steps and previos
+    (related upstreams) steps.
     """
 
     ERROR_MARKERS = {
@@ -74,20 +84,17 @@ def get_error_category(context):
 
     dag_run = context["dag_run"]
     failed_tis = dag_run.get_task_instances(state=State.FAILED)
-    log_handler = next(                                              # to get access to logs
-        (
-            h for h in logging.getLogger("airflow.task").handlers
-            if h.name == conf.get("logging", "task_log_reader")      # starting from Airflow 2.0.0 moved from [core] to [logging] section
-        ),
-        None
-    )
+    success_tis = dag_run.get_task_instances(state=State.SUCCESS)
+
+    airflow_handler = get_log_handler("airflow.task", conf.get("logging", "task_log_reader"))
+    cwl_handler = get_log_handler("cwltool", "cwltool")
 
     categories = set()                                               # use set to prevent duplicates
 
     for ti in failed_tis:
         ti.task = context["dag"].get_task(ti.task_id)                # for some reasons when retreived from DagRun we need to set "task" property from the DAG
         try:                                                         # in case log files were deleted or unavailable
-            logs, _ = log_handler.read(ti)                           # logs is always a list, so we need to take [0]
+            logs, _ = airflow_handler.read(ti)                       # logs is always a list, so we need to take [0]
             for marker, category in ERROR_MARKERS.items():
                 if marker in logs[0][-1][1]:                         # [-1] - to get only the last task retry, [1] - to get the actual log string with "\n"
                     categories.add(category)
@@ -95,20 +102,45 @@ def get_error_category(context):
         except Exception as err:
             logging.debug(f"Failed to define the error category for task {ti.task_id}. \n {err}")
 
-    if categories:
-        return ". ".join(categories).format(", ".join( [ti.task_id for ti in failed_tis] ))  # mainly to fill in the placeholder with failed task ids
-    return "Unknown error. Contact support team"
+    upstream_tis = []
+    for ti in success_tis:
+        ti.task = context["dag"].get_task(ti.task_id)
+        if (set(ti.task.downstream_task_ids) & set([ti.task_id for ti in failed_tis])):
+            upstream_tis.append(ti)                                                       # this upstream task could cause the failure of one of the tasks from failed_tis
+
+    collected_logs = {
+        "failed_steps": {},
+        "previous_steps": {}
+    }
+    for ti in failed_tis + upstream_tis:
+        current_log = {}
+        try:
+            current_log["airflow"] = get_log_location(airflow_handler, ti)
+        except Exception as err:
+            logging.debug(f"Failed to find the latest airflow log for {ti.task_id}. \n {err}")
+        try:
+            current_log["cwl"] = get_log_location(cwl_handler, ti)
+        except Exception as err:
+            logging.debug(f"Failed to find the latest cwl log for {ti.task_id}. \n {err}")
+        if ti.task_id in [ti.task_id for ti in failed_tis]:
+            collected_logs["failed_steps"][ti.task_id] = current_log
+        else:
+            collected_logs["previous_steps"][ti.task_id] = current_log
+
+    label = ". ".join(categories).format(", ".join( [ti.task_id for ti in failed_tis] )) if categories else "Unknown error. Contact support team"
+
+    return {"label": label, "logs": collected_logs}
 
 
 def report_progress(context, from_task=None):
     """
     If dag_run failed but this function was run from the task callback,
-    error would be always "". The "error" is not "" only when this function
-    will be called from the DAG callback, thus making it the last and the only
-    message with the meaningful error description. Workflow execution
-    statistics is generated only when this function is called from DAG (not
-    task). Also , not delivered messages will be backed up only if this function
-    was called from DAG.
+    error and logs fields would be always "". The "error" and logs are
+    not "" only when this function is called from the failed DAG callback,
+    thus making it the last and the only message with the meaningful error
+    description. Workflow execution statistics is generated only when this
+    function is called from DAG (not task). Also, not delivered messages
+    will be backed up only if this function was called from DAG.
     """
 
     from_task = False if from_task is None else from_task
@@ -117,6 +149,7 @@ def report_progress(context, from_task=None):
     len_tis = len(dag_run.get_task_instances())
     len_tis_success = len(dag_run.get_task_instances(state=State.SUCCESS)) + int(from_task)
     progress = 100 if len_tis == 0 else int(len_tis_success / len_tis * 100)
+    error_info = get_error_info(context) if dag_run.state == State.FAILED and not from_task else None
     message = {
         "payload": {
             "state": dag_run.state,
@@ -124,7 +157,8 @@ def report_progress(context, from_task=None):
             "run_id": dag_run.run_id,
             "progress": progress,
             "statistics": get_workflow_execution_stats(context) if not from_task else "",
-            "error": get_error_category(context) if dag_run.state == State.FAILED and not from_task else ""
+            "error": error_info["label"] if error_info is not None else "",
+            "logs": error_info["logs"] if error_info is not None else ""
         }
     }
     post_progress(message, not from_task)  # no need to backup progress messages that came from tasks
