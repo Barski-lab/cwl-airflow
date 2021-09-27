@@ -30,3 +30,9 @@ cd tests
 cd tests
 ./run_unit_tests_docker.sh $UBUNTU_VERSION $PYTHON_VERSION $CWL_AIRFLOW_VERSION
 ```
+
+**To build rellocatable version in Docker container**
+```
+cd ./packaging/portable/linux
+./pack_linux_docker.sh
+```
