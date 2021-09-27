@@ -17,7 +17,8 @@ Michael Kotliar, Andrey V Kartashov, Artem Barski, CWL-Airflow: a lightweight pi
 
 ## **Get the latest version**
 ```
-pip install cwl-airflow
+export PYTHON_VERSION=`python3 --version | cut -d " " -f 2 | cut -d "." -f 1,2`
+pip3 install cwl-airflow --constraint https://raw.githubusercontent.com/Barski-lab/cwl-airflow/master/packaging/constraints/constraints-${PYTHON_VERSION}.txt
 ```
 Latest version [documentation](https://cwl-airflow.readthedocs.io/en/latest/)
 
