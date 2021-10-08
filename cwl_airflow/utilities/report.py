@@ -49,6 +49,19 @@ def resend_reports():
                     logging.debug(f"Failed to POST value from {var.key} variable. Will retry in the next run \n {err}")
 
 
+def append_cwl_log(context):
+    """
+    Appends the latest CWL log to the end of the Airflow log.
+    """
+
+    ti = context["ti"]
+    cwl_log_handler = get_log_handler("cwltool", "cwltool")
+    cwl_logs, _ = cwl_log_handler.read(ti)
+    latest_cwl_log_content = cwl_logs[-1][0][1]                          # [-1] - to get only the last task retry, [0] - there is only one item in array. [1] - to get the actual log content as a string
+    ti.log.info("CWL LOGS")
+    ti.log.info(latest_cwl_log_content)
+
+
 def get_error_info(context):
     """
     This function should be called only from the dag_run failure callback.
@@ -96,7 +109,7 @@ def get_error_info(context):
         try:                                                         # in case log files were deleted or unavailable
             logs, _ = airflow_handler.read(ti)                       # logs is always a list, so we need to take [0]
             for marker, category in ERROR_MARKERS.items():
-                if marker in logs[0][-1][1]:                         # [-1] - to get only the last task retry, [1] - to get the actual log string with "\n"
+                if marker in logs[-1][0][1]:                         # [-1] - to get only the last task retry, [0] - there is only one item in array. [1] - to get the actual log content as a string
                     categories.add(category)
                     break
         except Exception as err:
@@ -307,11 +320,13 @@ def clean_up(context):
 def task_on_success(context):
     report_progress(context, True)
     report_status(context)
+    append_cwl_log(context)
 
 
 def task_on_failure(context):
     # no need to report progress as it hasn't been changed
     report_status(context)
+    append_cwl_log(context)
 
 
 def task_on_retry(context):

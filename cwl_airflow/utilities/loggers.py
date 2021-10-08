@@ -14,7 +14,7 @@ def setup_cwl_logger(ti, level=None):
     logs but not in the separate files.
     """
 
-    level = conf_get("core", "LOGGING_LEVEL", "INFO").upper() if level is None else level
+    level = conf_get("logging", "LOGGING_LEVEL", "INFO").upper() if level is None else level
     cwl_logger = logging.getLogger("cwltool")
     for handler in cwl_logger.handlers:
         try:
