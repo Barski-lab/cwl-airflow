@@ -310,9 +310,10 @@ def clean_up_dag_run(dag_id, run_id, dags_folder=None, kill_timeout=None):
     """
     For the provided dag_id and run_id fetches a list of dag_runs (should be always
     a list of 1 item). For each dag_run stops all running tasks, removes temporary
-    data and correspondent records in DB. Then removes outdated DAGs for the same
-    workflow. For that dag_id should follow the naming rule "cwlid-commitsha". If
-    dags_folder was not provided reads dags_folder from the airflow.cfg. If
+    data and correspondent records in DB.
+    Temporary commented out function remove_outdated_dags removes outdated DAGs for
+    the same workflow. For that dag_id should follow the naming rule "cwlid-commitsha".
+    If dags_folder was not provided reads dags_folder from the airflow.cfg. If
     kill_timeout was not provided use 2 times longer intervar than the one from the
     airflow.cfg. This function should never raise any exceptions.
     """
@@ -324,7 +325,7 @@ def clean_up_dag_run(dag_id, run_id, dags_folder=None, kill_timeout=None):
         stop_dag_run_tasks(dag_run, kill_timeout)
         remove_dag_run_tmp_data(dag_run)
         clean_dag_run_db(dag_run)
-    remove_outdated_dags(dag_id.split("-")[0], dags_folder)
+    # remove_outdated_dags(dag_id.split("-")[0], dags_folder)
 
 
 def conf_get(
