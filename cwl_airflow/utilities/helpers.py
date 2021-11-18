@@ -82,13 +82,13 @@ def get_uncompressed(data_str, parse_as_yaml=None):
     try:
         uncompressed = gzip.decompress(
             base64.b64decode(
-                data_str.encode("utf-8")
+                data_str.encode("utf-8") + b'=='       # safety measure to prevent incorrect padding error
             )
         ).decode("utf-8")
     except Exception:
         uncompressed = zlib.decompress(
             base64.b64decode(
-                data_str.encode("utf-8")
+                data_str.encode("utf-8") + b'=='       # safety measure to prevent incorrect padding error
             )
         ).decode("utf-8")
     return load_yaml(uncompressed) if parse_as_yaml else uncompressed
