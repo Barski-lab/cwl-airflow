@@ -496,13 +496,15 @@ def relocate_outputs(
     for output_id, output_data in get_items(workflow_tool["outputs"]):
         collected_job_items = []
         for source_id, _ in get_items(output_data["outputSource"]):
-            collected_job_items.append(
-                job_data_copy[source_id.replace("/", "_")]
-            )
-        if isinstance(output_data["outputSource"], list):
-            filtered_job_data[output_id] = collected_job_items
-        else:
-            filtered_job_data[output_id] = collected_job_items[0]
+            if source_id.replace("/", "_") in job_data_copy:
+                collected_job_items.append(
+                    job_data_copy[source_id.replace("/", "_")]
+                )
+        if collected_job_items:
+            if isinstance(output_data["outputSource"], list):
+                filtered_job_data[output_id] = collected_job_items
+            else:
+                filtered_job_data[output_id] = collected_job_items[0]
 
     runtime_context = RuntimeContext(default_cwl_args)
     relocated_job_data = relocateOutputs(
@@ -648,6 +650,7 @@ def execute_workflow_step(
     )
     
     skipped = True
+    failed = False
     step_outputs = {output_id: None for output_id, _ in get_items(workflow_data.tool["outputs"])}
     if need_to_run(workflow_data, job_data, task_id):
         skipped = False
@@ -661,14 +664,14 @@ def execute_workflow_step(
         sys.stderr = _stderr
 
         if step_status != "success":
-            raise ValueError("Failed to run workflow step")
+            failed = True
 
         # To remove "http://commonwl.org/cwltool#generation": 0 (copied from cwltool)
         visit_class(step_outputs, ("File",), MutationManager().unset_generation)
 
     dump_json(step_outputs, step_report)
 
-    return step_outputs, step_report, skipped
+    return step_outputs, step_report, skipped, failed
 
 
 def get_temp_folders(task_id, job_data):
