@@ -294,6 +294,14 @@ def post_status(message):
         logging.debug(f"Failed to POST status updates. \n {err}")
 
 
+def has_failed_tasks(dag_run):
+    for ti in dag_run.get_task_instances():
+        if ti.state == State.FAILED:
+            return True
+
+    return False
+
+
 def clean_up(context):
     """
     Loads "cwl" arguments from the DAG, just in case updates them with
@@ -308,8 +316,8 @@ def clean_up(context):
         default_cwl_args = get_default_cwl_args(
             context["dag"].default_args["cwl"]
         )
-        if not default_cwl_args["keep_tmp_data"]:
-            dag_run = context["dag_run"]
+        dag_run = context["dag_run"]
+        if not (default_cwl_args["keep_tmp_data"] or has_failed_tasks(dag_run)):
             remove_dag_run_tmp_data(dag_run)          # safe to run as it has its own exception handling
             for ti in dag_run.get_task_instances():
                 ti.clear_xcom_data()
