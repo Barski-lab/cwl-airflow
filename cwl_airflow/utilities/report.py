@@ -295,11 +295,7 @@ def post_status(message):
 
 
 def has_failed_tasks(dag_run):
-    for ti in dag_run.get_task_instances():
-        if ti.state == State.FAILED:
-            return True
-
-    return False
+    return dag_run.get_task_instances(state=State.FAILED).exists()
 
 
 def clean_up(context):
@@ -317,10 +313,15 @@ def clean_up(context):
             context["dag"].default_args["cwl"]
         )
         dag_run = context["dag_run"]
-        if not (default_cwl_args["keep_tmp_data"] or has_failed_tasks(dag_run)):
+        keep_tmp_data = default_cwl_args["keep_tmp_data"]
+        if keep_tmp_data is None:
+            keep_tmp_data = has_failed_tasks(dag_run)
+
+        if not keep_tmp_data:
             remove_dag_run_tmp_data(dag_run)          # safe to run as it has its own exception handling
             for ti in dag_run.get_task_instances():
                 ti.clear_xcom_data()
+
     except KeyError as err:                           # will catch if called from clean_dag_run
         logging.info(f"Failed to clean up data for current DAG, due to \n {err}")
 
