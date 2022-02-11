@@ -69,7 +69,7 @@ CWL_OUTPUTS_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_outputs_folder")
 CWL_INPUTS_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_inputs_folder")
 CWL_PICKLE_FOLDER = os.path.join(AIRFLOW_HOME, "cwl_pickle_folder")
 CWL_USE_CONTAINER = True
-CWL_KEEP_TMP_DATA = False
+CWL_KEEP_TMP_DATA = None
 CWL_NO_MATCH_USER = False
 CWL_SKIP_SCHEMAS = True
 CWL_STRICT = False
@@ -425,7 +425,6 @@ def get_default_cwl_args(preset_cwl_args=None):
             "keep_tmp_data": conf_get(                                             # prevents from cleaning dag_run temp data and XCom's in both success or failure scenarios
                 "cwl", "keep_tmp_data",
                 preset_cwl_args.get("keep_tmp_data", CWL_KEEP_TMP_DATA),
-                True                                                               # return Boolean
             ),
             "use_container": conf_get(                                             # execute jobs in docker containers
                 "cwl", "use_container",
