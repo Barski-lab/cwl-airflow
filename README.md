@@ -28,6 +28,3 @@ Latest version [documentation](https://cwl-airflow.readthedocs.io/en/latest/)
 pip install cwl-airflow==1.0.18
 ```
 Published version [documentation](https://cwl-airflow.readthedocs.io/en/1.0.18/)
-
-## **Notes**
-Notes for developers can be found in [DEV README](https://github.com/Barski-lab/cwl-airflow/blob/master/README.dev.md)
