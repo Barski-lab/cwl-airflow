@@ -96,7 +96,7 @@ setup(
     extras_require=EXTRAS_REQUIRE,
     install_requires=[
         "apache-airflow==2.1.4",
-        "git+https://github.com/drewm-jpl/cwltool.git@docker-mount#egg=cwltool",
+        "cwltool @ git+https://github.com/drewm-jpl/cwltool.git@docker-mount",
         "cwltest==2.1.20210626101542",
         "jsonmerge",
         "connexion",
