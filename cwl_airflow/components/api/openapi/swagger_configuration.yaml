@@ -208,8 +208,6 @@ paths:
            - removing outdated dags for the same cwlid if no running dag_runs were found for them
         3. Creates new dag_run for dag_id with run_id and optional conf
       operationId: post_dags_dag_runs
-      consumes:
-         - multipart/form-data
       responses:
         "200":
           description: Reference information about created dag and dag_run.
@@ -232,31 +230,12 @@ paths:
           schema:
             $ref: "#/definitions/ErrorResponse"
       parameters:
-        - name: dag_id
-          description: Dag identifier, follow the naming rule "cwlid-commitsha"
-          in: query
+        - name: body
+          description: request body
+          in: body
           required: true
-          type: string
-        - name: run_id
-          description: Run identifier
-          in: query
-          required: true
-          type: string
-        - name: conf
-          description: Run configuration (JSON-formatted string)
-          in: query
-          required: false
-          type: string
-        - name: workflow
-          description: CWL workflow file with embedded tools and all other dependencies
-          in: formData
-          required: false
-          type: file
-        - name: workflow_content
-          description: base64 encoded gzip compressed workflow content
-          in: formData
-          required: false
-          type: string
+          schema: 
+            $ref: "#/definitions/ReqBody"
       tags:
         - Airflow
 
@@ -603,6 +582,19 @@ paths:
 
 
 definitions:
+  
+  ReqBody:
+    type: object
+    required: 
+     - workflow_content
+     - workflow_data
+    properties:
+      workflow_content: 
+        type: string
+      workflow_data:
+        type: object
+    description: object with packed workflow_content, and stringified sample config
+  
 
   GetDagsResponse:
     type: object
