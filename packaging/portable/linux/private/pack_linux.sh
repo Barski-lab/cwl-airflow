@@ -66,6 +66,7 @@ echo "Updating permissions to u+w for python3 folder"
 chmod -R u+w python3
 
 echo "Compressing relocatable Python ${PYTHON_VERSION} with installed CWL-Airflow ($CWL_AIRFLOW_VERSION) to tar.gz"
-OUTPUT_NAME="python_${PYTHON_VERSION}_cwl_airflow_${CWL_AIRFLOW_VERSION}_linux.tar.gz"
+OUTPUT_NAME="python_${PYTHON_VERSION}_cwl_airflow_master_linux.tar.gz"
+#"python_${PYTHON_VERSION}_cwl_airflow_${CWL_AIRFLOW_VERSION}_linux.tar.gz"
 tar -zcf $OUTPUT_NAME python3
 rm -rf python3

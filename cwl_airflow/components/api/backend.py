@@ -160,8 +160,8 @@ class CWLApiBackend():
         workflow_data = None if body['workflow_data'] is None else body['workflow_data']
         dag_id = None if workflow_data['dag_id'] is None else workflow_data['dag_id']
         run_id = None if workflow_data['run_id'] is None else workflow_data['run_id']
-        project_id = None if run_data['proj_id'] is None else run_data['proj_id']
-        conf = None if run_data['conf'] is None else run_data['conf']
+        project_id = None if workflow_data['proj_id'] is None else workflow_data['proj_id']
+        conf = None if workflow_data['conf'] is None else workflow_data['conf']
         logging.info(f"Call post_dags_dag_runs with dag_id={dag_id}, run_id={run_id}, conf={conf}")
         conf = "{\"job\":{}}" if conf is None else conf    # safety measure if conf wasn't provided
         if not self.simulation_mode:
